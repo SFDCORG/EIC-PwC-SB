@@ -1,0 +1,36 @@
+<apex:page controller="FDAAppCreationController" docType="html-5.0">
+
+<script type='text/javascript'>
+window.onload=function(){
+	initialization();
+}
+
+function closewindodws()
+{
+	 window.close();
+}   
+</script>
+
+<apex:form >
+<apex:actionStatus id="status-waiting">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                                    <div class="waitingHolder" style="top: 100px; width: 50%;">
+
+                                    <b>创建前台到访中，请耐心等待，稍后窗口将自动关闭</b> <br/>   
+                
+                                      <img class="waitingImage" src="{!$Resource.AjaxLoader}" title="正在操作中，请耐心等候......" />
+                                    </div>
+                            </div>
+                        </apex:facet>
+</apex:actionStatus> 
+
+<apex:pageBlock >
+
+<b>创建前台到访中，请耐心等待，稍后窗口将自动关闭</b>
+</apex:pageBlock>
+
+<apex:actionFunction action="{!initialization}" name="initialization" status="status-waiting" oncomplete="closewindodws();"/>
+</apex:form>
+</apex:page>

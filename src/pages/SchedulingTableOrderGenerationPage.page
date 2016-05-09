@@ -1,0 +1,105 @@
+<apex:page controller="SchedulingTableOrderGenerationController" docType="html-5.0">
+   <style type="text/css">
+        table.exceptionText td {
+                 font-size:16px;
+                 font-weight:bold;
+                 text-align:center;
+                 color:red;}
+    </style>
+
+    <apex:stylesheet value="{!$Resource.skin}"/>
+    <apex:includeScript value="{!$Resource.js1}"/>
+    <apex:includeScript value="{!$Resource.js2}"/>
+    <apex:includeScript value="{!$Resource.js3}"/>
+
+    
+    <script type='text/javascript'>
+
+     YAHOO.namespace("force.com");
+    
+        // Function called when we want to show the dialog
+        YAHOO.force.com.showMe = function() {
+            document.getElementById("myPanel").style.display = "block";
+            YAHOO.force.com.myDialog.show();
+        }
+        // Function called when we want to hide the dialog
+        YAHOO.force.com.hideMe = function() {
+            YAHOO.force.com.myDialog.hide();
+        } 
+        YAHOO.force.com.init = function() {
+            document.body.className = document.body.className + " yui-skin-sam";
+            
+            YAHOO.force.com.myDialog = new YAHOO.widget.Panel(
+                "myPanel",  // The id of our dialog container
+                { 
+                        width           :   300,    // You can play with this until it's right
+                        visible         :   false,  // Should be invisible when rendered
+                        draggable       :   true,   // Make the dialog draggable
+                        close           :   false,  // Don't include a close title button
+                        modal           :   true,   // Make it modal
+                        fixedCenter     :   true,   // Keep centered if window is scrolled
+                        zindex          :   40,     // Make sure it's on top of everything
+                        
+                        // This line adds the appear/vanish fade effect
+                        effect          :   {
+                                              effect:YAHOO.widget.ContainerEffect.FADE,
+                                              duration:0.35
+                                            } 
+                }
+             );
+            // Render the dialog to the document.body level of the DOM
+            YAHOO.force.com.myDialog.render(document.body);
+        }
+        // Add the init method to the window.load event
+        YAHOO.util.Event.addListener(window, "load", YAHOO.force.com.init); 
+    </script>
+
+     <div id="myPanel" >
+        <div class="bd">             
+            <apex:pageBlock >
+                 <b>Loading....</b>
+                 <br/>                 
+                <img class="waitingImage" src="/img/loading32.gif" title="....." />
+            </apex:pageBlock>     
+       </div>
+     </div>
+
+    <apex:form id="form"> 
+
+        <apex:pageBlock id="pb1">
+                <apex:messages layout="table" styleClass="exceptionText" /> 
+           
+                <p>排班表顾问列表</p> 
+
+                <apex:pageBlockTable value="{!schedulingTableLines}" var="line" style=" overflow:scroll;width:800px;">
+                    <apex:column >
+
+                        <apex:commandButton id="add"  value="[+]" action="{!expandRichBoxValue}" reRender="pbs2" onclick="YAHOO.force.com.showMe();" oncomplete="YAHOO.force.com.hideMe();">
+                            <apex:param name="param1" value="{!line.User__r.Name}" assignTo="{!textLine}"/>
+                        </apex:commandButton>  
+
+                    </apex:column>
+                    <apex:column value="{!line.User__r.Name}"  headerValue="顾问名称" />
+                    <apex:column value="{!line.Project__c}"  headerValue="负责项目" />
+                    <apex:column value="{!line.Monday_Time__c}"  headerValue="周一" />
+                    <apex:column value="{!line.Tuesday_Time__c}"  headerValue="周二" />
+                    <apex:column value="{!line.Wednesday_Time__c}"  headerValue="周三" />
+                    <apex:column value="{!line.Thursday_Time__c}"  headerValue="周四" />
+                    <apex:column value="{!line.Friday_Time__c}"  headerValue="周五" />
+                    <apex:column value="{!line.Saturday_Time__c}"  headerValue="周六" />
+                    <apex:column value="{!line.Sunday_Time__c}"  headerValue="周日" />
+
+                </apex:pageBlockTable>
+
+            <apex:pageBlockSection columns="1" id="pbs2">
+                <apex:inputTextarea value="{!schedulingTableOrderText}" style="overflow:scroll;height:350px;width:800px;"/>
+            </apex:pageBlockSection>
+               
+               
+            <apex:commandButton action="{!generationOrder}" value="保存" />
+            <apex:commandButton action="{!cancel}" value="取消"/>
+
+        </apex:pageBlock>
+    </apex:form>
+    
+</apex:page>

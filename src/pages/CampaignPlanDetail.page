@@ -1,0 +1,26 @@
+<apex:page standardController="Campaign_Plan__c">
+    <head>
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <script type="text/javascript">
+    j$ = jQuery.noConflict();
+    j$(document).ready(function() {
+        
+        if(j$('.relatedProcessHistory').find('.btn').eq(0).val()=='调回批准请求'||j$('.relatedProcessHistory').find('.btn').eq(0).val()=='Recall Approval Request'){
+            // do nothing
+        }else{
+            j$('.relatedProcessHistory').find('.btn').eq(0).hide();
+        }
+        
+        var html0 = j$('.relatedProcessHistory').find('.actionColumn').find('a').eq(1).prop('outerHTML');
+        /*console.log('html0:---' + html0);
+        console.log('parent:---'  + j$('.relatedProcessHistory').find('.actionColumn').find('a').parent().html());*/
+        var ele = j$('.relatedProcessHistory').find('.actionColumn').find('a').parent();
+        j$('.relatedProcessHistory').find('.actionColumn').find('a').parent().html('');
+        ele.html(html0);
+        
+    });
+    </script>
+    </head>
+    <chatter:feedWithFollowers entityId="{!Campaign_Plan__c.Id}"/>
+    <apex:detail relatedList="true" inlineEdit="false"/>
+</apex:page>

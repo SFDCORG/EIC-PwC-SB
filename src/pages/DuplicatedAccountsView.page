@@ -1,0 +1,18 @@
+<apex:page standardController="Lead" extensions="DuplicatedAccountsViewController">
+  <apex:form id="AccountInfo">        
+        <apex:pageblock >
+          <apex:pageBlockTable value="{!dupOpps}" var="opp">
+              <apex:column headerValue="商机编号" width="15%">
+                  <apex:outputLink value="/{!opp.Id}" target="_blank">{!opp.Name}</apex:outputLink>
+              </apex:column> 
+              <apex:column headerValue="商机创建人" value="{!opp.CreatedById}" width="10%"/>
+              <apex:column headerValue="状态" value="{!opp.StageName}"/>
+              <apex:column headerValue="商机跟进人" value="{!opp.OwnerId}"/>
+              <apex:column headerValue="创建时间" value="{!opp.CreatedDate}"/>
+              <apex:column headerValue="意向城市" value="{!opp.Intended_City__c}"/>
+              <apex:column headerValue="业务线" value="{!opp.Record_Type_Chinese_Name__c}"/>
+              <apex:column headerValue="意向项目" value="{!opp.Project__c}"/>
+          </apex:pageBlockTable>
+        </apex:pageblock>
+     </apex:form>
+</apex:page>

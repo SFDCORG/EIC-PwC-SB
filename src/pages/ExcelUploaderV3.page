@@ -1,0 +1,936 @@
+<apex:page controller="ExcelUploaderV3Ctrl" sidebar="false" showHeader="false" standardStylesheets="false">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- jquery and bootstrap lib -->
+        <apex:includeScript value="{!$Resource.jquery110}" />
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrap3, '/css/bootstrap.min.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bootstrap3, '/js/bootstrap.min.js')}" />
+
+        <!-- JSON to HTML Lib -->
+        <apex:includeScript value="{!$Resource.json2html}" />
+
+        <!-- JS XLSX Lib -->
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/jszip.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/cpexcel.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/ods.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/xlsx.full.min.js')}" />
+
+        <apex:includeScript value="{!URLFOR($Resource.layoutit, '/js/jquery-ui.js')}" />
+        <apex:includeScript value="{!$Resource.underscore}" />
+        <script>
+            var XW = {
+                /* worker message */
+                msg: 'xlsx',
+                /* worker scripts */
+                rABS: '{!URLFOR($Resource.jsxlsx, "/xlsxworker2.js")}',
+                norABS: '{!URLFOR($Resource.jsxlsx, "/xlsxworker1.js")}',
+                noxfer: '{!URLFOR($Resource.jsxlsx, "/xlsxworker.js")}'
+            };
+
+            var data = '';
+        </script>
+
+        <style type="text/css">
+            #drop {
+                border: 2px dashed #bbb;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+                text-align: center;
+                font: 15px bold,"Vollkorn";
+                color: gray;
+                background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ECECEC), to(#FEE0C6));
+                background: -webkit-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -moz-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -ms-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -o-linear-gradient(top, #ECECEC, #FEE0C6);
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                height: 60px;
+                line-height: 60px;
+                width: 100%;
+            }
+
+            #mask {
+                display: none;
+                background-color: #FFF;
+                position:fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 100%;
+                width: 100%;
+                z-index: 9999;
+                cursor: pointer;
+                opacity: 0.75;
+            }
+
+            #dataArea {
+                padding-top: 20px;
+            }
+
+            .fieldsArea {
+                padding-left: 0;
+                list-style: none;
+            }
+
+            @media (min-width: 768px)
+            .bs-glyphicons li {
+                width: 12.5%;
+                font-size: 12px;
+            }
+
+            .fieldsArea li {
+                float: left;
+                width: 20%;
+                height: 35px;
+                padding: 10px;
+                font-size: 10px;
+                line-height: 1.4;
+                background-color: #f9f9f9;
+                border: 1px solid #fff;
+            }
+
+            .fieldsArea li:hover {
+                cursor: move;
+                color: #fff;
+                background-color: #563d7c
+            }
+
+            li.moving {
+                list-style: none;
+                opacity: 0.35;
+                width: auto;
+                height: 35px;
+                padding: 10px;
+                font-size: 14px;
+                line-height: 1.4;
+                border: 1px solid #fff;
+                cursor: move;
+                color: #fff;
+                background-color: #563d7c
+            }
+
+            .ui-sortable-placeholder {
+                outline: 1px dashed #ddd;
+                visibility: visible !important;
+                border: 2px dashed #bbb;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+            }
+
+            .ui-state-hover {
+                font-size: 16px;
+                font-weight: bold;
+                background-color: #ececec;
+            }
+        </style>
+    </head>
+
+    <apex:form >
+        <div class="container" style="width: 98%; padding-top: 15px; margin-bottom: 50px;">
+            <div class="row">
+                <div class="panel panel-info">
+                    <div class="panel-heading" id="output">
+                        {!$Label.Your_Output}
+                    </div>
+                    <div class="panel-body">
+                        <fieldset style="margin-bottom: 15px; display:none">
+                            <legend style="margin-bottom: 5px;">Parse Settings:</legend>
+                            <div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="useworker" checked="true" /> Use Web Workers
+                                </label>
+
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="xferable" checked="true" /> Use Transferrables
+                                </label>
+
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="userabs" checked="true" /> Use readAsBinaryString
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <div class="row" id="controls">
+                            <div class="col-md-12">
+                                <center>
+                                    <div class="btn-group" role="group" aria-label="...">
+                                        <button type="button" id="upload" class="btn btn-default">{!$Label.Upload_Lead}</button>
+                                        <a href="{!URLFOR($Resource.templates, 'Lead.xlsx')}" class="btn btn-default">{!$Label.Download}</a>
+                                        <button type="button" id="back2Lead" class="btn btn-default">{!$Label.Back_to_Lead}</button>
+                                        <button type="button" id="toggleErrorLinesBtn" class="btn btn-default">显示错误线索</button>
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+
+                        <div id="dataArea" class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">{!$Label.Your_Excel_Data_Will_Be_Shown_Here}</div>
+                                    <div class="panel-body">
+                                        <div id="tabs" style="overflow: auto;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="notes">
+                            <ul>
+                                <li><small style="color: #a94442;">新增数据列"推广员"，上传之前，请重新下载最新模板</small></li>
+                                <li><small style="color: #a94442;">{!$Label.Null_Value}</small></li>
+                                <li><small style="color: #a94442;">手机或电话号码相同的线索会被合并为一条</small></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="waitingSearchDiv" id="mask" style=" background-color: #dcdcdc;height: 300%;opacity: 0.80;filter: alpha(opacity=80);width: 100%;">
+            <div class="waitingHolder" style="position: fixed;top: 50%;left: 45%;width: 50%;">
+                <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                <span class="waitingDescription" style="font-size: 20px;font-weight: bold;color: red;">
+                    {!$Label.Loading}
+                </span>
+            </div>
+        </div>
+
+        <div id="drop">
+            {!$Label.Drop_A_File}
+        </div>
+
+        <div class="modal" id="errorDialog">
+            <div class="modal-dialog" style="top: 35%;">
+                <div class="modal-content" style="text-align: center;">
+                    <div class="modal-header">
+                        <span class="glyphicon glyphicon-warning-sign" style="font-size:26px; color:orange;margin: 0 10px 0 0;vertical-align: bottom;" aria-hidden="true"></span>
+                        {!$Label.Error_Occurred}
+                    </div>
+                      <div class="modal-body">
+                            <div id="errorText" data-html="true"></div>
+                      </div>
+                    <div class="modal-footer" style="text-align: center;">
+                        <button id="scanButton" class="btn btn-warning" type="button" onclick="jQuery('#errorDialog').modal('hide');">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+
+    <script>
+
+        $(function() {
+            $("#back2Lead").click(function(){
+                window.location.href = '/00Q';
+            })
+
+            $("#toggleErrorLinesBtn").click(function(){
+                toggleErrorLines();
+            })
+        })
+
+        function toggleErrorLines(){
+            $('#Lead').find('table:first').find('tr').find('td:last').each(function(){
+                var error = $(this).text();
+                if(typeof(error) == 'undefined' || error.trim() == ''){
+                    $(this).parent().toggle();
+                }
+            })
+            if($("#toggleErrorLinesBtn").text() == '显示错误线索'){
+                $("#toggleErrorLinesBtn").text('显示所有线索');
+            }else{
+                $("#toggleErrorLinesBtn").text('显示错误线索');
+            }
+        }
+
+        // read excel
+        $(function() {
+            var X = XLSX;
+
+            var rABS = typeof FileReader !== "undefined"
+                && typeof FileReader.prototype !== "undefined"
+                && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+            if(!rABS) {
+                document.getElementsByName("userabs")[0].disabled = true;
+                document.getElementsByName("userabs")[0].checked = false;
+            }
+
+            var use_worker = typeof Worker !== 'undefined';
+            if(!use_worker) {
+                document.getElementsByName("useworker")[0].disabled = true;
+                document.getElementsByName("useworker")[0].checked = false;
+            }
+
+            var transferable = use_worker;
+            if(!transferable) {
+                document.getElementsByName("xferable")[0].disabled = true;
+                document.getElementsByName("xferable")[0].checked = false;
+            }
+
+            var wtf_mode = false;
+
+            function fixdata(data) {
+                var o = "", l = 0, w = 10240;
+                for(; l<data.byteLength/w;  ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+                o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+                return o;
+            }
+
+            function ab2str(data) {
+                var o = "", l = 0, w = 10240;
+                for(; l<data.byteLength/w;  ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
+                o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
+                return o;
+            }
+
+            function s2ab(s) {
+                var b = new ArrayBuffer(s.length*2), v = new Uint16Array(b);
+                for (var i=0; i != s.length;  ++i) v[i] = s.charCodeAt(i);
+                return [v, b];
+            }
+
+            function xw_noxfer(data, cb) {
+                var worker = new Worker(XW.noxfer);
+                worker.onmessage = function(e) {
+                    switch(e.data.t) {
+                        case 'ready': break;
+                        case 'e': console.error(e.data.d); break;
+                        case XW.msg: cb(JSON.parse(e.data.d)); break;
+                    }
+                };
+                var arr = rABS ? data : btoa(fixdata(data));
+                worker.postMessage({d:arr,b:rABS});
+            }
+
+            function xw_xfer(data, cb) {
+                var worker = new Worker(rABS ? XW.rABS : XW.norABS);
+                worker.onmessage = function(e) {
+                    switch(e.data.t) {
+                        case 'ready': break;
+                        case 'e': console.error(e.data.d); break;
+                        default: xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); /*console.log("done");*/ cb(JSON.parse(xx)); break;
+                    }
+                };
+                if(rABS) {
+                    var val = s2ab(data);
+                    worker.postMessage(val[1], [val[1]]);
+                } else {
+                    worker.postMessage(data, [data]);
+                }
+            }
+
+            function xw(data, cb) {
+                transferable = document.getElementsByName("xferable")[0].checked;
+                if(transferable) xw_xfer(data, cb);
+                else xw_noxfer(data, cb);
+            }
+
+            function to_json(workbook) {
+                var result = {};
+                workbook.SheetNames.forEach(function(sheetName) {
+                    var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                    if(roa.length > 0){
+                        result[sheetName] = roa;
+                    }
+                });
+                return result;
+            }
+
+            function process_wb(wb) {
+                data = JSON.stringify(to_json(wb), 2, 2);
+                data = JSON.parse(data);
+
+                // create table structure
+                tabsEle = '<ul id="myTabs" class="nav nav-tabs" role="tablist">';
+                tabContentEle = '<div id="myTabContent" class="tab-content">';
+
+                Object.keys(data).forEach(function(sheetName, idx) {
+                    if(idx == 0){
+                        //if(sheetName == '销售线索'){
+                            targetDivId = 'Lead';
+                        //}
+                        liEle =
+                            '<li role="presentation" class="{2}">' +
+                                '<a href="#{0}" id="{0}-tab" role="tab" data-toggle="tab" ' +
+                                    'aria-controls="{0}" aria-expanded="false">{1}' +
+                                '</a>' +
+                            '</li>';
+                        tabsEle += liEle.format(
+                            targetDivId, sheetName, idx == 0 ? 'active' : ''
+                        );
+
+                        contentEle =
+                            '<div role="tabpanel" class="tab-pane fade {1}" ' +
+                            'id="{0}" aria-labelledby="{0}-tab" />';
+                        tabContentEle += contentEle.format(
+                            targetDivId, idx == 0 ? 'active in' : ''
+                        );
+                    }
+                });
+
+                tabsEle += '</ul>';
+                tabContentEle += '</div>';
+
+                $("#tabs").html(tabsEle + tabContentEle);
+
+                // display table data
+                var error = false;
+                Object.keys(data).forEach(function(sheetName, idx) {
+                    if(idx == 0){
+                        var uploadedDate = new Array(),
+                            mobiles = new Array(), // mobile
+                            phones = new Array(), // areaCode + phone
+                            mobilephones = new Array(); // mobile + areaCode + phone
+                        for(var i = 0; i < data[sheetName].length; i ++){
+                            var o = data[sheetName][i];
+                            //if(sheetName == '销售线索'){
+                                var name = '',
+                                    mobile = '',
+                                    areaCode = '',
+                                    phone = '',
+                                    campaignExternalCode = '',
+                                    consultationMode = '',
+                                    businessLine = '',
+                                    intendedCity = '',
+                                    project = '',
+                                    extensionAgent = '',
+                                    description = '',
+                                    e = '错误信息',
+                                    m = '信息缺失', // missing
+                                    f = '信息错误', // fault
+                                    d = '信息重复', // duplicated
+                                    nm = '信息不匹配', // not matching
+                                    mde = '手机号码重复', // duplicated mobile
+                                    pde = '电话号码重复'; // duplicated phone
+                                var live800Custom = '';
+
+                                <apex:repeat value="{!ExcelUploaderPreleadFieldMapping}" var="k">
+                                    var en = '{!k}',
+                                        cn = '{!ExcelUploaderPreleadFieldMapping[k]}';
+
+                                    if(en != 'errorMessage' && (typeof(o[cn]) == 'undefined' || o[cn].trim() == '')){
+                                        o[cn] = ' ';
+                                    }
+
+                                    if(en == 'name'){
+                                        name = o[cn];
+                                    }
+                                    if(en == 'mobile'){
+                                        mobile = o[cn];
+                                    }
+                                    if(en == 'areaCode'){
+                                        areaCode = o[cn];
+                                    }
+                                    if(en == 'phone'){
+                                        phone = o[cn];
+                                    }
+                                    if(en == 'campaignExternalCode'){
+                                        campaignExternalCode = o[cn];
+                                    }
+                                    if(en == 'consultationMode'){
+                                        consultationMode = o[cn];
+                                    }
+                                    if(en == 'businessLine'){
+                                        businessLine = o[cn];
+                                    }
+                                    if(en == 'intendedCity'){
+                                        intendedCity = o[cn];
+                                    }
+                                    if(en == 'project'){
+                                        project = o[cn];
+                                    }
+                                    if(en == 'description'){
+                                        description = encodeURI(o[cn]);
+                                    }
+                                    if(en == 'extensionAgent'){
+                                        extensionAgent = encodeURI(o[cn]);
+                                    }
+                                    if(en == 'live800Custom'){
+                                        live800Custom = o[cn];
+                                    }
+                                </apex:repeat>
+
+                                o[e] = ' ';
+
+                                // validate mandatory field
+                                if(typeof(live800Custom)!="undefined" && live800Custom.trim()!=''){
+                                    var key = '咨询方式';
+                                    if(o[key]!='网询'){
+                                        o[e]+='只有咨询方式是网询才能填网询顾问; ';
+                                        error = true;
+                                    }
+                                }
+                                if(typeof(name) == "undefined" || name.trim() == ''){
+                                    var key = '姓名';
+                                    o[key] = 'N/A';
+                                    o[e] += '姓名缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(consultationMode) == "undefined" || consultationMode.trim() == ''){
+                                    var key = '咨询方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '咨询方式缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(businessLine) == "undefined" || businessLine.trim() == ''){
+                                    var key = '业务线';
+                                    o[key] = 'N/A';
+                                    o[e] += '业务线缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(campaignExternalCode) == "undefined" || campaignExternalCode.trim() == ''){
+                                    var key = '四级推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '四级推广方式缺失; ';
+                                    error = true;
+                                }
+                                if((typeof(areaCode) == "undefined" || areaCode.trim() == '') && (typeof(phone) != "undefined" && phone.trim() != '')){
+                                    var key = '区号';
+                                    o[key] = 'N/A';
+                                    o[e] += '区号缺失; ';
+                                    error = true;
+                                }
+                                if((typeof(areaCode) != "undefined" && areaCode.trim() != '') && (typeof(phone) == "undefined" || phone.trim() == '')){
+                                    var key = '电话号码';
+                                    o[key] = 'N/A';
+                                    o[e] += '电话号码缺失; ';
+                                    error = true;
+                                }
+                                if((typeof(areaCode) == "undefined" || areaCode.trim() == '') && (typeof(phone) == "undefined" || phone.trim() == '') && (typeof(mobile) == "undefined" || mobile.trim() == '')){
+                                    var key = '手机';
+                                    o[key] = 'N/A';
+                                    o[e] += '手机缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(intendedCity) == "undefined" || intendedCity.trim() == ''){
+                                    var key = '意向城市';
+                                    o[key] = 'N/A';
+                                    o[e] += '意向城市缺失; ';
+                                    error = true;
+                                }
+
+                                // validate format and mapping
+                                if(!validateMobile(mobile)){
+                                    var key = '手机';
+                                    o[key] = 'N/A';
+                                    o[e] += '手机格式错误; ';
+                                    error = true;
+                                }
+                                if(!validateAreaCode(areaCode)){
+                                    var key = '区号';
+                                    o[key] = 'N/A';
+                                    o[e] += '区号格式错误; ';
+                                    error = true;
+                                }
+                                if(!validatePhone(phone)){
+                                    var key = '电话号码';
+                                    o[key] = 'N/A';
+                                    o[e] += '电话号码格式错误; ';
+                                    error = true;
+                                }
+                                if(!validateConsultationModes(consultationMode)){
+                                    var key = '咨询方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '咨询方式不匹配; ';
+                                    error = true;
+                                }
+                                if(!validateIntendedCities(intendedCity)){
+                                    var key = '意向城市';
+                                    o[key] = 'N/A';
+                                    o[e] += '意向城市不匹配; ';
+                                    error = true;
+                                }
+                                if(!validatebusinessLines(businessLine)){
+                                    var key = '业务线';
+                                    o[key] = 'N/A';
+                                    o[e] += '业务线不匹配; ';
+                                    error = true;
+                                }
+                                if(!validateProjects(businessLine, project)){
+                                    var key = '意向业务';
+                                    o[key] = 'N/A';
+                                    o[e] += '意向业务不匹配; ';
+                                    error = true;
+                                }
+                                /*if(typeof(mobile) != "undefined" && mobile.trim() != ''){
+                                    if(!validateDuplicatedMobilePhones(mobiles, mobile)){
+                                        o[e] = mde;
+                                        error = true;
+                                    }else{
+                                        mobiles.push(mobile);
+                                    }
+                                }
+                                if(typeof(areaCode) != "undefined" && areaCode.trim() != ''){
+                                    if(!validateDuplicatedMobilePhones(phones, areaCode + phone)){
+                                        o[e] = pde;
+                                        error = true;
+                                    }else{
+                                        phones.push(areaCode + phone);
+                                    }
+                                }*/
+                            //}
+                            uploadedDate.push(data[sheetName][i]);
+                        }
+
+                        targetDivId = 'Lead';
+
+                        $.jsontotable(uploadedDate, {
+                            id: '#' + targetDivId,
+                            header: true,
+                            className: 'table table-bordered table-hover table-condensed'
+                        });
+                    }
+                });
+
+                // highlight N/A
+                $('td:contains("N/A")').css('color', '#FF0000');
+                $('#Lead').find('table:first').find('tr').find('td:last').css('color', '#FF0000');
+                /*$('th:contains("ErrorMessage")').html('错误信息');*/
+
+                // enable upload button and show result
+                var output = '{!$Label.Your_Output} ';
+                $("#upload").html('{!$Label.Upload_Lead}');
+                if(error == true){
+                    $("#upload").attr('disabled', true);
+                    $("#upload").addClass('disabled');
+                    $('#output').html(output + '导入信息有误, 请修改相关信息后重新导入!');
+                }else{
+                    $("#upload")[0].removeAttribute('disabled');
+                    $("#upload").removeClass('disabled');
+                    $('#output').html(output + '初步验证无误, 请点击"导入线索"按钮进行数据导入!');
+                }
+
+                // add column "序号"
+                $('#Lead').find('table:first').find('tr').find('th:first').before('<th>序号</th>');
+                var index = 1;
+                $('#Lead').find('table:first').find('tr').find('td:first').each(function(){
+                    $(this).before('<td>' + index + '</td>');
+                    index ++;
+                })
+
+                $("#mask").hide();
+            }
+
+            function validateMobile(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(!r){
+                    var reg = /^0?(13[0-9]|15[0-9]|14[0-9]|17[0-9]|18[0-9]|19[0-9])[0-9]{8}/;
+                    return reg.test(v);
+                }else{
+                    return true;
+                }
+            }
+
+            function validateAreaCode(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(!r){
+                    var reg = /0\d{2,3}/;
+                    return reg.test(v);
+                }else{
+                    return true;
+                }
+            }
+
+            function validatePhone(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(!r){
+                    var reg = /\d{7,8}/;
+                    return reg.test(v);
+                }else{
+                    return true;
+                }
+            }
+
+            function validateConsultationModes(v){
+                if(v == '面询'){
+                    return false;
+                }
+                if(typeof(v) != "undefined" && v.trim() != ''){
+                    var r = false;
+                    <apex:repeat value="{!ConsultationModes}" var="c">
+                        if(v == '{!c}'){
+                            r = true;
+                        }
+                    </apex:repeat>
+                    return r;
+                }else{
+                    return true;
+                }
+
+            }
+
+            function validateIntendedCities(v){
+                if(typeof(v) != "undefined" && v.trim() != ''){
+                    var r = false;
+                    <apex:repeat value="{!IntendedCities}" var="c">
+                        if(v == '{!c}'){
+                            r = true;
+                        }
+                    </apex:repeat>
+                    return r;
+                }else{
+                    return true;
+                }
+            }
+
+            function validatebusinessLines(v){
+                if(typeof(v) != "undefined" && v.trim() != ''){
+                    var bl = v.split(';');
+                    var businessLines = new Array();
+                    <apex:repeat value="{!BusinessLines}" var="k">
+                        businessLines.push('{!k}');
+                    </apex:repeat>
+                    for(var i = 0; i < bl.length; i ++){
+                        var f = false;
+                        for(var j = 0; j < businessLines.length; j ++){
+                            if(bl[i] == businessLines[j]){
+                                f = true;
+                            }
+                        }
+                        if(!f){
+                            return false;
+                        }
+                    }
+                    return true;
+                }else{
+                    return true;
+                }
+            }
+
+            function validateProjects(bl, v){
+                var r = false;
+                if(typeof(bl) != "undefined" && bl.trim() != '' && typeof(v) != "undefined" && v.trim() != ''){
+                    bl = typeof(bl) == 'undefined' ? '' : bl;
+                    var bls = bl.split(';');
+
+                    // validate whether p is in projects
+                    var p = v.split(';');
+                    for(var j = 0; j < p.length; j ++){
+                        var f = false;
+                        var businessLines = new Array();
+                        <apex:repeat value="{!BusinessLines}" var="k">
+                            var b = '{!k}',
+                                pstr = '{!BusinessLines[k]}',
+                                ps = pstr.split(';');
+                            for(var m = 0; m < ps.length; m ++){
+                                if(ps[m] == p[j]){
+                                    businessLines.push(b);
+                                    f = true;
+                                }
+                            }
+                        </apex:repeat>
+                        if(!f){
+                            return false;
+                        }else{
+                            // validate whether b is in businessLines
+                            for(var i = 0; i < bls.length; i ++){
+                                for(var x = 0; x < businessLines.length; x ++){
+                                    if(businessLines[x] == bls[i]){
+                                        r = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }else{
+                    if(typeof(v) == "undefined" || v.trim() == ''){
+                        return true;
+                    }
+                }
+                if(!r){
+                    return false;
+                }
+                return true;
+            }
+
+            /*function validateDuplicatedMobilePhones(vs, v){
+                var f = true;
+                for(var i = 0; i < vs.length; i ++){
+                    console.log('vs[i]: ' + vs[i]);
+                    console.log('v: ' + v);
+                    if(vs[i] == v){
+                        f = false;
+                    }
+                }
+                return f;
+            }*/
+
+            function handleDrop(e) {
+                $("#mask").show();
+                e.stopPropagation();
+                e.preventDefault();
+                rABS = document.getElementsByName("userabs")[0].checked;
+                use_worker = document.getElementsByName("useworker")[0].checked;
+                var files = e.dataTransfer.files;
+                var f = files[0];
+                {
+                    var reader = new FileReader();
+                    var name = f.name;
+                    reader.onload = function(e) {
+                        /*if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);*/
+                        var data = e.target.result;
+                        if(use_worker) {
+                            xw(data, process_wb);
+                        } else {
+                            var wb;
+                            if(rABS) {
+                                wb = X.read(data, {type: 'binary'});
+                            } else {
+                            var arr = fixdata(data);
+                                wb = X.read(btoa(arr), {type: 'base64'});
+                            }
+                            process_wb(wb);
+                        }
+                    };
+                    if(rABS) reader.readAsBinaryString(f);
+                    else reader.readAsArrayBuffer(f);
+                }
+            }
+
+            function handleDragover(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            }
+
+            var drop = document.getElementById('drop');
+            if (drop.addEventListener) {
+                drop.addEventListener('dragenter', handleDragover, false);
+                drop.addEventListener('dragover', handleDragover, false);
+                drop.addEventListener('drop', handleDrop, false);
+            }
+        });
+
+        // upload excel
+        $(function() {
+            $("#upload").click(function() {
+                if (!data) {
+                    /*alert('Please upload your excel.');*/
+                    $('#errorText').text('{!$Label.Please_Upload_Your_Excel}');
+                    $('#errorDialog').modal();
+                    return true;
+                }
+
+                $("#mask").show();
+
+                Visualforce.remoting.timeout = 120000; // Set timeout at page level
+
+                $btn = this;
+                $($btn).html('{!$Label.Uploading}');
+                $btn.disabled = true;
+                $btn.className = 'btn btn-default disabled';
+
+                /*var translatedData = JSON.stringify(data['Lead']);*/
+                var sn = '';
+                Object.keys(data).forEach(function(sheetName, idx) {
+                    if(idx == 0){
+                        sn = sheetName;
+                    }
+                })
+                data['Lead'] = data[sn];
+                data[sn] = '';
+
+                var translatedData = JSON.stringify(data);
+
+                <apex:repeat value="{!ExcelUploaderPreleadFieldMapping}" var="k">
+                    var key = '{!k}';
+                    var value = '{!ExcelUploaderPreleadFieldMapping[k]}';
+                    var reg = new RegExp('"' + value + '"',"g");
+                    if(typeof(translatedData) != 'undefined' && translatedData != ''){
+                        translatedData = translatedData.replace(reg, '"' + key + '"');
+                    }
+                </apex:repeat>
+
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.ExcelUploaderV3Ctrl.uploadData}',
+                    translatedData,
+                    function(result, event) {
+                        /*console.log(event.status);*/
+                        /*if(event.status){
+                            $($btn).html('{!$Label.Uploaded}');
+                            displayDMLResult(_.unescape(result));
+
+                            // highlight main leads
+                            $('td:contains("主线索")').parent().css('color', 'blue').css('font-weight', 'bold').attr('title', '主线索');
+                            // hide first column
+                            $('#Lead').find('table:first').find('tr').find('td:first').hide();
+                            $('#Lead').find('table:first').find('tr').find('th:first').hide();
+                            // highlight error message
+                            $('#Lead').find('table:first').find('tr').find('td:last').css('color', '#FF0000');
+                        }else{
+                            // Error occurred
+                            $('#errorText').text(event.message);
+                            $('#errorDialog').modal();
+                        }
+
+                        $("#toggleErrorLinesBtn").show();
+
+                        $("#mask").hide();*/
+                        if(event.status){
+                            $('#output').html('<span style="color:red;"><b>您的线索导入任务已经提交，请耐心等待，处理完成之后将会邮件通知您结果。请勿重复提交!</b></span>'+'<br/><a href="/'+result+'" style="text-decoration: underline;color:red;">点击查看任务状态</a>');
+                            $("#mask").hide();
+                        }else{
+                            $('#errorText').html(event.message);
+                            $('#errorDialog').modal();
+                            $("#mask").hide();
+                        }
+                    },
+                    {escape: true}
+                );
+            });
+        });
+
+        function displayDMLResult(result) {
+            data = JSON.parse(result)
+            tabsEle = '<ul id="myTabs" class="nav nav-tabs" role="tablist">';
+            tabContentEle = '<div id="myTabContent" class="tab-content">';
+            data.forEach(function(row, idx) {
+                var output = '{!$Label.Your_Output} ' + '{!$Label.Lead_Output}';
+                $('#output').html(output.format(row['noOfLeads'], row['noOfLeadItems']));
+
+                sheetName = row['sObjectName'];
+                targetDivId = sheetName.replace(' ', '');
+                var translatedSheetName = '销售线索';
+                liEle =
+                    '<li role="presentation" class="{2}">' +
+                        '<a href="#{0}" id="{0}-tab" role="tab" data-toggle="tab" ' +
+                            'aria-controls="{0}" aria-expanded="false">{1}' +
+                        '</a>' +
+                    '</li>';
+                tabsEle += liEle.format(
+                    targetDivId, translatedSheetName, idx == 0 ? 'active' : ''
+                );
+
+                contentEle =
+                    '<div role="tabpanel" class="tab-pane fade {1}" ' +
+                    'id="{0}" aria-labelledby="{0}-tab" />';
+                tabContentEle += contentEle.format(
+                    targetDivId, idx == 0 ? 'active in' : ''
+                );
+            });
+            tabsEle += '</ul>';
+            tabContentEle += '</div>';
+
+            $("#tabs").html(tabsEle + tabContentEle)
+
+            data.forEach(function(row, idx) {
+                sheetName = row['sObjectName'];
+                targetDivId = sheetName.replace(' ', '');
+                $.jsontotable(row['records'], {
+                    id: '#' + targetDivId,
+                    header: true,
+                    className: 'table table-bordered table-hover table-condensed'
+                });
+            });
+        }
+
+    </script>
+</apex:page>

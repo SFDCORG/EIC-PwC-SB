@@ -1,0 +1,454 @@
+<apex:page controller="UploadServicingTableController" sidebar="false" showHeader="false">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- jquery and bootstrap lib -->
+        <apex:includeScript value="{!$Resource.jquery110}" />
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrap3, '/css/bootstrap.min.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bootstrap3, '/js/bootstrap.min.js')}" />
+
+        <!-- JSON to HTML Lib -->
+        <apex:includeScript value="{!$Resource.json2html}" />
+
+        <!-- JS XLSX Lib -->
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/jszip.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/cpexcel.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/ods.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/xlsx.full.min.js')}" />
+
+        <apex:includeScript value="{!URLFOR($Resource.layoutit, '/js/jquery-ui.js')}" />
+        <apex:includeScript value="{!$Resource.underscore}" />
+        <script>
+            var XW = {
+                /* worker message */
+                msg: 'xlsx',
+                /* worker scripts */
+                rABS: '{!URLFOR($Resource.jsxlsx, "/xlsxworker2.js")}',
+                norABS: '{!URLFOR($Resource.jsxlsx, "/xlsxworker1.js")}',
+                noxfer: '{!URLFOR($Resource.jsxlsx, "/xlsxworker.js")}'
+            };
+
+            var data = '';
+        </script>
+         <!--<apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/custom.js')}" />-->
+
+        <style type="text/css">
+            #drop {
+                border: 2px dashed #bbb;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+                text-align: center;
+                font: 15px bold,"Vollkorn";
+                color: gray;
+                background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ECECEC), to(#FEE0C6));
+                background: -webkit-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -moz-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -ms-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -o-linear-gradient(top, #ECECEC, #FEE0C6);
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                height: 60px;
+                line-height: 60px;
+                width: 100%;
+            }
+
+            #mask {
+                display: none;
+                background-color: #FFF;
+                position:fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 100%;
+                width: 100%;
+                z-index: 9999;
+                cursor: pointer;
+                opacity: 0.75;
+            }
+
+            #dataArea {
+                padding-top: 20px;
+            }
+
+            .fieldsArea {
+                padding-left: 0;
+                list-style: none;
+            }
+
+            @media (min-width: 768px)
+            .bs-glyphicons li {
+                width: 12.5%;
+                font-size: 12px;
+            }
+
+            .fieldsArea li {
+                float: left;
+                width: 20%;
+                height: 35px;
+                padding: 10px;
+                font-size: 10px;
+                line-height: 1.4;
+                background-color: #f9f9f9;
+                border: 1px solid #fff;
+            }
+
+            .fieldsArea li:hover {
+                cursor: move;
+                color: #fff;
+                background-color: #563d7c
+            }
+
+            li.moving {
+                list-style: none;
+                opacity: 0.35;
+                width: auto;
+                height: 35px;
+                padding: 10px;
+                font-size: 14px;
+                line-height: 1.4;
+                border: 1px solid #fff;
+                cursor: move;
+                color: #fff;
+                background-color: #563d7c
+            }
+
+            .ui-sortable-placeholder {
+                outline: 1px dashed #ddd;
+                visibility: visible !important; 
+                border: 2px dashed #bbb;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+            }
+
+            .ui-state-hover {
+                font-size: 16px;
+                font-weight: bold;
+                background-color: #ececec;
+            }
+        </style>
+         <script>
+        $(function() {
+        	var X = XLSX;
+
+            var rABS = typeof FileReader !== "undefined" 
+                && typeof FileReader.prototype !== "undefined" 
+                && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+            if(!rABS) {
+                document.getElementsByName("userabs")[0].disabled = true;
+                document.getElementsByName("userabs")[0].checked = false;
+            }
+
+            var use_worker = typeof Worker !== 'undefined';
+            if(!use_worker) {
+                document.getElementsByName("useworker")[0].disabled = true;
+                document.getElementsByName("useworker")[0].checked = false;
+            }
+
+            var transferable = use_worker;
+            if(!transferable) {
+                document.getElementsByName("xferable")[0].disabled = true;
+                document.getElementsByName("xferable")[0].checked = false;
+            }
+
+            var wtf_mode = false;
+
+            function fixdata(data) {
+                var o = "", l = 0, w = 10240;
+                for(; l<data.byteLength/w;  ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+                o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+                return o;
+            }
+
+            function ab2str(data) {
+                var o = "", l = 0, w = 10240;
+                for(; l<data.byteLength/w;  ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
+                o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
+                return o;
+            }
+
+            function s2ab(s) {
+                var b = new ArrayBuffer(s.length*2), v = new Uint16Array(b);
+                for (var i=0; i != s.length;  ++i) v[i] = s.charCodeAt(i);
+                return [v, b];
+            }
+
+            function xw_noxfer(data, cb) {
+                var worker = new Worker(XW.noxfer);
+                worker.onmessage = function(e) {
+                    switch(e.data.t) {
+                        case 'ready': break;
+                        case 'e': console.error(e.data.d); break;
+                        case XW.msg: cb(JSON.parse(e.data.d)); break;
+                    }
+                };
+                var arr = rABS ? data : btoa(fixdata(data));
+                worker.postMessage({d:arr,b:rABS});
+            }
+
+            function xw_xfer(data, cb) {
+                var worker = new Worker(rABS ? XW.rABS : XW.norABS);
+                worker.onmessage = function(e) {
+                    switch(e.data.t) {
+                        case 'ready': break;
+                        case 'e': console.error(e.data.d); break;
+                        default: xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); /*console.log("done");*/ cb(JSON.parse(xx)); break;
+                    }
+                };
+                if(rABS) {
+                    var val = s2ab(data);
+                    worker.postMessage(val[1], [val[1]]);
+                } else {
+                    worker.postMessage(data, [data]);
+                }
+            }
+
+            function xw(data, cb) {
+                transferable = document.getElementsByName("xferable")[0].checked;
+                if(transferable) xw_xfer(data, cb);
+                else xw_noxfer(data, cb);
+            }
+
+            function to_json(workbook) {
+                var result = {};
+                workbook.SheetNames.forEach(function(sheetName) {
+                    var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                    if(roa.length > 0){
+                        result[sheetName] = roa;
+                    }
+                });
+                return result;
+            }
+
+            function process_wb(wb) {
+                data = JSON.stringify(to_json(wb), 2, 2);
+                data = JSON.parse(data);
+
+                // create table structure
+                tabsEle = '<ul id="myTabs" class="nav nav-tabs" role="tablist">';
+                tabContentEle = '<div id="myTabContent" class="tab-content">';
+                var uploadObj = [];
+                Object.keys(data).forEach(function(sheetName, idx) {
+                        if(sheetName == 'TMK值班表'){
+                        	uploadObj=data[sheetName];
+                            targetDivId = 'Lead';
+	                        liEle = 
+	                            '<li role="presentation" class="{2}">' +
+	                                '<a href="#{0}" id="{0}-tab" role="tab" data-toggle="tab" ' +
+	                                    'aria-controls="{0}" aria-expanded="false">{1}' +
+	                                '</a>' +
+	                            '</li>';
+	                        tabsEle += liEle.format(
+	                            targetDivId, sheetName, idx == 0 ? 'active' : ''
+	                        );	
+
+	                        contentEle = 
+	                            '<div role="tabpanel" class="tab-pane fade {1}" ' +
+	                            'id="{0}" aria-labelledby="{0}-tab" />';
+	                        tabContentEle += contentEle.format(
+	                            targetDivId, idx == 0 ? 'active in' : ''
+	                        );
+                        }else{
+                        }
+                });
+
+                tabsEle += '</ul>';
+                tabContentEle += '</div>';
+                $("#tabs").html(tabsEle + tabContentEle);
+
+
+                console.log(JSON.stringify(data));
+
+                targetDivId = 'Lead';
+                $.jsontotable(uploadObj, {
+                    id: '#' + targetDivId, 
+                    header: true,
+                    className: 'table table-bordered table-hover table-condensed'
+                });
+                $('#'+targetDivId).css('max-width: none;table-layout: fixed;word-wrap: break-word;');
+
+                $("#mask").hide();
+            }
+
+
+            function handleDrop(e) {
+                $("#mask").show();
+                e.stopPropagation();
+                e.preventDefault();
+                rABS = document.getElementsByName("userabs")[0].checked;
+                use_worker = document.getElementsByName("useworker")[0].checked;
+                var files = e.dataTransfer.files;
+                var f = files[0];
+                {
+                    var reader = new FileReader();
+                    var name = f.name;
+                    reader.onload = function(e) {
+                        /*if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);*/
+                        var data = e.target.result;
+                        if(use_worker) {
+                            xw(data, process_wb);
+                        } else {
+                            var wb;
+                            if(rABS) {
+                                wb = X.read(data, {type: 'binary'});
+                            } else {
+                            var arr = fixdata(data);
+                                wb = X.read(btoa(arr), {type: 'base64'});
+                            }
+                            process_wb(wb);
+                        }
+                    };
+                    if(rABS) reader.readAsBinaryString(f);
+                    else reader.readAsArrayBuffer(f);
+                }
+            }
+
+            function handleDragover(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            }
+
+            var drop = document.getElementById('drop');
+            if (drop.addEventListener) {
+                drop.addEventListener('dragenter', handleDragover, false);
+                drop.addEventListener('dragover', handleDragover, false);
+                drop.addEventListener('drop', handleDrop, false);
+            }
+
+        });
+
+
+		$(function() {
+            $("#upload").click(function() {
+                if (!data) {
+                    /*alert('Please upload your excel.');*/
+                    $('#errorText').text('{!$Label.Please_Upload_Your_Excel}');
+                    $('#errorDialog').modal();
+                    return true;
+                }
+
+                //$("#mask").show();
+
+                Visualforce.remoting.timeout = 120000; // Set timeout at page level
+
+                var param = JSON.stringify(data);
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.UploadServicingTableController.uploadData}',
+                    param,
+                    function(result, event) {
+                        if(event.status) {
+                            if(result.length>0){
+                                var targetDivId = 'Lead';
+                                var h = '<table class="table table-bordered table-hover table-condensed">';
+                                h += '<thead><tr><th>序号</th><th>用户</th><th>导入结果</th></tr></thead>';
+                                h+='<tbody>'
+                                for(var i = 0; i<result.length; i++){
+                                    h+='<tr><td>'+result[i].index+'</td><td>'+result[i].username+'</td><td>'+result[i].msg+'</td></tr>';
+                                }
+                                h+='</tbody></table>';
+                                $("#Lead").html(h);
+                            }
+                        } else if (event.type === 'exception') {
+                            console.log(result);
+                        } else {
+                            console.log(result);
+                        }
+                    }, 
+                    {escape: true}
+                );
+            });
+        });
+
+    </script>
+    </head>
+    <apex:form >
+        <div class="container" style="width: 98%; padding-top: 15px; margin-bottom: 50px;">
+            <div class="row">
+                <div class="panel panel-info">
+                    <div class="panel-heading" id="output">
+                        {!$Label.UploadServicingTable_OutputTitle}
+                    </div>
+                    <div class="panel-body">
+                        <fieldset style="margin-bottom: 15px; display:none">
+                            <legend style="margin-bottom: 5px;">Parse Settings:</legend>
+                            <div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="useworker" checked="true" /> Use Web Workers
+                                </label>
+
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="xferable" checked="true" /> Use Transferrables
+                                </label>
+
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="userabs" checked="true" /> Use readAsBinaryString
+                                </label>
+                            </div>
+                        </fieldset>
+                        <div class="row" id="controls">
+                            <div class="col-md-12">
+                                <center>
+                                    <div class="btn-group" role="group" aria-label="...">
+                                        <button type="button" id="upload" class="btn btn-default">{!$Label.UploadServicingTable_UploadButton}</button>
+                                        <a href="{!URLFOR($Resource.templates, 'TMKServiceTable.xlsx')}" class="btn btn-default">{!$Label.Download}</a>
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+                        <div id="dataArea" class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">{!$Label.UploadServicingTable_DataShow}</div>
+                                    <div class="panel-body">
+                                        <div id="tabs" style="overflow: auto;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--<div class="row" id="notes">
+                            <ul>
+                                <li><small style="color: #a94442;">{!$Label.Null_Value}</small></li>
+                            </ul>
+                        </div>-->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="waitingSearchDiv" id="mask" style=" background-color: #dcdcdc;height: 300%;opacity: 0.80;filter: alpha(opacity=80);width: 100%;">
+            <div class="waitingHolder" style="position: fixed;top: 50%;left: 45%;width: 50%;">
+                <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                <span class="waitingDescription" style="font-size: 20px;font-weight: bold;color: red;">
+                    {!$Label.Loading}
+                </span>
+            </div>
+        </div>
+
+        <div id="drop">
+            {!$Label.UploadServicingTable_DropFile}
+        </div>
+
+        <div class="modal" id="errorDialog">
+            <div class="modal-dialog" style="top: 35%;">
+                <div class="modal-content" style="text-align: center;">
+                    <div class="modal-header">
+                        <span class="glyphicon glyphicon-warning-sign" style="font-size:26px; color:orange;margin: 0 10px 0 0;vertical-align: bottom;" aria-hidden="true"></span> 
+                        {!$Label.Error_Occurred}
+                    </div>
+                      <div class="modal-body">
+                            <div id="errorText"></div>
+                      </div>
+                    <div class="modal-footer" style="text-align: center;">
+                        <button id="scanButton" class="btn btn-warning" type="button" onclick="jQuery('#errorDialog').modal('hide');">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+	</apex:form>
+</apex:page>

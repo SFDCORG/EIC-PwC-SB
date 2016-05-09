@@ -1,0 +1,200 @@
+<apex:component controller="schoolWidgetController" id="SchoolDBSearchWidget">
+<apex:includeScript value="{!$Resource.Jquery}"/>
+<apex:includeScript value="{!$Resource.BootstrapJS}"/>
+<apex:includeScript value="{!URLFOR($Resource.jqueryuifull,'jquery-ui.min.js')}" />
+<apex:stylesheet value="{!URLFOR($Resource.jqueryuifull,'jquery-ui.min.css')}" />
+<apex:stylesheet value="{!$Resource.BootstrapCSS}"/>
+
+<script>
+    $(document).ready(function(){
+        var initdata = {!initdata};
+        var countries = initdata.data.country;
+        var faculties = initdata.data.faculty;
+        var majors = initdata.data.faculty[0].systemmajor;
+        var degree_types = initdata.data.degree_type;
+        var countryHtml = '';
+        for(var i=0; i<countries.length; i++){
+            console.log(countries[i].chinese_name);
+            countryHtml += "<option value="+countries[i].uuid+">"+countries[i].english_name+" ("+countries[i].chinese_name+")"+"</option>";
+        }
+        $('select[id$=chooseCountry]').html(countryHtml);
+        chooseCountry(countries);
+        var facultyHtml = '';
+        for(var i=0; i<faculties.length; i++){
+            facultyHtml += "<option value="+faculties[i].uuid+">"+faculties[i].english_name+" ("+faculties[i].chinese_name+")"+"</option>";
+            
+        }
+        $('select[id$=chooseFacultyType]').html(facultyHtml);
+        var majorHtml = '';
+        for(var i=0; i<majors.length; i++){
+            majorHtml += "<option value="+majors[i].uuid+">"+majors[i].english_name+" ("+majors[i].chinese_name+")"+"</option>";
+            
+        }
+        $('select[id$=chooseSystemMajor]').html(majorHtml);
+        var degreeHtml = '';
+        for(var i=0; i<degree_types.length; i++){
+            degreeHtml += "<option value="+degree_types[i].uuid+">"+degree_types[i].english_name+" ("+degree_types[i].chinese_name+")"+"</option>";
+            
+        }
+        $('select[id$=chooseDegreeType]').html(degreeHtml);
+
+        $('select[id$=chooseFacultyType]').change(function(){
+            var fid = $(this).val();
+            for(var i = 0; i<faculties.length; i++){
+                if(fid==faculties[i].uuid){
+                    majors = faculties[i].systemmajor;
+                    break;
+                }
+            }
+            var majorHtml = '';
+            for(var i=0; i<majors.length; i++){
+                majorHtml += "<option value="+majors[i].uuid+">"+majors[i].english_name+" ("+majors[i].chinese_name+")"+"</option>";
+            
+            }
+            $('select[id$=chooseSystemMajor]').html(majorHtml);
+        });
+
+        $('input[id$=searchSchool]').autocomplete({
+            minLength: 2,
+            autoFocus: true,
+            source: function(request, response1) {
+                $('input[id$=searchSchool]').addClass('loadstatus');
+                $('input[id$=schooluuidHidden]').val('');
+                queryTerm = request.term;
+                var country = $("select[id$=chooseCountry]").val();
+                if(country=="undefined"||country==null){
+                    country = "";
+                }
+                var url = "https://school-api.prepsmith.com/v1/schools/?limit=10&skip=0&name="+queryTerm+"&country="+country;
+                //var url = 'http://school-api-staging.api.prepsmith.com/search-criteria';
+                console.log(url);
+                //console.log(getRemoteSchool(url));
+                getRemoteSchool(url,response1);
+                /*$.ajax(url,{
+                    beforeSend: function (xhr) {
+                        xhr.setRequestHeader ("Authorization", "OUkxMStDNCs1OlVNP0s/Tl46MzhMREk4TlE1VEQ0KDFXRisyUDhPezxCJDk6Tisz");
+                    },
+                    success: function(response){
+                        if(response.result=="failled"){
+                            response1([]);
+                        }else{
+                            var arr = [];
+                            for(var i = 0; i<response.data.length; i++){
+                                var o = {};
+                                o.id = response.data[i].uuid;
+                                o.name = response.data[i].english_name+' '+response.data[i].chinese_name;
+                                arr.push(o);
+                            }
+                        }
+                        response1(arr);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown){
+                        console.log("Error getting filter parameters");
+                    }
+                })*/
+                
+            },
+            focus: function(event, ui) {
+                return false;
+            },
+
+            select: function(event, ui) {
+                //console.info(ui);
+                $('input[id$=searchSchool]').val(ui.item.name);
+                $('input[id$=searchSchool]').prop("placeholder","");
+                $('input[id$=schooluuidHidden]').val(ui.item.id);
+                $('input[id$=searchSchool]').removeClass('loadstatus');
+                return false;
+            },
+        })
+            .data("uiAutocomplete")._renderItem = function(ul, item) {
+                var entry = item.name;
+                entry = entry.replace(queryTerm, "<b>" + queryTerm + "</b>");
+                return $("<li>")
+                    .data("item.autocomplete", item)
+                    .append($("<a>").html(entry))
+                    .appendTo(ul);
+        };
+    });
+
+    function getRemoteSchool(url,response) {
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.schoolWidgetController.getSchool}',
+            url, 
+            function(result, event){
+                $('input[id$=searchSchool]').removeClass('loadstatus');
+                var arr = new Array();
+                if (event.status) {
+                    result = result.replace(/\+/g, '%20');
+                   console.log(result);
+                   console.log(decodeURIComponent(result));
+                   var data = JSON.parse(decodeURIComponent(result));
+                   if(data.result=='failled'){
+                    return arr;
+                   }
+                   var fs = data.data;
+                   for(var i = 0; i<fs.length; i++){
+                       var o = {};
+                        o.id = fs[i].uuid;
+                        o.name = fs[i].english_name+' '+fs[i].chinese_name;
+                        arr.push(o);
+                        console.log(arr);
+                    }
+                    response(arr);
+                } else if (event.type === 'exception') {
+                   return arr;
+                } else {
+                    return arr;
+                }
+            }, 
+            {escape: true}
+        );
+    }
+</script>
+<style>
+.loadstatus{
+    opacity: 1;
+    background-image: URL("{!$Resource.loading}");
+    background-repeat: no-repeat;
+    background-position: right 12px top 6px; 
+    background-size: 20px;20px;
+}
+</style>
+<div class="panel panel-default ">
+<div class="panel-body">
+    <form>
+    <div class="form-group">
+        <label for="{!$Component.SchoolDBSearchWidget}_chooseCountry" id="{!$Component.SchoolDBSearchWidget}_f_Country">Country:</label>
+        <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseCountry">
+        </select>
+    </div>
+    <div class="form-group" id="{!$Component.SchoolDBSearchWidget}_f_Degree">
+        <label for="{!$Component.SchoolDBSearchWidget}_chooseDegreeType">Degree Type:</label>
+        <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseDegreeType">
+        </select>
+    </div>
+    <div class="form-group" id="{!$Component.SchoolDBSearchWidget}_f_Faculty">
+      <label for="{!$Component.SchoolDBSearchWidget}_chooseFacultyType">Faculty Type:</label>
+      <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseFacultyType">
+      </select>
+    </div>
+    <div class="form-group" id="{!$Component.SchoolDBSearchWidget}_f_SystemMajor">
+      <label for="{!$Component.SchoolDBSearchWidget}_chooseSystemMajor">System Major:</label>
+      <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseSystemMajor">
+      </select>
+    </div>
+    <div class="form-group" id="{!$Component.SchoolDBSearchWidget}_f_School">
+      <label for="{!$Component.SchoolDBSearchWidget}_input_db_searchSchool">School Name:</label>
+      <div class="input-group" style="width:100%;">
+        <input type="text" placeholder="School here..." id="{!$Component.SchoolDBSearchWidget}_input_db_searchSchool" style="width:100%;padding:6px 12px;" />
+        <input type="text" style="display:none;" id="{!$Component.SchoolDBSearchWidget}_schooluuidHidden" />
+      </div>
+    </div>
+    <div class="form-group" id="f_submit">
+        <input type="button" value="保存" id="{!$Component.SchoolDBSearchWidget}_submit_confirmation_button" onclick="save();" />
+    </div>
+    </form>
+</div>
+</div>
+    
+</apex:component>

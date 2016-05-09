@@ -1,0 +1,193 @@
+<apex:page controller="SendMessageCtrl" tabStyle="Account" sidebar="false" showHeader="false">
+    <apex:includeScript value="{!$Resource.jquery110}" />
+   
+    <apex:sectionHeader title="发送短信给客户" subtitle="{!accountName}"/>
+    
+    <apex:form id="theForm">
+        <apex:pageMessages id="messages" escape="false"/>
+
+        <apex:actionFunction name="changeSMSBody" reRender="theForm" action="{!updateSMSBody}" oncomplete="transferToRadio();" status="status-waiting"/>
+
+        <apex:actionFunction name="refreshPhoneSection" reRender="contactBolck" status="status-waiting" oncomplete="transferToRadio();" action="{!refreshPhoneSection}">
+           
+           <apex:param name="selectedphone" value="{!}" assignTo="{!selectedPhone}"/>
+
+        </apex:actionFunction>
+
+        <apex:inputHidden value="{!smsStatusCode}" id="smsStatusCode"/>
+
+        <apex:pageBlock id="filterPageBolck" title="选择模板" rendered="{!!hasError}">
+            <apex:panelGrid columns="2" width="100%">
+
+                <apex:pageBlockSection columns="1" >
+                    <apex:selectList value="{!firstLevel}" label="一级条件" size="1">
+                        <apex:selectOptions value="{!firstLevelItemList}"/>
+                        <apex:actionSupport event="onchange" action="{!queryByFirstLevel}" status="status-waiting" reRender="theForm" oncomplete="completeFilter();"/>
+                    </apex:selectList>
+
+                    <apex:selectList value="{!secondLevel}" label="二级条件" size="1">
+                        <apex:selectOptions value="{!secondLevelItemList}"/>
+                        <apex:actionSupport event="onchange" action="{!queryBySecondLevel}" status="status-waiting" reRender="theForm" oncomplete="completeFilter();"/>
+                    </apex:selectList>
+
+                    <apex:selectList value="{!thirdLevel}" label="三级条件" size="1">
+                        <apex:selectOptions value="{!thirdLevelItemList}"/>
+                        <apex:actionSupport event="onchange" action="{!queryByThirdLevel}" status="status-waiting" reRender="theForm" oncomplete="completeFilter();"/>
+                    </apex:selectList>
+
+                    <apex:selectList value="{!fourthLevel}" label="四级条件" size="1">
+                        <apex:selectOptions value="{!fourthLevelItemList}"/>
+                        <apex:actionSupport event="onchange" action="{!queryByFourthLevel}" status="status-waiting" reRender="theForm" oncomplete="completeFilter();"/>
+                    </apex:selectList>
+                </apex:pageBlockSection>
+
+                <apex:pageBlockSection columns="1" >
+                    <apex:inputField value="{!smsTemplateLookup.SMS_Template__c}" label="直接选择">
+                        <apex:actionSupport event="onchange" action="{!lookupTemplate}" status="status-waiting" reRender="theForm" oncomplete="transferToRadio()"/>
+                    </apex:inputField>
+                </apex:pageBlockSection>
+
+            </apex:panelGrid>
+
+            <apex:pageBlockTable value="{!displayedSMSTemplateWrapperList}" var="sms" id="smsTemplateTable" rows="10">
+                <apex:column width="2%">
+                    <apex:facet name="header">
+                        选择
+                    </apex:facet>
+                    <apex:inputCheckbox value="{!sms.isSelected}" onchange="uncheckOthers(this, '{!JSENCODE(sms.SMSTemplate.SMS_Body__c)}');changeSMSBody()" id="cbSMSTemplate"/>
+                </apex:column>
+
+                <apex:column headerValue="{!$ObjectType.SMS_Template__c.Fields.Name.Label}" width="10%">
+                    <apex:outputLink value="/{!sms.SMSTemplate.Id}" target="_blank">
+                        {!sms.SMSTemplate.Name}
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="{!$ObjectType.SMS_Template__c.Fields.First_Level__c.Label}" value="{!sms.SMSTemplate.First_Level__c}" width="10%"/>
+                <apex:column headerValue="{!$ObjectType.SMS_Template__c.Fields.Second_Level__c.Label}" value="{!sms.SMSTemplate.Second_Level__c}" width="10%"/>
+                <apex:column headerValue="{!$ObjectType.SMS_Template__c.Fields.Third_Level__c.Label}" value="{!sms.SMSTemplate.Third_Level__c}" width="10%"/>
+                <apex:column headerValue="{!$ObjectType.SMS_Template__c.Fields.Fourth_Level__c.Label}" value="{!sms.SMSTemplate.Fourth_Level__c}" width="10%"/>
+                <apex:column headerValue="{!$ObjectType.SMS_Template__c.Fields.SMS_Body__c.Label}" value="{!sms.SMSTemplate.SMS_Body__c}" width="50%"/>
+            </apex:pageBlockTable>
+
+        </apex:pageBlock>
+
+        <apex:pageBlock title="选择电话" id="contactBolck" rendered="{!!hasError}">
+            <apex:pageBlockTable value="{!contactList}" var="c" id="contactTable">
+                <apex:column width="2%">
+                    <apex:facet name="header">
+                        选择
+                    </apex:facet> 
+                    <apex:inputCheckbox value="{!c.isSelected}" id="cbContact" onclick="refreshPhoneSection('{!c.mobile}')" />
+                </apex:column>
+
+                <apex:column headerValue="联系人" width="10%">
+                    <apex:outputLink value="/{!c.contactId}" target="_blank">
+                        {!c.contactName}
+                    </apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="电话号码" value="{!c.encrypedPhone}" width="10%"/>
+                <apex:column headerValue="主号码" width="10%">
+                    <apex:inputCheckbox value="{!c.isPrimary}" id="cbIsPrimary" disabled="true"/>
+                </apex:column>
+            </apex:pageBlockTable>
+        </apex:pageBlock>
+
+        <apex:pageBlock title="短信内容" id="smsTemplateBolck" rendered="{!!hasError}">
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="发送短信" action="{!sendMessage}" oncomplete="completeSendMessage()" reRender="theForm" rendered="{!isShowButton}" status="status-waiting"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="1" id="smsTemplateSection">
+                <apex:pageBlockSectionItem id="smsTemplateBodySectionItem">
+                        <apex:outputLabel value="短信模板内容" for="smsBodyTemplate"/>
+                        <apex:inputTextarea value="{!smsTemplateLookup.SMS_Body__c}" cols="100" rows="10" id="smsBodyTemplate" onblur="changeSMSBody()"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem id="smsMessageSectionItem">
+                    <apex:outputLabel value="发送短信内容" for="smsBody"/>
+                    <apex:outputText value="{!smsBodyWithValue}" id="smsBody"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:actionstatus id="status-waiting">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" id="el_loading" style=" background-color: #dcdcdc;height: 300%;opacity: 0.80;filter: alpha(opacity=80);width: 100%;">
+                    <div class="waitingHolder" style="position: fixed;top: 50%;left: 30%;width: 50%;">
+                        <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                        <span class="waitingDescription" style="font-size: 20px;font-weight: bold;color: red;">
+                            Loading......
+                        </span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+
+    </apex:form>
+
+    <script type="text/javascript">
+        
+        $(function(){
+            transferToRadio();
+        })
+
+        /*var allInput = document.getElementsByTagName("input");
+        for (var i = 0; i < allInput.length; i ++) {
+            if (allInput[i].type == "checkbox") {
+                allInput[i].type = "radio";
+            }
+        }*/
+
+        function uncheckOthers(cb, txt) {
+            var inputElem = document.getElementsByTagName("input");
+            document.getElementById("{!$Component.theForm.smsTemplateBolck.smsTemplateSection.smsTemplateBodySectionItem.smsBodyTemplate}").value = txt;
+
+            /*for (var i = 0; i < inputElem.length; i ++) {
+                if (inputElem[i] != cb) {
+                    inputElem[i].checked = false;
+                }
+            }*/
+            $("input[id$='cbSMSTemplate']").each(function(){
+                $(this).prop('checked', false);
+            })
+            $(cb).prop('checked', true);
+        }
+
+        function uncheckAll() {
+            /*var inputElem = document.getElementsByTagName("input");
+            for (var i = 0; i < inputElem.length; i ++) {
+                inputElem[i].checked = false;
+            }*/
+            $("input[id$='cbSMSTemplate']").each(function(){
+                $(this).prop('checked', false);
+            })
+        }       
+
+        function transferToRadio() {
+            $("input:checkbox[id$='cbSMSTemplate']").each(function(){
+                $(this).attr('type', 'radio');
+            })
+            $("input:checkbox[id$='cbContact']").each(function(){
+                $(this).attr('type', 'radio');
+            })
+            /*var allInput = document.getElementsByTagName("input");
+            for (var i = 0; i < allInput.length; i ++) {
+                if (allInput[i].type == "checkbox") {
+                    allInput[i].type = "radio";
+                }
+            }*/
+        }
+
+        function completeFilter(){
+            uncheckAll();
+            transferToRadio();
+        }
+
+        function completeSendMessage() {
+            var smsStatusCode = document.getElementById("{!$Component.theForm.smsStatusCode}").value;
+            if (smsStatusCode == '0' ) {
+                alert('短信发送成功');
+                window.location.href = '/' + recordId;
+            }
+        }
+    </script>
+</apex:page>

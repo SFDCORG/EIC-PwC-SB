@@ -1,0 +1,3 @@
+<apex:page standardController="Opportunity"  sidebar="TRUE" extensions="OpportunitiesAssignPageController" docType="html-5.0">
+  
+</apex:page>

@@ -1,0 +1,159 @@
+<apex:page StandardController="Account" extensions="ConsultantReferralExtension">
+  <apex:includeScript value="{!$Resource.jquery110}" />
+    <apex:form id="formId">
+    <apex:sectionHeader title="顾问互荐" subtitle="{!account.Name}"/>
+    <apex:pageBlock id="AccountInfo">
+        <apex:actionstatus id="status">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" id="el_loading" style=" background-color: #dcdcdc ;
+                   height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                <div class="waitingHolder" style="position: fixed; top: 30%; left: 30%; width: 50%;">
+                    <img class="waitingImage" src="/img/loading32.gif" title="请稍后" />
+                    <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                        请稍后...
+                    </span>
+                </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+        <apex:pageMessages escape="false"/>
+        <apex:pageBlockButtons >
+            <apex:commandButton value="{!$Label.Button_Save_And_Check}" action="{!confirmConvert}" reRender="formId" status="status"/>
+            <apex:commandButton value="{!$Label.Button_Return_To_Account}" action="{!cancel}" />
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection columns="2" title="{!$Label.Consultant_Referral_Information}" id="subformId">
+            <apex:inputField value="{!leadVar.Intended_City__c}" required="true">
+                <apex:actionSupport event="onchange" action="{!resetIsTestprep}" reRender="subformId"/>
+            </apex:inputField>
+            <apex:inputField value="{!leadVar.Intended_Office__c}" required="true"/>
+            <apex:inputField value="{!leadVar.Is_Counselling__c}" id="Is_Counselling__c" onchange="selectIsCounselling()"/>
+            <apex:inputField value="{!leadVar.Counselling_Project__c}" id="Counselling_Project__c" onchange="selectCounsellingProject()"/>
+            <apex:inputField value="{!leadVar.Is_TestPrep__c}" id="Is_TestPrep__c" onchange="selectIsTestPrep()" rendered="{!NOT(isTestPrep)}"/>
+            <apex:inputField value="{!leadVar.TestPrep_Project__c}" id="TestPrep_Project__c" onchange="selectTestPrepProject()" rendered="{!NOT(isTestPrep)}"/>
+            <apex:inputField value="{!leadVar.Is_Cooperative_Education__c}" id="Is_Cooperative_Education__c" onchange="selectIsCooperativeEdu()"/>
+            <apex:inputField value="{!leadVar.Cooperative_Education_Project__c}" id="Cooperative_Education_Project__c" onchange="selectCooperativeEducationProject()"/>
+            <apex:inputField value="{!leadVar.Is_Scholar_Tree__c}" id="Is_Scholar_Tree__c" onchange="selectIsScholarTree()"/>
+            <apex:selectList value="{!mode}" size="1" label="咨询方式">
+                <apex:selectOptions value="{!modes}"/>
+            </apex:selectList>
+            <apex:actionFunction name="clearCounsellingProjects" action="{!clearCounsellingProjects}" oncomplete="afterClearCounselling()" reRender="subformId"/>
+            <apex:actionFunction name="clearTestPrepProjects" action="{!clearTestPrepProjects}" oncomplete="afterClearTestPrep()" reRender="subformId"/>
+            <apex:actionFunction name="clearCoopProjects" action="{!clearCoopProjects}" oncomplete="afterClearCooperativeEducation()" reRender="subformId"/>
+            <apex:actionFunction name="clearNonCounsellingProjects" action="{!clearNonCounsellingProjects}" oncomplete="afterClearOtherProjects()" reRender="subformId"/>
+            <apex:actionFunction name="clearNonTestprepProjects" action="{!clearNonTestprepProjects}" oncomplete="afterClearOtherProjects()" reRender="subformId"/>
+            <apex:actionFunction name="clearNonCoopProjects" action="{!clearNonCoopProjects}" oncomplete="afterClearOtherProjects()" reRender="subformId"/>
+            <apex:actionFunction name="clearAllProjects" action="{!clearAllProjects}" oncomplete="afterClearOtherProjects()" reRender="subformId"/>
+            <apex:inputField value="{!leadVar.Text_Area__c}" label="工作备注"/>
+        </apex:pageBlockSection>
+    </apex:pageBlock>
+
+    </apex:form>
+
+
+    <script type="text/javascript">
+        function selectCounsellingProject(){
+            var select = $("[id$='Counselling_Project__c_selected']");
+            if(select[0].options.length > 0){
+                $("[id$='Is_Counselling__c']").prop('checked', true);
+                $("[id$='Is_TestPrep__c']").prop('checked', false);
+                $("[id$='Is_Scholar_Tree__c']").prop('checked', false);
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+                clearNonCounsellingProjects();
+            }
+        }
+
+        function selectTestPrepProject(){
+            var select = $("[id$='TestPrep_Project__c_selected']");
+            if(select[0].options.length > 0){
+                $("[id$='Is_TestPrep__c']").prop('checked', true);
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+                $("[id$='Is_Scholar_Tree__c']").prop('checked', false);
+                clearNonTestprepProjects();
+            }
+        }
+
+        function selectCooperativeEducationProject(){
+            var select = $("[id$='Cooperative_Education_Project__c_selected']");
+            if(select[0].options.length > 0){
+                $("[id$='Is_TestPrep__c']").prop('checked', false);
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+                $("[id$='Is_Scholar_Tree__c']").prop('checked', false);
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', true);
+                clearNonCoopProjects();
+            }
+        }
+
+        function afterClearCounselling(){
+            if($("[id$='Is_Counselling__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_Counselling__c']").prop('checked', true);
+            }
+        }
+
+        function afterClearTestPrep(){
+            if($("[id$='Is_TestPrep__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_TestPrep__c']").prop('checked', true);
+            }
+        }
+
+        function afterClearCooperativeEducation(){
+            if($("[id$='Is_Cooperative_Education__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', true);
+            }
+        }
+
+        function afterClearOtherProjects(){
+            if($("[id$='Is_Cooperative_Education__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', true);
+            }
+            if($("[id$='Is_TestPrep__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_TestPrep__c']").prop('checked', true);
+            }
+            if($("[id$='Is_Counselling__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_Counselling__c']").prop('checked', true);
+            }
+        }
+
+        function selectIsCounselling(){
+            if($("[id$='Is_Counselling__c']").prop('checked') == false){
+                clearCounsellingProjects();
+            } else {
+              $("[id$='Is_TestPrep__c']").prop('checked', false);
+              $("[id$='Is_Scholar_Tree__c']").prop('checked', false);
+              $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+              clearNonCounsellingProjects();
+            }
+        }
+
+        function selectIsTestPrep(){
+            if($("[id$='Is_TestPrep__c']").prop('checked') == false){
+                clearTestPrepProjects();
+            }else{
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+                $("[id$='Is_Scholar_Tree__c']").prop('checked', false);
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+                clearNonTestprepProjects();
+            }
+        }
+
+        function selectIsScholarTree(){
+            if($("[id$='Is_Scholar_Tree__c']").prop('checked') == true){
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+                $("[id$='Is_TestPrep__c']").prop('checked', false);
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+                clearAllProjects();
+            }
+        }
+
+        function selectIsCooperativeEdu(){
+            if($("[id$='Is_Cooperative_Education__c']").prop('checked') == false){
+                clearCoopProjects();
+            }else{
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+                $("[id$='Is_TestPrep__c']").prop('checked', false);
+                $("[id$='Is_Scholar_Tree__c']").prop('checked', false);
+                clearNonCoopProjects();
+            }
+        }
+    </script>
+</apex:page>

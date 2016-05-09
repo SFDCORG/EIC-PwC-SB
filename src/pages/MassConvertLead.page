@@ -1,0 +1,75 @@
+<apex:page standardController="Lead" recordSetVar="leads" extensions="MassConvertLeadExtension" sidebar="FALSE">
+    <apex:form id="formId">
+        <apex:outputpanel >
+            <apex:actionstatus id="status">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #dcdcdc ;
+                           height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                        <div class="waitingHolder" style="position: fixed; top: 30%; left: 30%; width: 50%;">
+                            <img class="waitingImage" src="/img/loading32.gif" title="{!$Label.Please_Wait}" />
+                            <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                                {!$Label.Please_Wait}
+                            </span>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionstatus>
+        </apex:outputpanel>
+        <apex:sectionHeader title="批量转化" subtitle="销售线索"/>
+        <apex:pageBlock >
+            <apex:pageMessages />
+            <apex:pageBlockButtons location="both">
+                <apex:commandButton value="确认转化" action="{!convertLeadItems}" disabled="{!isConverted}" status="status" reRender="formId"/>
+                <apex:commandButton value="前往商机分配页面" action="{!gotoAssginOpportunity}" disabled="{!IF(TotalItemNo != ConvertedItemNo, TRUE, FALSE)}"/>
+                <apex:commandButton value="取消" action="{!cancel}"/> 
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="转化个数信息" columns="1">
+                <div>
+                    共选中<span style="font-weight: bold; font-size: 15px; color: red">{!TotalItemNo}</span>条未转化意向项目
+                    已转化<span style="font-weight: bold; font-size: 15px; color: red">{!ConvertedItemNo}</span>条意向项目
+                </div>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection columns="2" collapsible="false" >
+                <apex:panelGrid columns="2">
+                    <apex:outputLabel value="意向城市" styleClass="labelCol"/>
+                    <apex:selectList value="{!intendedCity}" size="1">
+                        <apex:selectOptions value="{!intendedCityItems}"/>
+                        <apex:actionSupport action="{!query}" event="onchange" status="status" reRender="formId"/>
+                    </apex:selectList>
+                </apex:panelGrid>           
+                
+                <apex:panelGrid columns="2">
+                    <apex:outputLabel value="四级推广方式" styleClass="labelCol"/>
+                    <apex:selectList value="{!campaignName}" size="1">
+                        <apex:selectOptions value="{!campaignNameItems}"/>
+                        <apex:actionSupport action="{!query}" event="onchange" status="status" reRender="formId"/>
+                    </apex:selectList>
+                </apex:panelGrid>
+
+                <apex:panelGrid columns="2">
+                    <apex:outputLabel value="业务线" styleClass="labelCol"/>
+                    <apex:selectList value="{!businessLine}" size="1">
+                        <apex:selectOptions value="{!businessLineItems}"/>
+                        <apex:actionSupport action="{!query}" event="onchange" status="status" reRender="formId"/>
+                    </apex:selectList>
+                </apex:panelGrid>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="请依次点击销售线索转化" columns="1" collapsible="false">
+                <apex:pageBlockTable value="{!leadItems}" var="li">
+                    <apex:column headerValue="线索所有人" value="{!li.Lead__r.OwnerId}" style="width:5%"/>
+                    <apex:column headerValue="线索" style="width:5%">
+                        <apex:outputLink value="/{!li.Lead__c}" target="_blank">{!li.Lead__r.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="状态" value="{!li.Status__c}" style="width:3%"/>
+                    <apex:column headerValue="创建时间" value="{!li.Lead__r.CreatedDate}" style="width:5%"/>
+                    <apex:column headerValue="四级推广方式" value="{!li.Lead__r.Campaign__c}" style="width:10%"/>
+                    <apex:column headerValue="咨询方式" value="{!li.Lead__r.Consultation_Mode__c}" style="width:5%"/>                
+                    <apex:column headerValue="意向城市" value="{!li.Intended_City__c}" style="width:5%"/>
+                    <apex:column headerValue="业务线" value="{!li.Business_Line__c}" style="width:5%"/>
+                    <apex:column headerValue="留学国家" value="{!li.Intended_Country__c}"  rendered="{!IF(businessLine == '考培', FALSE, TRUE)}" style="width:5%"/>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>            
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

@@ -1,0 +1,60 @@
+<apex:page standardController="lead" extensions="DuplicatePhoneAccountCls"  docType="html-5.0">
+
+    <apex:form id="theform">
+
+
+            <apex:sectionHeader title="拆分客户信息确认" subtitle="{!leadw.leadz.lastname}"/>
+            <apex:pageBlock id="pb1" >
+
+                    <apex:pageMessage id="msg"  detail="客户拆分后，“新客户名称”、“手机号码”、“座机号码”将被拆分作为新的客户，请仔细核对信息！" severity="WARNING"/>
+
+                    <apex:pageMessages id="msgs" />
+
+                    <apex:pageBlockSection id="pbsection1" columns="1" title="新客户信息">
+
+                        <apex:inputText value="{!leadw.leadz.LastName}" label="新客户名称"/>
+
+                        <apex:outputText value="{!leadw.leadz.MobilePhone}" label="手机号码"/>
+
+                        <apex:outputText value="{!leadw.leadz.Area_Code__c}{!leadw.leadz.Phone}" label="座机号码"/>
+
+                    </apex:pageBlockSection>
+
+
+                    <apex:pageBlockSection id="pbsection2" columns="1" title="客户意向信息">
+
+                        <apex:outputText value="{!leadw.leadz.Counselling_Project__c}" label="留学意向业务"/>
+
+                        <apex:outputText value="{!leadw.leadz.TestPrep_Project__c}" label="考培意向业务"/>
+
+                        <apex:outputText value="{!leadw.leadz.Cooperative_Education_Project__c}" label="合作办学意向业务"/>
+
+                        <apex:outputText value="{!leadw.oldAccountName}" label="推荐人"/>
+
+                        <apex:outputText value="{!leadw.leadz.Consultation_Mode__c}" label="咨询方式" />
+
+                        <apex:outputText value="{!leadw.campainName}" label="四级推广方式" />
+
+                    </apex:pageBlockSection>
+
+
+                    <apex:pageBlockSection id="pbsection3" columns="1" title="被拆分客户信息">
+
+                        <apex:outputText value="{!duplicatedAccount.Name}" label="被拆分客户"/>
+
+                    </apex:pageBlockSection>
+
+                    <apex:pageBlockSection id="pbButton">
+
+                        <apex:outputPanel >
+                            <apex:commandButton action="{!saveResult}"  value="保存" />
+                            <apex:commandButton action="{!cancel}"      value="取消" />
+                        </apex:outputPanel>
+
+                    </apex:pageBlockSection>
+
+            </apex:pageBlock>
+
+    </apex:form>
+
+</apex:page>

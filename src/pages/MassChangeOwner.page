@@ -1,0 +1,257 @@
+<apex:page standardController="Lead" extensions="MassChangeOwnerExt" recordSetVar="leads" sidebar="false">
+    <apex:includeScript value="{!$Resource.jquery110}" />
+
+    <style type="text/css">
+        .error{
+            border-color: red;
+            border-width: 3px;
+        }
+    </style>
+    
+    <apex:form id="theForm">
+        <apex:pageMessages id="messages" escape="false"/>
+
+        <apex:sectionHeader title="批量分配线索"/>
+
+        <apex:pageBlock >
+            <apex:pageBlockButtons rendered="{!hasError}" location="top">
+                <apex:commandButton value="返回销售线索" action="{!back}"/>
+            </apex:pageBlockButtons>
+
+            <apex:pageBlockSection title="选择分配类型" columns="1" collapsible="false" rendered="{!!hasError}">
+                <div>
+                    共选中<span style="font-weight: bold; font-size: 15px; color: red">{!numberOfLeads}</span>条(电话号码相同视为一条)未转化的销售线索！
+                </div>
+                <apex:selectRadio value="{!distributionType}" onchange="selectDistributionType()" id="distributeTypeRadio">
+                    <apex:selectOptions value="{!DistributionTypes}"/>
+                </apex:selectRadio>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="选择分配表" columns="1" collapsible="false" rendered="{!!hasError}">
+                <apex:pageBlockTable value="{!leadDistributionTableList}" var="ldt" id="leadDistributionTable" rendered="{!leadDistributionTableSize > 0}">
+                    <apex:column >
+                        <apex:facet name="header">
+                            选择
+                        </apex:facet>
+                        <input type="checkbox" id="ldt-{!ldt.Id}" onclick="selectLeadDistributionTable(this, '{!ldt.Id}')"/>
+                    </apex:column>
+                    <apex:column headerValue="名称">
+                        <apex:outputField value="{!ldt.Name}"/>
+                    </apex:column>
+                    <apex:column headerValue="分配表所有人">
+                        <apex:outputField value="{!ldt.OwnerId}"/>
+                    </apex:column>
+                </apex:pageBlockTable>
+                <div class="pbBody" id="noLeadDistributionTableDiv" style="display:{!IF(leadDistributionTableSize == 0, 'bolck', 'none')}; margin-left: 0;">
+                    <table class="list" border="0" cellspacing="0" cellpadding="0">
+                        <tbody>
+                            <tr>
+                                <td scope="col" class="noRowsHeader">
+                                    没有找到线索分配表数据, 请先维护您的<a href="/{!LeadDistributionTablePrefix}" style="font-size: 14px; color: blue; font-weight: bold;">线索分配表</a>！
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="分配线索数量" columns="1" collapsible="false" rendered="{!!hasError}">
+                <apex:repeat value="{!leadDistributionTableIdList}" var="ldtId">
+                    <apex:pageBlockTable value="{!leadDistributionTableIdLinesMap[ldtId]}" var="dt" id="schedulingTableLines" title="schedulingTableLine-{!ldtId}" style="display: none;">
+                        <apex:column >
+                            <apex:facet name="header">
+                                <input type="checkbox" id="selectAll-{!ldtId}" onclick="selectAllTableLines('{!ldtId}')"/>
+                            </apex:facet>
+                            <input type="checkbox" style="display: {!IF(OR(dt.ldtl.Customer_Service_Staff__r.IsActive == true, dt.ldtl.Queue__c != ''), 'none', 'in-line')}" disabled="true" />
+                            <input type="checkbox" id="dt-{!ldtId}-{!dt.ldtl.Id}" title="{!OR(dt.ldtl.Customer_Service_Staff__r.IsActive, dt.ldtl.Queue__c != '')}" onclick="selectLeadDistributionLineTable(this, '{!ldtId}', '{!dt.ldtl.Id}')" style="display: {!IF(OR(dt.ldtl.Customer_Service_Staff__r.IsActive == true, dt.ldtl.Queue__c != ''), 'in-line', 'none')}"/>
+                        </apex:column>
+                        <apex:column headerValue="姓名 / 队列">
+                            <apex:outputField value="{!dt.ldtl.Customer_Service_Staff__c}" rendered="{!dt.ldtl.Queue__c == ''}"/>
+                            <apex:outputField value="{!dt.ldtl.Queue__c}" rendered="{!dt.ldtl.Customer_Service_Staff__c == ''}"/>
+                        </apex:column>
+                        <apex:column headerValue="是否激活">
+                            <apex:outputField value="{!dt.ldtl.Customer_Service_Staff__r.IsActive}" rendered="{!dt.ldtl.Queue__c == ''}"/>
+                            <span style="color: red; display: {!IF(OR(dt.ldtl.Customer_Service_Staff__r.IsActive == true, dt.ldtl.Queue__c != ''), 'none', 'in-line')};">该用户处于未激活状态, 请及时更新您的线索分配表！</span>
+                        </apex:column>
+                        <apex:column headerValue="数量">
+                            <apex:inputText value="{!dt.numbers}" onblur="changeQuantity(this)"/>
+                            <span style="color: red; display: none;">请输入数字！</span>
+                        </apex:column>
+                    </apex:pageBlockTable>
+                </apex:repeat>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="确认分配" columns="1" collapsible="false" rendered="{!!hasError}" id="buttons">
+                <apex:actionFunction name="save" action="{!save}" status="status-waiting" reRender="messages"/>
+                <input type="button" value="平均分配" onclick="distribute()" id="distributeButton" style="display: none;"/>
+            </apex:pageBlockSection>
+
+        </apex:pageBlock>
+
+        <apex:actionstatus id="status-waiting">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" id="el_loading" style=" background-color: #dcdcdc;height: 300%;opacity: 0.80;filter: alpha(opacity=80);width: 100%;">
+                    <div class="waitingHolder" style="position: fixed;top: 50%;left: 30%;width: 50%;">
+                        <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                        <span class="waitingDescription" style="font-size: 20px;font-weight: bold;color: red;">
+                            Loading......
+                        </span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+
+        <apex:inputHidden id="leadDistributionTableId" value="{!leadDistributionTableId}"/>
+        <apex:inputHidden id="selectedStaffIds" value="{!selectedStaffIds}"/>
+    </apex:form>
+
+    <script>
+
+        $(function(){
+            $("#distributeButton").parent().css('text-align', 'center');
+            $(".bPageTitle").css('padding', '0');
+            if('{!hasError}' == 'false'){
+                $(".pbTitle").parent().hide();
+            }
+            $("[id^='ldt-']").first().trigger("click");
+        })
+
+        function selectDistributionType(){
+            var type =  $("input:checked[name$='distributeTypeRadio']").val();
+            if(type == '平均分配'){
+                $("#distributeButton").val('平均分配');
+                var ldtId = $("input:checked[type=checkbox][id^='ldt-']").first().attr('id');
+                if(typeof(ldtId) != 'undefined' && ldtId.trim() != '' && ldtId.length > 4){
+                    ldtId = ldtId.substr(4, ldtId.length);
+                    calculate(ldtId);
+                }
+            }else{
+                $("#distributeButton").val('按数量分配');
+            }
+        }
+
+        function selectLeadDistributionTable(com, ldtId){
+            $("[title^='schedulingTableLine-']").hide();
+            var isSelect = $(com).prop("checked");
+            if(isSelect == true){
+                $("[title='schedulingTableLine-" + ldtId + "']").show();
+                $("input[type=checkbox][id^='ldt-']").each(function(){
+                    var comId = 'ldt-' + ldtId;
+                    if($(this).attr('id') != comId){
+                        $(this).prop("checked", false);
+                    }
+                })
+                $("input:checked[type=checkbox][id^='dt-']").each(function(){
+                    var ldtId2 = $(this).attr('id').substr(3, 18);
+                    if(ldtId2 != ldtId){
+                        $(this).prop('checked', false);
+                        $("#selectAll-" + ldtId2 + "").prop('checked', false);
+                        $(this).parent().parent().find('td:last').find('input:text').val('');
+                    }
+                })
+            }else{
+                $("input:checked[type=checkbox][id^='dt-" + ldtId + "']").prop('checked', false);
+                $("#distributeButton").hide();
+            }
+        }
+
+        function selectAllTableLines(ldtId){
+            var isSelectAll = $("#selectAll-" + ldtId + "").prop("checked");
+            $("input[title=true][type=checkbox][id^='dt-" + ldtId + "-']").each(function(){
+                $(this).prop("checked", isSelectAll);
+            })
+            calculate(ldtId);
+            if(isSelectAll == true){
+                $("#distributeButton").show();
+            }else{
+                $(this).parent().parent().find('td:last').find('input:text').val('');
+                $("#distributeButton").hide();
+            }
+        }
+
+        function selectLeadDistributionLineTable(com, ldtId, ldtlId){
+            if($(com).prop('checked') == true){
+                var isSelectAll = false;
+                var selected = $("input:checked[type=checkbox][id^='dt-" + ldtId + "']").length;
+                var total = $("input[type=checkbox][id^='dt-" + ldtId + "']").length;
+                if(selected == total){
+                    $("#selectAll-" + ldtId + "").prop("checked", true);
+                }else{
+                    $("#selectAll-" + ldtId + "").prop("checked", false);
+                }
+            }else{
+                $("#selectAll-" + ldtId + "").prop('checked', false);
+                $(this).parent().parent().find('td:last').find('input:text').val('');
+            }
+            calculate(ldtId);
+            $("#distributeButton").show();
+        }
+
+        function calculate(ldtId){
+            var type =  $("input:checked[name$='distributeTypeRadio']").val();
+            if(type == '平均分配'){
+                $("input[type=checkbox][id^='dt-" + ldtId + "']").each(function(){
+                    $(this).parent().parent().find('td:last').find('input:text').val('');
+                })
+                var numberOfLeads = '{!numberOfLeads}';
+                var numberOfStaff = $("input:checked[type=checkbox][id^='dt-" + ldtId + "']").length;
+                if(typeof(numberOfStaff) == 'undefined'){
+                    numberOfStaff = 0;
+                }
+                var quantity = 0;
+                quantity = Math.floor(Number(numberOfLeads) / Number(numberOfStaff));
+                $("input:checked[type=checkbox][id^='dt-" + ldtId + "']").each(function(){
+                    $(this).parent().parent().find('td:last').find('input:text').val(quantity);
+                })
+                var total = Number(quantity) * Number(numberOfStaff);
+                if(Number(total) < Number(numberOfLeads)){
+                    $("input:checked[type=checkbox][id^='dt-" + ldtId + "']").each(function(){
+                        if(Number(total) < Number(numberOfLeads)){
+                            $(this).parent().parent().find('td:last').find('input:text').val(Number(quantity) + 1);
+                            total = Number(total) + 1;
+                        }
+                    })
+                }
+            }
+        }
+        
+        function distribute(){
+            var ldtId = $("input:checked[type=checkbox][id^='ldt-']").first().attr('id');
+            if(typeof(ldtId) != 'undefined' && ldtId.trim() != '' && ldtId.length > 4){
+                ldtId = ldtId.substr(4, ldtId.length);
+                $("[id$='leadDistributionTableId']").val(ldtId);
+
+                var selectedStaffIds = '';
+                var numberOfLeads = '{!numberOfLeads}';
+                var total = 0;
+                var e = false;
+                $("input:checked[type=checkbox][id^='dt-" + ldtId + "']").each(function(){
+                    var staffId = $(this).attr('id');
+                    selectedStaffIds += staffId.substr(22) + ';';
+                    var quantity = $(this).parent().parent().find('td:last').find('input:text').val();
+                    total = Number(total) + Number(quantity);
+                    if(Number(total) > Number(numberOfLeads)){
+                        e = true;
+                        alert('分配数量不能大于所选中的线索总数！');
+                        return false;
+                    }
+                })
+                if(e == false){
+                    $("[id$='selectedStaffIds']").val(selectedStaffIds);
+                    save();
+                }
+            }
+        }
+
+        function changeQuantity(com){
+            var quantityStr = $(com).val();
+            if(isNaN(quantityStr)){
+                $(com).addClass('error');
+                $(com).next().show();
+            }else{
+                $(com).removeClass('error');
+                $(com).next().hide();
+            }
+        }
+    </script>
+</apex:page>

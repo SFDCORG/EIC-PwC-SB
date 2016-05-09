@@ -1,0 +1,64 @@
+<apex:page standardController="Lead_Item__c" sidebar="false" extensions="ConvertLeadItemExtension">
+	<script type="text/javascript">
+        function setFocusOnLoad() {}
+
+		function confirmSave(btn) {
+            if (btn.value == "转换中...") {
+                return false;
+
+            } else {
+                btn.className='btnDisabled';
+                btn.value='转换中...';
+            }
+            return true;
+        }
+    </script>
+
+	<apex:form >
+		<apex:pageBlock >
+			<apex:pageMessages escape="FALSE"/>
+			<apex:pageBlockSection collapsible="FALSE" columns="2">
+				<apex:outputPanel >
+					<apex:outputLabel value="预约时间" style="font-weight:bold"/>
+					&nbsp;&nbsp;
+					<apex:inputField value="{!appointTime.Due_Date__c}"/>
+					<apex:inputField value="{!appointTime.Due_Time__c}"/>
+					&nbsp;&nbsp;&nbsp;&nbsp;
+					<apex:commandButton value="确认转化" action="{!confirmConvert}" onclick="return confirmSave(this);" disabled="{!isDisabled}"/>
+					&nbsp;&nbsp;
+					<apex:commandButton value="取消转化" action="{!cancel}"/>
+				</apex:outputPanel>
+			</apex:pageBlockSection>
+
+			<apex:pageBlockSection title="成功转化(意向)" columns="1">				
+				<apex:pageBlockTable value="{!masterleadItems}" var="mli">
+					<apex:column headerValue="线索名称" style="width:10%">
+						<apex:outputLink value="/{!mli.Lead__c}" target="_blank">{!mli.Lead__r.Name}</apex:outputLink>
+					</apex:column>					
+					<apex:column headerValue="线索所有人" value="{!mli.Lead__r.OwnerId}" style="width:10%"/>
+					<apex:column headerValue="创建时间" value="{!mli.Lead__r.CreatedDate}" style="width:10%"/>
+					<apex:column headerValue="四级推广方式" value="{!mli.Lead__r.Campaign__c}" style="width:10%"/>
+					<apex:column headerValue="咨询方式" value="{!mli.Lead__r.Consultation_Mode__c}" style="width:10%"/>
+					<apex:column headerValue="意向城市" value="{!mli.Intended_City__c}" style="width:10%"/>
+					<apex:column headerValue="业务线" value="{!mli.Business_Line__c}" style="width:10%"/>
+					<apex:column headerValue="意向国家" value="{!mli.Intended_Country__c}" style="width:10%"/>					
+				</apex:pageBlockTable>
+			</apex:pageBlockSection>
+
+			<apex:pageBlockSection title="重复转化(意向)" columns="1">
+				<apex:pageBlockTable value="{!dupleadItems}" var="li">
+					<apex:column headerValue="线索名称" style="width:10%">
+						<apex:outputLink value="/{!li.Lead__c}" target="_blank">{!li.Lead__r.Name}</apex:outputLink>
+					</apex:column>					
+					<apex:column headerValue="线索所有人" value="{!li.Lead__r.OwnerId}" style="width:10%"/>
+					<apex:column headerValue="创建时间" value="{!li.Lead__r.CreatedDate}" style="width:10%"/>
+					<apex:column headerValue="四级推广方式" value="{!li.Lead__r.Campaign__c}" style="width:10%"/>
+					<apex:column headerValue="咨询方式" value="{!li.Lead__r.Consultation_Mode__c}" style="width:10%"/>
+					<apex:column headerValue="意向城市" value="{!li.Intended_City__c}" style="width:10%"/>
+					<apex:column headerValue="业务线" value="{!li.Business_Line__c}" style="width:10%"/>
+					<apex:column headerValue="意向国家" value="{!li.Intended_Country__c}" style="width:10%"/>	
+				</apex:pageBlockTable>
+			</apex:pageBlockSection>
+		</apex:pageBlock>
+	</apex:form>    
+</apex:page>

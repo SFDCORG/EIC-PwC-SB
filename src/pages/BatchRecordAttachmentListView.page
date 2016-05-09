@@ -1,0 +1,10 @@
+<apex:page standardController="BatchJobRecord__c" extensions="BatchRecordAttachmentView">
+<apex:pageBlock >
+    <apex:pageBlockTable value="{!attachs}" var="a">
+    	<apex:column ><apex:outputLink value="{!path}{!a.Id}">查看</apex:outputLink></apex:column>
+    	<apex:column value="{!a.Name}" headerValue="文件名"></apex:column>
+    	<apex:column value="{!a.CreatedById}" headerValue="创建人"></apex:column>
+    	<apex:column value="{!a.CreatedDate}" headerValue="创建日期"></apex:column>
+    </apex:pageBlockTable>
+</apex:pageBlock>
+</apex:page>

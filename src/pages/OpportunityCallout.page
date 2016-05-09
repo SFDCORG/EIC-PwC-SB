@@ -1,0 +1,65 @@
+<apex:page standardController="Opportunity" extensions="OpportunityCalloutController,CalloutUtil" sidebar="false" showHeader="false">
+   <head>
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <!--<apex:includeScript value="/soap/ajax/34.0/connection.js" />
+    <apex:includeScript value="/soap/ajax/34.0/apex.js" />-->
+    <script type="text/javascript">
+    j$ = jQuery.noConflict();
+    j$(document).ready(function() {
+        j$("a[id$=phoneNum]").click(function(){
+            sforce.connection.sessionId = '{!$Api.Session_ID}';
+            var s = '{"phone":"{!phone}","idstr":"{!oppid}"}'; 
+            send(s);
+        });
+    });
+    function send(param) {
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.CalloutUtil.SingleCallout}',
+            param, 
+            function(result, event){
+                if (event.status) {
+                   console.log(result);
+                } else if (event.type === 'exception') {
+                   console.log(result);
+                } else {
+                   console.log(result);
+                }
+            }, 
+            {escape: true}
+        );
+    }
+    </script>
+    <style>
+    .detailList{
+        width: 100%;
+    }
+    .labelCol{
+        padding-top: 3px;
+        padding-bottom: 3px;
+        color: #4a4a56;
+        width: 18%;
+        padding-top: 2px;
+        padding-right: 10px;
+        padding-bottom: 2px;
+        padding-left: 2px;
+        padding-right:10px;
+        text-align: right;
+        font-size: 91%;
+        font-weight: bold;
+        color: #333;
+    }
+    .dataCol{
+        padding-top: 2px;
+        padding-right: 2px;
+        padding-bottom: 2px;
+        padding-left: 10px;
+        text-align: left;
+    }
+    </style>
+</head>
+<apex:outputPanel rendered="{!IF(AND(NOT(ISBLANK(phone)),OR($Profile.Name='集团市场部呼叫中心主管',$Profile.Name='集团市场部呼叫中心专员',$Profile.Name='分公司分校客服专员',$Profile.Name='分公司分校客服主管')),true,false)}">
+<table class="detailList">
+<tr><td class="labelCol">电话</td><td class="dataCol"><apex:outputLink value="#" id="phoneNum">{!phone}</apex:outputLink><apex:image value="/img/btn_dial_inline.gif" /></td></tr>
+</table>
+</apex:outputPanel>
+</apex:page>

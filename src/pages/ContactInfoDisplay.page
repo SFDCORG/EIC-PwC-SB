@@ -1,0 +1,70 @@
+<apex:page standardController="Account" extensions="ContactInfoRelatedController" >
+     
+    <style type="text/css">
+    .primarySet{
+             color:#228B22;
+             background:#FFFFF0;
+            }
+    </style>
+
+    <script>
+      function refreshPage(){ 
+        var currentURL = "https://ap2.salesforce.com/{!currentReocrdID}"; 
+        top.location.href = currentURL; } 
+    </script>
+
+
+     <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/docs/js/jquery-1.2.6.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.widgets.min.js')}" ></script>
+    
+    
+     <apex:form id="Contactinfo">
+              <apex:pageMessages id="msg"/>
+              <apex:actionFunction name="assignConsole" reRender="Contactinfo" />
+
+              <apex:pageblock > 
+              
+                     <script>
+                         $(function(){
+                                $('table').tablesorter({
+                                    widgets        : ['zebra', 'columns'],
+                                    usNumberFormat : false,
+                                    sortReset      : true,
+                                    sortRestart    : true
+                                });
+                         });
+                     </script>
+                
+                    <apex:pageBlockTable value="{!ContactInfoWList}" var="contactVar" id="ContactTable" align="center" width="100%" > 
+                        <apex:column width="10%" >
+
+                            <apex:facet name="header"> 
+                                <apex:commandbutton action="{!showContactNumber}" value="明码显示" reRender="Contactinfo" rendered="{!isbuttonDisplay}"/>
+                            </apex:facet> 
+
+                        </apex:column>
+                        <apex:column headerValue="联系人名称" Value="{!contactVar.contat.Name}"/>
+                        <apex:column headerValue="联系人关系" value="{!contactVar.contat.Relationship__c}"/>
+                        <apex:column headerValue="联系方式类型" value="{!contactVar.contat.Contact_Type__c}"/>
+                        <apex:column headerValue="联系方式">
+                            <a href="#" onclick="redirectCallCenter('{!contactVar.contat.ContactNumber__c}', '{!currentReocrdID}', '{!contactVar.contat.Name}');">
+                            <apex:outputLabel value="{!contactVar.displayPhoneNumber}"/>
+                            <apex:image url="/img/btn_dial_inline.gif" alt="点击拔号" width="16" height="10" rendered="{!OR(contactVar.primaryButtonflag,contactVar.contat.isPrimary__c)}"  />
+                            </a>
+                        </apex:column> 
+                        <apex:column headerValue="主要联系方式" width="10%"> 
+                             <apex:inputCheckbox value="{!contactVar.contat.isPrimary__c}" disabled="true" />
+                             <apex:commandButton id="primarySet"  value="勾选" action="{!setPrimary}" reRender="Contactinfo" rendered="{!contactVar.primaryButtonflag}" styleClass="primarySet" >
+                                <apex:param name="contIdParam" value="{!contactVar.index}" assignTo="{!primarycontact}"/>
+                             </apex:commandButton>  
+                        </apex:column>
+                       
+                   </apex:pageBlockTable>
+
+              </apex:pageblock>  
+
+     </apex:form>
+
+</apex:page>

@@ -1,0 +1,648 @@
+<apex:page controller="ResourceExchangeController" sidebar="false">
+ <apex:outputPanel id="apexmsgs">
+ <apex:pagemessages />
+ </apex:outputPanel>
+ <head>
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <script type="text/javascript">
+    j$ = jQuery.noConflict();
+    j$(document).ready(function() {
+      j$(document).on('click','.acct_checkAll',function(){
+          if(j$(this).prop("checked")==false){
+            j$('.acct_checkthis').prop("checked",false);
+          }else{
+            j$('.acct_checkthis').prop('checked',true);
+          }
+        });
+        j$(document).on('click','.acct_checkthis',function(){
+          if(j$(this).prop("checked")==false){
+            if(j$('.acct_checkAll').prop('checked')==true){
+              j$('.acct_checkAll').prop('checked',false);
+            }
+          }else{
+            if(j$('.acct_checkthis:checked').length==j$('.acct_checkthis').length){
+              j$('.acct_checkAll').prop('checked',true);
+            }
+          }
+        });
+
+      j$(document).on('dblclick','.sourceList',function(){
+            console.log(j$(this).find("option:selected").length);
+            if(j$(this).find("option:selected").length==0){
+              checkBusinessLineCheckboxes();
+              return;
+            }
+             var idstr = j$(this).prop('id');
+             var html = j$(this).find("option:selected").prop('outerHTML');
+             var val = j$(this).find("option:selected").val();
+             var valhtml = j$(this).find("option:selected").html();
+             j$("#Selected"+idstr).append(html);
+             j$(this).find("option:selected").remove();
+             if(j$("input[id$=Hidden"+idstr+"]").val()=='' ){
+                j$("input[id$=Hidden"+idstr+"]").val(val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(valhtml);
+                }
+             }else{
+                j$("input[id$=Hidden"+idstr+"]").val(j$("input[id$=Hidden"+idstr+"]").val()+','+val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(j$("input[id$=HiddenHtml"+idstr+"]").val()+','+valhtml);
+                  console.log(j$("input[id$=HiddenHtml"+idstr+"]").val());
+                }
+             }
+             console.log(j$("input[id$=Hidden"+idstr+"]").val());
+             checkBusinessLineCheckboxes();
+
+         });
+         j$(document).on('dblclick','.targetList',function(){
+            if(j$(this).find("option:selected").length==0){
+              checkBusinessLineCheckboxes();
+              return;
+            }
+             var idstr = j$(this).prop('id');
+             idstr = idstr.replace('Selected','');
+             var html = j$(this).find("option:selected").prop('outerHTML');
+             var val = j$(this).find("option:selected").val();
+             var name = j$(this).find("option:selected").html();
+             j$("#"+idstr).append(html);
+             j$(this).find("option:selected").remove();
+             var hidval = j$("input[id$=Hidden"+idstr+"]").val();
+             var vals = hidval.split(',');
+             hidval = '';
+             var flag = 0;
+             var hidname = '';
+             var names = [];
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+               hidname = j$("input[id$=HiddenHtml"+idstr+"]").val();
+               names = hidname.split(',');
+               hidname = '';
+             }
+             for(var i = 0; i<vals.length; i++){
+              if(vals[i]!=val){
+                if(flag == 0){
+                  hidval = vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                    hidname = names[i];
+                  }
+                  flag = 1;
+                }else{
+                  hidval = hidval+','+vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                    hidname = hidname+','+names[i];
+                  }
+                }
+              }
+             }
+             j$("input[id$=Hidden"+idstr+"]").val(hidval);
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+               j$("input[id$=HiddenHtml"+idstr+"]").val(hidname)
+               console.log(j$("input[id$=HiddenHtml"+idstr+"]").val());
+             }
+             console.log(j$("input[id$=Hidden"+idstr+"]").val());
+             checkBusinessLineCheckboxes();
+         });
+
+         j$(document).on('click','.moveRight',function(){
+            var idstr = j$(this).prop('id');
+            idstr = idstr.replace('Right','');
+            var html = '';
+            var val = '';
+            var valhtml = '';
+            if(j$("#"+idstr).find('option:selected').length==0){
+              checkBusinessLineCheckboxes();
+              return;
+            }
+            j$("#"+idstr).find('option:selected').each(function(){
+              if(val == ''){
+                val+=j$(this).val();
+                valhtml += j$(this).html();
+              }else{
+                val = val+','+j$(this).val();
+                valhtml = valhtml+','+j$(this).html();
+              }
+
+            });
+            j$("#"+idstr).find('option:selected').each(function(){
+              html += j$(this).prop("outerHTML");
+              j$(this).remove();
+            });
+            j$("#Selected"+idstr).append(html);
+            if(j$("input[id$=Hidden"+idstr+"]").val()=='' ){
+                j$("input[id$=Hidden"+idstr+"]").val(val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(valhtml);
+                }
+            }else{
+                j$("input[id$=Hidden"+idstr+"]").val(j$("input[id$=Hidden"+idstr+"]").val()+','+val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(j$("input[id$=HiddenHtml"+idstr+"]").val()+','+valhtml);
+                }
+            }
+            checkBusinessLineCheckboxes();
+         });
+
+         j$(document).on('click','.moveLeft',function(){
+            var idstr = j$(this).prop('id');
+            idstr = idstr.replace('Left','');
+            var html = '';
+            var val = {};
+            var valhtml = {};
+            if(j$("#Selected"+idstr).find('option:selected').length==0){
+              checkBusinessLineCheckboxes();
+              return;
+            }
+            j$("#Selected"+idstr).find('option:selected').each(function(){
+              val[j$(this).val()]=j$(this).val();
+              valhtml[j$(this).html()]=j$(this).html();
+            });
+            j$("#Selected"+idstr).find('option:selected').each(function(){
+              html += j$(this).prop("outerHTML");
+              j$(this).remove();
+            });
+            j$("#"+idstr).append(html);
+            var hidval = j$("input[id$=Hidden"+idstr+"]").val();
+             var vals = hidval.split(',');
+             hidval = '';
+             var hidname='';
+             var names = [];
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                var hidname = j$("input[id$=HiddenHtml"+idstr+"]").val();
+                var names = hidname.split(',');
+             }
+             var flag = 0;
+             for(var i = 0; i<vals.length; i++){
+              if(vals[i] in val){
+                console.log(vals[i]);
+              }else{
+                if(flag == 0){
+                  hidval = vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                    hidname = names[i];
+                  }
+                  flag = 1;
+                }else{
+                  hidval = hidval + ','+vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                   hidname = hidname +','+names[i];
+                  }
+                }
+              }
+             }
+             j$("input[id$=Hidden"+idstr+"]").val(hidval);
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                j$("input[id$=HiddenHtml"+idstr+"]").val(hidname)
+                console.log(j$("input[id$=HiddenHtml"+idstr+"]").val());
+             }
+             console.log(j$("input[id$=Hidden"+idstr+"]").val());
+             checkBusinessLineCheckboxes();
+         });
+    });
+
+    function selectHasTestprep(){
+      if(j$("[id$='HasTestprep']").prop('checked') == false){
+          var select = j$("[id$='SelectedTestprepOppProject']");
+          if(select[0].options.length > 0){
+              clearTestprepProjects();
+          }
+      }
+    }
+
+    function afterClearTestprep(){
+        if(j$("[id$='HasTestprep']").prop('checked') == false && j$(".messageTable").length && j$(".messageTable").length > 0){
+            j$("[id$='HasTestprep']").prop('checked', true);
+        }
+    }
+
+    function selectHasCooperative(){
+      if(j$("[id$='HasCooperative']").prop('checked') == false){
+          var select = j$("[id$='SelectedCooperativeOppProject']");
+          if(select[0].options.length > 0){
+              clearCooperativeProjects();
+          }
+      }
+    }
+
+    function afterClearCooperative(){
+        if(j$("[id$='HasCooperative']").prop('checked') == false && j$(".messageTable").length && j$(".messageTable").length > 0){
+            j$("[id$='HasCooperative']").prop('checked', true);
+        }
+    }
+
+    function selectHasCounselling(){
+      if(j$("[id$='HasCounselling']").prop('checked') == false){
+          var select = j$("[id$='SelectedCounsellingOppProject']");
+          if(select[0].options.length > 0){
+              clearCounsellingProjects();
+          }
+      }
+    }
+
+    function afterClearCounselling(){
+        if(j$("[id$='HasCounselling']").prop('checked') == false && j$(".messageTable").length && j$(".messageTable").length > 0){
+            j$("[id$='HasCounselling']").prop('checked', true);
+        }
+    }
+
+    function selectCounsellingProject(){
+        var counsellingProjectSelect = j$("[id$='SelectedCounsellingOppProject']");
+        if(counsellingProjectSelect[0].options.length > 0){
+            j$("[id$='HasCounselling']").prop('checked', true);
+        }
+    }
+
+    function selectCooperativeProject(){
+        var cooperativeProjectSelect = j$("[id$='SelectedCooperativeOppProject']");
+        if(cooperativeProjectSelect[0].options.length > 0){
+            j$("[id$='HasCooperative']").prop('checked', true);
+        }
+    }
+
+    function selectTestprepProject(){
+        var testprepProjectSelect = j$("[id$='SelectedTestprepOppProject']");
+        if(testprepProjectSelect[0].options.length > 0){
+            j$("[id$='HasTestprep']").prop('checked', true);
+        }
+    }
+
+      function checkBusinessLineCheckboxes(){
+        selectCounsellingProject();
+        selectTestprepProject();
+        selectCooperativeProject();
+      }
+
+    function searchCampaigns(ele){
+      var val1 = j$('Select[id$=slLv1]').val();
+      var val2 = j$('Select[id$=slLv2]').val();
+      var val3 = j$('Select[id$=slLv3]').val();
+      var val4 = j$('#Campaign_Input').val();
+
+      if(val1!='--无--'||val2!='--无--'||val3!='--无--'||val4!=''){
+        val1 = (val1=='--无--'||val1==null)?'':val1;
+        val2 = (val2=='--无--'||val2==null)?'':val2;
+        val3 = (val3=='--无--'||val3==null)?'':val3;
+        var param = '{"lv1":"'+val1+'","lv2":"'+val2+'","lv3":"'+val3+'","term":"'+val4+'"}';
+        ResourceExchangeController.searchCampaign(param,j$("input[id$=HiddenCampaignSource]").val(), function(result, event){
+                if(event.status) {
+                   if(result.length>0){
+                    var html = ''
+                     for(var i=0; i<result.length; i++){
+                      html += '<option value="'+result[i].Id+'" title="'+result[i].Name+'"> '+result[i].Name+'</option>'
+                     }
+                     j$("#CampaignSource").html(html);
+                   }
+                } else if (event.type === 'exception') {
+                   console.log(result);
+                } else {
+                   console.log(result);
+                }
+            });
+      }
+    }
+
+    function initialLv2(com){
+            var v = j$(com).val();
+            if(v == '--无--'){
+                j$("[id$='slLv2']").val('--无--');
+                j$("[id$='slLv3']").val('--无--');
+            }else{
+                getLv2ByLv1();
+            }
+        }
+
+        function initialLv3(com){
+            var v = j$(com).val();
+            if(v == '--无--'){
+                j$("[id$='slLv3']").val('--无--');
+            }else{
+                getLv3ByLv1Lv2();
+            }
+        }
+    </script>
+</head>
+<apex:form id="formId">
+<!--<apex:pageMessages />-->
+<apex:actionStatus id="status-waiting">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                        <div class="waitingHolder" style="top: 100px; width: 50%;">
+                            <img class="waitingImage" src="/img/loading32.gif" title="正在操作中，请耐心等候......" />
+                            <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                                    {!$Label.Please_Wait}
+                            </span>
+                        </div>
+                    </div>
+                </apex:facet>
+        </apex:actionStatus>
+<apex:pageBlock rendered="{!NOT(issuccess)}">
+  <apex:pageBlockButtons >
+                <apex:commandButton value="{!$Label.Search}" action="{!searchOpp}" status="status-waiting" reRender="formId,apexmsgs"/>
+                <apex:commandButton value="{!$Label.Create_Leads}" action="{!createLeads}" status="status-waiting" />
+    </apex:pageBlockButtons>
+            <apex:pageBlockSection title="{!$Label.Required_Filters}">
+              <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$Label.Intended_City}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="IntendCity" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!IntendCity}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightIntendCity"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftIntendCity"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedIntendCity" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedIntendCityVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedIntendCity}" id="HiddenIntendCity"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$Label.Opportunity_Stage}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="OppStage" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!OppStage}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightOppStage"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftOppStage"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedOppStage" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedOppStageVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedOppStage}" id="HiddenOppStage"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$Label.Created_Date}"/>
+                    <apex:outputPanel >
+                        <apex:inputField value="{!filterLead.Birthday__c}" />
+                        <apex:outputPanel >&nbsp;-&nbsp;</apex:outputPanel>
+                        <apex:inputField value="{!filterLead.Schedule_Abroad_Year__c}"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+               <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="{!$Label.Optional_Filters}">
+              <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$Label.Campaign}"/>
+                <apex:outputPanel >
+                      <apex:outputPanel id="Owner_Searchbox">
+                      <apex:panelGrid columns="1" id="filtergroup">
+                        <apex:panelGroup >
+                            <apex:selectList value="{!selectedInOrEx}" size="1" multiselect="false" style="width:75px;">
+                                <apex:selectOptions value="{!incOrExcOptions}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                        <apex:panelGroup >
+                          <apex:outputLabel value="{!$Label.Marketing_Channel_Lv1}" id="lv1Label"/>
+                          <apex:actionFunction name="getLv2ByLv1" action="{!getLv2ByLv1}" status="statusWaiting" reRender="filtergroup"/>
+                            <apex:selectList value="{!lv1}" size="1" onchange="initialLv2(this);" id="slLv1" style="width:250px;">
+                                <apex:selectOptions value="{!marketingChannelLv1List}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                        <apex:panelGroup >
+                          <apex:outputLabel value="{!$Label.Marketing_Channel_Lv2}" id="lv2Label"/>
+                          <apex:actionFunction name="getLv3ByLv1Lv2" action="{!getLv3ByLv1Lv2}" status="statusWaiting" reRender="filtergroup"/>
+                            <apex:selectList value="{!lv2}" size="1" onchange="initialLv3(this);" id="slLv2" style="width:250px;">
+                                <apex:selectOptions value="{!marketingChannelLv2List}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                        <apex:panelGroup >
+                        <apex:outputLabel value="{!$Label.Marketing_Channel_Lv3}" id="lv3Label" />
+                          <apex:selectList value="{!lv3}" size="1" id="slLv3" style="width:250px;">
+                                <apex:selectOptions value="{!marketingChannelLv3List}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                      </apex:panelGrid>
+                      <input type="text" placeholder="{!$Label.Enter_Campaign_Name}" id="Campaign_Input"/>
+                      <input type="button" value="{!$Label.Search}" id="Owner_Search" onclick="searchCampaigns(this);" />
+                      </apex:outputPanel>
+                      <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="CampaignSource" Class="sourceList" multiple="true">
+
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightCampaignSource"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftCampaignSource"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedCampaignSource" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!selectedCampaignItems}">
+                                      <option value="{!var.val}" title="{!var.name}"> {!var.name} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedCampaignSource}" id="HiddenCampaignSource"/>
+                                <apex:inputHidden value="{!selectedHtmlCampaignSource}" id="HiddenHtmlCampaignSource"/>
+                            </apex:outputPanel>
+                    </apex:panelGrid>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$Label.Consultation_Mode}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="ConsultMode" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!ConsultMode}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightConsultMode"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftConsultMode"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedConsultMode" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedConsultModeVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedConsultMode}" id="HiddenConsultMode"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="{!$Label.Project_Filters}" id="ProjectFields">
+             <apex:actionFunction name="clearCounsellingProjects" action="{!clearCounsellingProjects}" oncomplete="afterClearCounselling()" reRender="ProjectFields"/>
+             <apex:actionFunction name="clearTestprepProjects" action="{!clearTestprepProjects}" oncomplete="afterClearTestprep()" reRender="ProjectFields"/>
+             <apex:actionFunction name="clearCooperativeProjects" action="{!clearCooperativeProjects}" oncomplete="afterClearCooperative()" reRender="ProjectFields"/>
+               <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem ><b>{!$Label.Existing_Opp_BL}</b></apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem ><b>{!$Label.Existing_Opp_Projects}</b></apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$Label.Counselling}" for="HasCounselling"/>
+                <apex:inputcheckbox value="{!hasCounsellingOpps}" id="HasCounselling"  onchange="selectHasCounselling()" styleClass="counsellinginput"/>
+              </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$Label.Counselling}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="CounsellingOppProject" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!CounsellingOppProjectList}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightCounsellingOppProject"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftCounsellingOppProject"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedCounsellingOppProject" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedCounsellingOppProjectVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedCounsellingOppProject}" id="HiddenCounsellingOppProject"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+              </apex:pageBlockSectionItem>
+
+
+              <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$Label.Testprep}" for="HasTestprep"/>
+                <apex:inputcheckbox value="{!hasTestprepOpps}" id="HasTestprep" onchange="selectHasTestprep()" styleClass="testPrepinput"/>
+              </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                      <apex:outputLabel value="{!$Label.Testprep}" />
+                      <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="TestprepOppProject" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!TestprepOppProjectList}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightTestprepOppProject"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftTestprepOppProject"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedTestprepOppProject" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedTestprepOppProjectVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedTestprepOppProject}" id="HiddenTestprepOppProject"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+
+
+              <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$Label.Cooperative}" for="HasCooperative"/>
+                <apex:inputcheckbox value="{!hasCooperativeOpps}" id="HasCooperative"  onchange="selectHasCooperative()" styleClass="cooperativeinput"/>
+              </apex:pageBlockSectionItem>
+              <apex:pageBlockSectionItem >
+                      <apex:outputLabel value="{!$Label.Cooperative}" />
+                      <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="CooperativeOppProject" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!CooperativeOppProjectList}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightCooperativeOppProject"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftCooperativeOppProject"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedCooperativeOppProject" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedCooperativeOppProjectVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedCooperativeOppProject}" id="HiddenCooperativeOppProject"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="{!$Label.New_Leads_BL}">
+
+              <apex:pageBlockSectionItem >
+                      <apex:outputLabel value="{!$Label.Business_Lines}" />
+                      <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="NewBusinessLine" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!BusinessLineList}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightNewBusinessLine"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftNewBusinessLine"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedNewBusinessLine" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedNewBusinessLineVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedNewBusinessLine}" id="HiddenNewBusinessLine"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+              </apex:pageBlockSection>
+    <apex:pageBlockSection title="{!$Label.Opportunity_Accounts}" columns="1" rendered="{!IF(acctSize==0,false,true)}">
+      <apex:pageBlockTable value="{!show}" var="w">
+       <apex:column >
+              <apex:facet name="header">
+                <input type="checkbox" Class="acct_checkAll"/>
+              </apex:facet>
+              <apex:inputCheckbox value="{!w.isSelected}" styleClass="acct_checkthis"/></apex:column>
+              <apex:column headerValue="{!$Label.Account_Name}" value="{!w.acct.name}" style="text-align:center;"/>
+              <apex:column headerValue="{!$Label.Testprep_Opportunity_Count}" value="{!w.acct.TestPrepOppCount__c}" style="text-align:center;"/>
+              <apex:column headerValue="{!$Label.Newest_Testprep_Opp_Created_Date}" value="{!w.acct.Newest_Testprep_Opportunity_CreateDate__c}" style="text-align:center;" />
+              <apex:column headerValue="{!$Label.Counselling_Opportunity_Count}" value="{!w.acct.CounsellingOppCount__c}" style="text-align:center;" />
+              <apex:column headerValue="{!$Label.Newest_Counselling_Opp_Created_Date}" value="{!w.acct.Newest_Counseling_Opportunity_CreateDate__c}" style="text-align:center;" />
+              <apex:column headerValue="{!$Label.Cooperative_Opportunity_Count}" value="{!w.acct.Cooperative_Education_Opportunity_Count__c}" style="text-align:center;" />
+              <apex:column headerValue="{!$Label.Newest_Cooperative_Opp_Created_Date}" value="{!w.acct.Newest_Coop_Ed_Opportunity_CreatedDate__c}" style="text-align:center;"/>
+              <apex:facet name="footer">
+              <apex:outputPanel >
+              <apex:outputPanel style="float:right;">
+                <apex:commandButton value="<<" action="{!homePage}" reRender="formId" disabled="{!!previousEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="<{!$Label.Previous}" action="{!previous}" reRender="formId" disabled="{!!previousEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="{!$Label.Next}>" action="{!next}" reRender="formId" disabled="{!!nextEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value=">>" action="{!endPage}" reRender="formId" disabled="{!!nextEnable}" rendered="true" status="status-waiting"/>
+              </apex:outputPanel>
+              <apex:outputPanel style="float:left;">
+                <apex:outputLabel value="{!$Label.Per_Page}" />
+                <apex:selectList value="{!pageRecord}" size="1" >
+                  <apex:selectOptions value="{!PageSizePerPage}"/>
+                  <apex:actionSupport action="{!changeLeadPerPage}" reRender="formId" event="onchange" status="status-waiting"/>
+                </apex:selectList>
+                <apex:outputLabel value="{!$Label.Records}  "/>
+                <apex:outputLabel value="{!$Label.Page} {!CurrentPageNo} {!$Label.Of} {!TotalPageNo} {!$Label.Pages_Total}{!Total})"/>
+              </apex:outputPanel>
+              </apex:outputPanel>
+              </apex:facet>
+      </apex:pageBlockTable>
+    </apex:pageBlockSection>
+</apex:pageBlock>
+<apex:pageBlock rendered="{!issuccess}">
+<apex:outputLabel value="{!$Label.Exchange_Resource_Submitted_Message}" />
+</apex:pageBlock>
+</apex:form>
+</apex:page>

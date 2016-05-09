@@ -1,0 +1,61 @@
+<apex:page standardController="SMS_Template__c" extensions="GenerateSMSTemplateExt" sidebar="false" showHeader="false">
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <apex:form id="theForm">
+        <apex:actionFunction name="addLeftFieldLabelId" action="{!addLeftFieldLabel}" reRender="theForm"/>
+
+        <apex:pageBlock >
+            <apex:pageBlockButtons location="top">
+                <apex:commandButton value="保存" action="{!save}" oncomplete="closeWindow();"/>
+                <apex:commandButton value="取消" onclick="closeWindow();"/>
+            </apex:pageBlockButtons>
+
+            <apex:pageMessages />
+
+            <apex:pageBlockSection title="编辑短信模板" columns="1" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="相关项" for="relatedTo"/>
+                    <apex:outputField value="{!SMS_Template__c.Related_To__c}" id="relatedTo"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="选择字段" for="fields"/>
+                    <apex:selectList value="{!fieldAPI}" size="1" id="fields">
+                        <apex:selectOptions value="{!FieldAPIList}" />
+                        <apex:actionSupport event="onchange" reRender="mergeField" oncomplete="afterChangeField()"/>
+                    </apex:selectList>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="复制合并字段值" for="mergeField"/>
+                    <apex:inputText value="{!MergeField}" size="35" id="mergeField"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="短信正文" columns="1" collapsible="false">
+                <apex:pageBlockSectionItem >
+                    <apex:inputTextarea value="{!SMS_Template__c.SMS_Body__c}" cols="100" rows="10"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>  
+        </apex:pageBlock>
+    </apex:form>
+
+    <script>
+        $(function() {
+            //window.setTimeout(addLeftFieldLabelId, 200);
+
+            $("[id$='mergeField']").bind('focus', function(){
+                $(this).first().select();
+            })
+        });
+
+        function afterChangeField(){
+            $("[id$='mergeField']").focus();
+            $("[id$='mergeField']").first().select();
+        }
+
+        function closeWindow(){
+            window.opener.location = '/{!SMS_Template__c.Id}';
+            window.close();
+        }
+    </script>
+</apex:page>

@@ -1,0 +1,303 @@
+<apex:page controller="LookupCampaignCtrl" tabStyle="Campaign" showHeader="false" sidebar="false">
+    <apex:includeScript value="{!$Resource.jquery110}"/>
+    <style>
+        .waitingSearchDiv {
+            position: absolute;
+            text-align: center;
+            top: 0;
+            z-index: 80;
+            left: 0;
+        }
+        .waitingHolder {
+            border: none;
+            background-color: transparent;
+            font-size: 1em;
+            font-weight: normal;
+            padding: 0;
+        }
+        .waitingImage {
+            vertical-align: middle;
+        }
+        .lookup {
+            padding: 0;
+        }
+        .bPageTitle {
+            margin: 0 ;
+            padding: 0 !important;
+        }
+        .ptBody {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .secondaryPalette {
+            background-color: #737e96;
+            border-color: #737e96;
+        }
+        .content {
+            float: left;
+            vertical-align: middle;
+            padding-left: 10px !important;
+            width: 70%;
+        }
+        .pageTitleIcon {
+            margin-top: 5px;
+            background-image: url(/img/sprites/master.png);
+            background-position: 0 -1202px;
+            width: 32px;
+            height: 32px;
+        }
+        h1 {
+            font-size: 1.8em !important;
+            color: #333435;
+            margin: 8px 0 4px;
+        }
+        .pBody {
+            padding-left: 10px !important;
+            margin-top: -10px !important;
+        }
+        .searchText {
+            height: 20px;
+            margin-left: 5px;
+        }
+        .lookupSearch {
+            padding: 12px 0;
+            padding-left: 10px;
+        }
+        .clearResults {
+            display: none;
+            margin-top: 6px;
+            margin-bottom: 0;
+            margin-left: 2px;
+        }
+        .pbTitle {
+            padding-left: 0 !important;
+        }
+        .relatedListIcon {
+            background-image: url(/img/icon/campaigns32.png);
+            background-position: 50% 50%;
+            width: 24px;
+            height: 24px;  
+            display: inline;
+        }
+        .searchFirstCell {
+            white-space: nowrap;
+        }
+        .helpTxt {
+            font-weight: normal;
+            padding-top: 5px;
+            font-size: .9em;
+        }
+        table#navBar {
+            width: 100%;
+            padding-top: 10px;
+        }
+        table#navBar td.nav {
+            min-width: 200px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        table#navBar td.nav a {
+            padding: 3px;
+        }
+        .tabHeader {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .searchFilterFieldsHolderFirst .searchFilterFields {
+            background: #f2f2f2 url('/img/alohaSkin/bPageBlock_gradient.png') repeat-x; 
+            -moz-border-radius-topleft: 4px;
+            -moz-border-radius-topright: 4px;
+            -webkit-border-top-right-radius: 4px;
+            -webkit-border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            border-top-left-radius: 4px;
+        }
+        .searchFilterFieldsHolder .searchFilterFields {
+            background-color: #f2f2f2;
+            padding: 7px 3px 5px;
+            border: 1px solid #d6d6d6;
+            margin-left: 10px;
+            margin-top: 5px;
+        }
+        .searchFilterFields .searchFilterButtons {
+            padding: 0;
+        }
+        .searchFilterFields .searchFilterButtons {
+            margin-top: 0;
+            text-align: left;
+        }
+    </style>
+    <apex:pageMessages />
+    <apex:form id="theForm">
+        <div class="lookup">
+            <div class="bPageTitle">
+                <div class="ptBody secondaryPalette">
+                    <div class="content">
+                        <img src="/s.gif" alt="" class="pageTitleIcon" title=""/>
+                        <h1>查找</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="pBody">
+                <apex:inputText styleClass="searchText" id="itSearchTextCity" html-placeholder="城市(如：上海)" value="{!searchTextCity}" onkeypress="return noenter(event);"/>
+                <apex:inputText styleClass="searchText" id="itSearchTextBusinessLine" html-placeholder="业务线(如：留学)" value="{!searchTextBusinessLine}" onkeypress="return noenter(event);"/>
+                <apex:inputText styleClass="searchText" id="itSearchTextOther" html-placeholder="其他(如：户外广告)" value="{!searchTextOther}" onkeypress="return noenter(event);"/>
+ 
+                <apex:actionFunction name="searchCampaign" action="{!searchCampaign}" status="statusWaiting" reRender="campaignTable"/>
+                <input value=" 转至! " class="btn" id="go" name="go" title="Go!" type="button" onclick="search();" />
+            </div>
+            <div class="searchFilterFieldsHolder searchFilterFieldsHolderFirst">
+                <table class="searchFilterFields" id="filtersTable">
+                    <tr>
+                        <td>
+                            <apex:outputLabel value="一级市场推广方式" id="lv1Label"/>
+                        </td>
+                        <td>
+                            <apex:actionFunction name="getLv2ByLv1" action="{!getLv2ByLv1}" reRender="theForm"/>
+                            <apex:selectList value="{!lv1}" size="1" onchange="initialLv2(this);" id="slLv1">
+                                <apex:selectOptions value="{!marketingChannelLv1List}"/>
+                            </apex:selectList>
+                        </td>
+                        <td>
+                            <apex:outputLabel value="二级市场推广方式" id="lv2Label"/>
+                        </td>
+                        <td>
+                            <apex:actionFunction name="getLv3ByLv1Lv2" action="{!getLv3ByLv1Lv2}" reRender="theForm"/>
+                            <apex:selectList value="{!lv2}" size="1" onchange="initialLv3(this);" id="slLv2">
+                                <apex:selectOptions value="{!marketingChannelLv2List}"/>
+                            </apex:selectList>
+                        </td>
+                        <td>
+                            <apex:outputLabel value="三级市场推广方式" id="lv3Label"/>
+                        </td>
+                        <td>
+                            <apex:selectList value="{!lv3}" size="1" id="slLv3">
+                                <apex:selectOptions value="{!marketingChannelLv3List}"/>
+                            </apex:selectList>
+                        </td>
+                        <td>
+                            <div class="searchFilterButtons">
+                                <apex:actionFunction name="searchCampaignByFilters" action="{!searchCampaignByFilters}" status="statusWaiting" reRender="campaignTable"/>
+                                <input type="button" value="应用过滤条件" class="btn" onclick="applyFilters()" id="applyFiltersBtn" title="应用过滤条件"/>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="lookupSearch">
+                <div class="clearResults" id="clearResults">
+                    &lt; 
+                    <a href="#" onclick="clearResults();return false;">清除搜索结果</a>
+                </div>
+                <div>
+                    <apex:pageBlock title="市场推广">
+                        <table border="0" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td class="pbTitle">
+                                    <img src="/s.gif" alt="" class="relatedListIcon" title=""/>
+                                    <h3>
+                                        <span class="searchFirstCell">
+                                            市场推广
+                                        </span>
+                                    </h3>
+                                </td>
+                            </tr>
+                        </table>
+                        <apex:pageBlockTable id="campaignTable" value="{!campaignList}" var="c">
+                            <apex:column headerValue="{!$ObjectType.Campaign.fields.Name.label}"> 
+                                <a href="#" onclick="selectCampaign('{!c.Id}', '{!c.Name}');return false;">{!c.Name}</a>
+                            </apex:column>
+                            <apex:column headerValue="{!$ObjectType.Campaign.fields.City__c.label}"> 
+                                {!c.City__c}
+                            </apex:column>
+                            <apex:column headerValue="{!$ObjectType.Campaign.fields.StartDate.label}"> 
+                                <apex:outputField value="{!c.StartDate}"/>
+                            </apex:column>
+                            <apex:column headerValue="{!$ObjectType.Campaign.fields.EndDate.label}"> 
+                                <apex:outputField value="{!c.EndDate}"/>
+                            </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlock> 
+                </div>
+            </div>
+        </div>
+
+        <!-- action status -->
+        <apex:actionstatus id="statusWaiting">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" style="background-color:#dcdcdc;height:300%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                    <div class="waitingHolder" style="position:fixed;top:50%;left:30%;width:50%;">
+                        <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                        <span style="font-size:20px;font-weight:bold;color:red;">
+                            Loading......
+                        </span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+    </apex:form>
+    <script>
+    
+        $(function(){
+            $("[id$='itSearchTextBusinessLine']").focus();
+        })
+
+        // press "enter"
+        function noenter(ev){
+            if (window.event && window.event.keyCode == 13 || ev.which == 13){
+                search();
+                return false;
+            }else{
+                return true;
+            }
+        }
+
+        // click "search" button
+        function search(){
+            searchCampaign();
+            $("#clearResults").show();
+        }
+
+        // click "clear" link
+        function clearResults(){
+            $("[id^='itSearchText']").val('');
+            searchCampaign();
+            $("#clearResults").hide();
+        }
+
+        // select one c reseller
+        function selectCampaign(cId, cName){
+            window.opener.setCampaignValue(cId, cName);
+            window.close();
+        }
+
+        function applyFilters(){
+            searchCampaignByFilters();
+        }
+
+        function initialLv2(com){
+            var v = $(com).val();
+            $("[id$='slLv3']").val('--无--');
+            if(v == '--无--'){
+                $("[id$='slLv2']").val('--无--');
+            }else{
+                getLv2ByLv1();
+            }
+        }
+
+        function initialLv3(com){
+            var v = $(com).val();
+            if(v == '--无--'){
+                $("[id$='slLv3']").val('--无--');
+            }else{
+                getLv3ByLv1Lv2();
+            }
+        }
+    </script>
+</apex:page>

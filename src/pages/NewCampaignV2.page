@@ -1,0 +1,336 @@
+<apex:page standardController="Campaign" extensions="NewCampaignV2Ext" sidebar="false">
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <style>
+        body .bPageTitle {
+            padding: 15px 0 0;
+        }
+        .bPageTitle {
+            margin-bottom: 15px;
+        }
+        body .bPageTitle .ptBody {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+        }
+        .bPageTitle .ptBody {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .bPageTitle .ptBody .content {
+            float: left;
+            vertical-align: middle;
+            padding-left: 5px;
+            width: 70%;
+        }
+        body .bPageTitle .pageTitleIcon {
+            margin-top: 5px;
+        }
+        body .bPageTitle .ptBody .pageType, body .bPageTitle .ptBody .pageDescription {
+            margin-left: 37px;
+        }
+        body .bPageTitle .ptBody .pageType {
+            font-size: .9em;
+            font-weight: bold;
+            color: #4a4a56;
+            padding-left: 1px;
+        }
+        .titleSeparatingColon {
+            display: none;
+        }
+        body .bPageTitle .ptBody .pageDescription {
+            font-size: 1.8em;
+            font-weight: normal;
+            line-height: 1.1em;
+        }
+        h1.noSecondHeader {
+            margin-top: 9px;
+            margin-bottom: 0;
+            color: #000;
+            font-size: 2em;
+            font-weight: normal;
+        }
+    </style>
+    <apex:form id="theForm">
+        <div class="bPageTitle">
+            <div class="ptBody">
+                <div class="content">
+                    <img src="/s.gif" alt="市场推广" class="pageTitleIcon" title="市场推广"/>
+                        <h1 class="noSecondHeader pageType">编辑市场推广：新建市场推广</h1>
+                        <div class="blank">&nbsp;</div>
+                </div>
+                <div class="links">
+                    <a href="javascript:openPopupFocusEscapePounds(%27https://login.salesforce.com/services/auth/sso/00D30000000XsfGEAS/HTAuthProvider?startURL=%252Fapex%252Fhtdoor%253Floc%253Dhelp%2526target%253Dleads_edit.htm%2526section%253DLeads%2526language%253Dzh_CN%2526release%253D198.10.2%2526instance%253DAP2&amp;site=https%3A%2F%2Fhelp.salesforce.com&amp;showSplash=true%27, %27Help%27, 1024, 768, %27width=1024,height=768,resizable=yes,toolbar=yes,status=yes,scrollbars=yes,menubar=yes,directories=no,location=yes,dependant=no%27, false, false);" title="此页面的帮助 （新窗口）">
+                        <span class="helpLink">此页面的帮助</span>
+                        <img src="/s.gif" alt="" class="helpIcon"/>
+                    </a>
+                </div>
+            </div>
+            <div class="ptBreadcrumb"></div>
+        </div>
+
+        <apex:pageBlock title="市场推广编辑" mode="edit">
+            <apex:pageMessages escape="false"/>
+            <apex:pageBlockButtons >
+                <apex:commandButton onclick="beforeSave()" action="{!save}" value="保存" rendered="{!editable}"/>
+                <apex:commandButton action="{!cancel}" value="取消"/>
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection title="四级推广方式" columns="2" rendered="{!editable}">
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="名称" for="ifName"/>
+                    <apex:inputField value="{!campaign.Name}" id="ifName" required="true"/> 
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="市场推广记录类型" for="ifRecordType"/>
+                    <apex:outputText value="{!recordTypeName}" id="ifRecordType"/> 
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="城市" for="ifCity"/>
+                    <apex:inputField value="{!campaign.City__c}" id="ifCity" required="true"/> 
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="审批人" for="ifApprover"/>
+                    <apex:inputField value="{!campaign.Approver__c}" id="ifApprover" required="true"/> 
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="业务线" for="ifBusinessLine"/>
+                    <apex:inputField value="{!campaign.Business_line__c}" id="ifBusinessLine" required="true"/> 
+                </apex:pageBlockSectionItem>
+ 
+                <apex:pageBlockSectionItem rendered="{!renderedSection == '1'}">
+                    <apex:outputLabel value="是否精准渠道" for="ifIsPrecise"/>
+                    <apex:inputField value="{!campaign.Is_Precise__c}" id="ifIsPrecise"/> 
+                </apex:pageBlockSectionItem>
+
+                <apex:outputLabel value="一级市场推广方式" id="olMarketingChannelLv1"/>
+                    <apex:outputPanel id="opMarketingChannelLv1" layout="block">
+                        <div class = "requiredInput">
+                            <div class = "requiredBlock"></div>
+                            <apex:selectList size="1" value="{!lv1}" onchange="selectLv1();" id="slMarketingChannelLv1">
+                                <apex:selectOptions value="{!marketingChannelLv1List}" />
+                            </apex:selectList>
+                        </div>
+                    </apex:outputPanel>
+
+                <apex:outputLabel value="二级市场推广方式" id="olMarketingChannelLv2"/>
+                    <apex:outputPanel id="opMarketingChannelLv2" layout="block">
+                        <div class = "requiredInput">
+                            <div class = "requiredBlock"></div>
+                            <apex:selectList size="1" value="{!lv2}" onchange="selectLv2();" id="slMarketingChannelLv2" >
+                                <apex:selectOptions value="{!marketingChannelLv2List}"/>
+                            </apex:selectList>
+                        </div>
+                    </apex:outputPanel>
+
+                <apex:outputLabel value="三级市场推广方式" id="olMarketingChannelLv3"/>
+                    <apex:outputPanel id="opMarketingChannelLv3">
+                        <div class = "requiredInput">
+                            <div class = "requiredBlock"></div>
+                            <apex:selectList size="1" value="{!lv3}" onchange="selectLv3();" id="slMarketingChannelLv3" >
+                                <apex:selectOptions value="{!marketingChannelLv3List}"/>
+                            </apex:selectList>
+                        </div>
+                    </apex:outputPanel>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="系统信息" columns="2" rendered="{!editable}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="所有人" for="ifOwner"/>
+                    <apex:outputText value="{!ownerName}" id="ifOwner"/> 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="状态" for="ifStatus"/>
+                    <apex:inputField value="{!campaign.Status}" id="ifStatus"/> 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="启用" for="ifIsActive"/>
+                    <apex:inputField value="{!campaign.IsActive}" id="ifIsActive"/> 
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="预算与花费" columns="2" rendered="{!AND(editable, renderedSection == '1')}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="预算成本" for="ifBudgetedCost"/>
+                    <apex:inputField value="{!campaign.BudgetedCost}" id="ifBudgetedCost"/> 
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="实际成本" for="ifActualCost"/>
+                    <apex:inputField value="{!campaign.ActualCost}" id="ifActualCost"/> 
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="备注信息" columns="2" rendered="{!AND(editable, renderedSection == '1')}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="系统用户推荐" for="ifDescription"/>
+                    <apex:inputField value="{!campaign.Description}" id="ifDescription"/> 
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+            <apex:pageBlockSection title="四级推广方式线索统计" columns="2" rendered="{!AND(editable, renderedSection == '1')}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="销售线索总计" for="ifLeadTotalNumber"/>
+                    <apex:inputField value="{!campaign.Lead_Total_Number__c}" id="ifLeadTotalNumber"/> 
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <apex:inputHidden value="{!lv1}" id="inputHiddenLv1"/>
+        <apex:inputHidden value="{!lv2}" id="inputHiddenLv2"/>
+        <apex:inputHidden value="{!lv3}" id="inputHiddenLv3"/>
+        <apex:inputField value="{!campaign.RecordTypeId}" style="display: none;"/>
+    </apex:form>
+
+    <script>
+        $(function(){
+            adjustPageLayout();
+            resetPicklist();
+        })
+
+        function adjustPageLayout(){
+            $("[id$='ifStatus']").attr('disabled', true);
+
+            $("[id$='olMarketingChannelLv1']").parent().addClass('labelCol vfLabelColTextWrap');
+            $("[id$='olMarketingChannelLv1']").parent().removeClass('dataCol');
+            $("[id$='olMarketingChannelLv1']").parent().attr('colspan','1');
+            $("[id$='opMarketingChannelLv1']").parent().attr('colspan','1');
+
+            $("[id$='olMarketingChannelLv2']").parent().addClass('labelCol vfLabelColTextWrap');
+            $("[id$='olMarketingChannelLv2']").parent().removeClass('dataCol');
+            $("[id$='olMarketingChannelLv2']").parent().attr('colspan','1');
+            $("[id$='opMarketingChannelLv2']").parent().attr('colspan','1');
+
+            $("[id$='olMarketingChannelLv3']").parent().addClass('labelCol vfLabelColTextWrap');
+            $("[id$='olMarketingChannelLv3']").parent().removeClass('dataCol');
+            $("[id$='olMarketingChannelLv3']").parent().attr('colspan','1');
+            $("[id$='opMarketingChannelLv3']").parent().attr('colspan','1');
+        }
+
+        function initialLv1(){
+            var select = $("[id$='slMarketingChannelLv1']")[0];
+
+            <apex:repeat value="{!lv1Lv2Map}" var="lv1">
+                var opt = document.createElement('option');
+                opt.value = '{!lv1}';
+                opt.innerHTML = '{!lv1}';
+                select.appendChild(opt);
+            </apex:repeat>
+        }
+
+        function resetLv3(){
+            var lv2 = $("[id$='slMarketingChannelLv2']").val();
+            var lv3 = $("[id$='inputHiddenLv3']").val();
+            $("[id$='slMarketingChannelLv3']").empty();
+            addNullValue($("[id$='slMarketingChannelLv3']")[0]);
+            initialLv3(lv2);
+            $("[id$='inputHiddenLv3']").val('--无--');
+        }
+
+        function selectLv1(){
+            var lv1 = $("[id$='slMarketingChannelLv1']").val();
+            $("[id$='inputHiddenLv1']").val(lv1);
+            $("[id$='inputHiddenLv2']").val('--无--');
+            $("[id$='inputHiddenLv3']").val('--无--');
+
+            $("[id$='slMarketingChannelLv2']").empty();
+            addNullValue($("[id$='slMarketingChannelLv2']")[0]);
+
+            $("[id$='slMarketingChannelLv3']").empty();
+            addNullValue($("[id$='slMarketingChannelLv3']")[0]);
+
+            $("[id$='slLv3']").val('--无--');
+            if(lv1 == '--无--'){
+                $("[id$='slLv2']").val('--无--');
+            }else{
+                initialLv2(lv1);
+            }
+        }
+
+        function initialLv2(lv1){
+            var select = $("[id$='slMarketingChannelLv2']")[0];
+            <apex:repeat value="{!lv1Lv2Map}" var="lv1">
+                if(lv1 == '{!lv1}'){
+                    <apex:repeat value="{!lv1Lv2Map[lv1]}" var="lv2">
+                        var opt = document.createElement('option');
+                        opt.value = '{!lv2}';
+                        opt.innerHTML = '{!lv2}';
+                        select.appendChild(opt);
+                    </apex:repeat>
+                }
+            </apex:repeat>
+            $("[id$='slMarketingChannelLv2']").val('--无--');
+            $("[id$='slMarketingChannelLv3']").val('--无--');
+        }
+
+        function selectLv2(){
+            var lv2 = $("[id$='slMarketingChannelLv2']").val();
+            $("[id$='inputHiddenLv2']").val(lv2);
+            $("[id$='inputHiddenLv3']").val('--无--');
+
+            $("[id$='slMarketingChannelLv3']").empty();
+            addNullValue($("[id$='slMarketingChannelLv3']")[0]);
+
+            if(lv2 == '--无--'){
+                $("[id$='slLv3']").val('--无--');
+            }else{
+                initialLv3(lv2);
+            }
+        }
+
+        function initialLv3(lv2){
+            var select = $("[id$='slMarketingChannelLv3']")[0];
+            var lv1 = $("[id$='slMarketingChannelLv1']").val();
+
+            var lv1Lv2 = lv1 + '-' + lv2;
+            <apex:repeat value="{!lv1Lv2Lv3Map}" var="lv1Lv2">
+                if(lv1Lv2 == '{!lv1Lv2}'){
+                    <apex:repeat value="{!lv1Lv2Lv3Map[lv1Lv2]}" var="lv3">
+                        var opt = document.createElement('option');
+                        opt.value = '{!lv3}';
+                        opt.innerHTML = '{!lv3}';
+                        select.appendChild(opt);
+                    </apex:repeat>
+                }
+            </apex:repeat>
+            $("[id$='slMarketingChannelLv3']").val('--无--');
+        }
+
+        function selectLv3(){
+            var lv3 = $("[id$='slMarketingChannelLv3']").val();
+            $("[id$='inputHiddenLv3']").val(lv3);
+        }
+
+        function addNullValue(select){
+            var opt = document.createElement('option');
+            opt.value = '--无--';
+            opt.innerHTML = '--无--';
+            select.appendChild(opt);
+        }
+
+        function beforeSave(){
+            /*$("[id$='slMarketingChannelLv1']").val('--无--');
+            $("[id$='slMarketingChannelLv2']").val('--无--');
+            $("[id$='slMarketingChannelLv3']").val('--无--');*/
+        }
+
+        function resetPicklist(){
+            $("[id$='slMarketingChannelLv2']").empty();
+            $("[id$='slMarketingChannelLv3']").empty();
+            addNullValue($("[id$='slMarketingChannelLv2']")[0]);
+            addNullValue($("[id$='slMarketingChannelLv3']")[0]);
+            var lv1 = $("[id$='inputHiddenLv1']").val();
+            var lv2 = $("[id$='inputHiddenLv2']").val();
+            var lv3 = $("[id$='inputHiddenLv3']").val();
+            initialLv2(lv1);
+            initialLv3(lv2);
+            $("[id$='slMarketingChannelLv1']").val(lv1);
+            $("[id$='slMarketingChannelLv2']").val(lv2);
+            $("[id$='slMarketingChannelLv3']").val(lv3);
+        }
+    </script>
+</apex:page>

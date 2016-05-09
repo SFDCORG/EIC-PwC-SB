@@ -1,0 +1,20 @@
+<apex:page standardController="Lead">
+<apex:includeScript value="{!$Resource.jquery110}" />
+<script type="text/javascript">
+	j$ = jQuery.noConflict();
+    j$(document).ready(function() {
+        if(getURLParameter('batchId')!=null){
+            j$.each(j$('a'),function(i, obj){
+                var re = /\/apex\/ConvertLeadItem\?Id=([\w]{15})/; 
+                j$(this).prop('href',j$(this).prop('href').replace(re,'/apex/ConvertLeadItem?Id=$1&batchId='+getURLParameter('batchId')));
+            });
+        }
+    });
+
+    function getURLParameter(name) {
+  		return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+	}
+</script>
+    <chatter:feedWithFollowers entityId="{!Lead.Id}" />
+    <apex:detail />
+</apex:page>

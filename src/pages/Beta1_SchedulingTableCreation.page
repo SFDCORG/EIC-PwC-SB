@@ -1,0 +1,319 @@
+<apex:page controller="Beta1_SchedulingTableCreation" docType="html-5.0" tabStyle="Scheduling_Table__c" sidebar="false">
+     
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <style type="text/css">
+        table.exceptionText td {
+                 font-size:16px;
+                 font-weight:bold;
+                 text-align:center;
+                 color:red;}
+    </style>
+
+    <apex:form id="theForm">
+
+        
+        <apex:actionFunction reRender="schline,hideproject,hidesource"  status="status-waiting" action="{!refreshScope}"
+         name="refreshlines" />
+
+         <apex:actionStatus id="status-waiting">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                                    <div class="waitingHolder" style="top: 100px; width: 50%;">
+
+                                      <b>Loading....</b> <br/>   
+                                      <img class="waitingImage" src="/img/loading32.gif"  />
+                                    </div>
+                            </div>
+                        </apex:facet>
+         </apex:actionStatus> 
+            
+        <apex:pageBlock id="pb1">
+           
+            <apex:inputHidden value="{!hidProjects}"  id="hideproject" />
+
+            <apex:inputHidden value="{!hidSources}"  id="hidesource" />
+            
+
+            <script language="javascript">
+                                
+                        function movePickList(sid, apendname, removename)
+                        {   
+                        	var v ='';
+                            var v2='';
+                            var v3='';
+                            var v0='';
+
+                            var selectValues = $("#"+removename+sid).val();
+
+                            if(apendname=='SProjectID-'||apendname=='ProjectID-') 
+	                            v = document.getElementById('{!$Component.theForm.pb1.hideproject}');
+	                        else if(apendname=='SSoruceID-'||apendname=='SourceID-')
+                                v = document.getElementById('{!$Component.theForm.pb1.hidesource}');
+                           
+                    
+		                        var v0= v.value.substring(0,v.value.indexOf(sid+':')); 
+		                        var v1= v.value.substring(v.value.indexOf(sid+':'),v.value.length); 
+		                        if(v1.indexOf(',')>-1)
+		                        	v2= v1.substring(0,v1.indexOf(','));
+		                        else
+		                        	v2= v1.substring(0,v1.length);
+		                        if(v1.indexOf(',')>-1)
+		                        	v3= v1.substring(v1.indexOf(',')+1,v.length);
+	                        
+                          
+                            for(var i=0;i<selectValues.length;i++)
+                            {
+                                $("#"+apendname+sid).append("<option value='"+selectValues[i]+"'>"+selectValues[i]+"</option>");
+                                $("#"+removename+sid+" option[value="+selectValues[i]+"]").remove();
+                                if(apendname=='SourceID-'||apendname=='ProjectID-')
+                                {
+                                   v2=v2.replace(selectValues[i],'');
+                                   v2=v2.replace(';;',';');
+                                }
+                                else
+                                {
+                                    v2+=';'+selectValues[i];
+                                }
+                            }
+
+                            if(apendname=='SProjectID-')
+                            {
+                               document.getElementById('{!$Component.hideproject}').value= (v0+','+v2+','+v3).replace(':;',':').replace('::',':');
+                            }
+                            else if(apendname=='SSoruceID-')
+                            {
+                               document.getElementById('{!$Component.hidesource}').value= (v0+','+v2+','+v3).replace(':;',':').replace('::',':');
+                            }
+
+                            else if(apendname=='ProjectID-')
+                            {
+                               document.getElementById('{!$Component.hideproject}').value=(v0+','+v2+','+v3).replace(';;',';').replace('::',':').replace(':;',':');
+                            }
+                            else if(apendname=='SourceID-')
+                            {
+                              document.getElementById('{!$Component.hidesource}').value=(v0+','+v2+','+v3).replace(';;',';').replace('::',':').replace(':;',':');
+                            }
+                        }
+
+                        function refreshLinesScope(ev)
+                        {     
+                              
+                              if(ev!='true')
+                              {
+                                 refreshlines();
+                              }
+
+                        }
+                               
+             </script>
+             <apex:pageMessages id="headmsg" rendered="{!headErrorFlag}" />
+             <apex:outputPanel id="schedTablHead">
+
+                <apex:pageBlockSection title="基本信息" collapsible="false" columns="2"  >
+                   <apex:inputField value="{!scheTableHead.Name}"  label="排班表名称" />
+                   <apex:outputField value="{!scheTableHead.OwnerID}"  label="负责人" />
+                   <apex:outputField value="{!scheTableHead.RecordTypeId}"  label="业务线" />
+                   <apex:inputField value="{!scheTableHead.City__c}" label="城市" id="scheCity"  >
+                        <script>document.getElementById('{!$Component.scheCity}').disabled= true;  </script>
+                   </apex:inputField>
+                   <apex:outputField value="{!scheTableHead.Office__c}" label="办公地点"  />
+                   <apex:inputField value="{!scheTableHead.Department__c}" label="部门" id="scheDep">
+                        <script>document.getElementById('{!$Component.scheDep}').disabled= true;  </script>
+                    </apex:inputField>
+                    <apex:inputField value="{!scheTableHead.End_Date__c}" label="提醒更新日期"/>
+                 </apex:pageBlockSection>
+           
+
+                <apex:pageBlockSection title="管理信息" collapsible="false" columns="2">
+
+                   <apex:inputField value="{!scheTableHead.Project__c}" label="接收商机项目" id="headproject" onchange="refreshLinesScope('{!newflag}')"/>
+                        
+                   <apex:inputField value="{!scheTableHead.Source__c}" label="接收商机来源" id="headsource" />
+                                         
+                   <apex:inputField value="{!scheTableHead.Manager__c}" label="排班表管理员"/>
+                   <apex:outputField value="{!scheTableHead.Front_Desk__c}" label="前台"/>
+                   <apex:inputField value="{!scheTableHead.Intercept__c}" label="分配截流"/>
+
+                </apex:pageBlockSection>
+
+            </apex:outputPanel>
+
+            <apex:pageBlockSection title="顾问信息" collapsible="false" columns="1"  id="schline">
+               <apex:pageMessages id="ccMsg" rendered="{!ccErrorFlag}"/>
+
+               <apex:outputLabel value="{!worktimeExample}"  />
+              
+                
+                <apex:pageBlockTable value="{!scheLineList}" var="item" id="dtTable" width="100%">
+                    <apex:column >
+                        <apex:facet name="header"> 
+                            <apex:commandbutton action="{!addRow}" value="【添加】" reRender="theForm" status="status-waiting"/>
+                        </apex:facet>
+
+                         <apex:commandButton action="{!removeLine}" value="【删】"  reRender="theForm" status="status-waiting">
+                            <apex:param name="rowindex0" assignTo="{!rowIndex}" value="{!item.index}" />
+                         </apex:commandButton>          
+                    </apex:column>
+                    
+                    <apex:column headerValue="顾问" style="width:50px">
+                         <apex:outputLabel value="▍" style="color:red" rendered="{!item.isExistLine}"/>
+                         <apex:outputLabel value="▍" style="color:green" rendered="{!!item.isExistLine}"/>
+                         <apex:inputField value="{!item.scheLine.User__c}" / >
+                    </apex:column>
+                        
+
+                    <apex:column headerValue="负责项目" style="width:200px">
+                            
+                            <apex:outputPanel >
+                                  <apex:panelGrid columns="3">
+                                      <apex:outputPanel >
+                                            <p><b>可选择</b></p>
+                                            <select value="{!item.selectedProject}" size="5" multiselect="true" style="width:90px" id="ProjectID-{!item.index}" multiple="true" ondblclick="movePickList('{!item.index}','SProjectID-','ProjectID-')">
+
+                                                 <apex:repeat var="var" value="{!item.projectsScope}">
+                                                     <option value="{!var}" > {!var} </option>
+                                                 </apex:repeat>
+                                            </select>
+                                        </apex:outputPanel>
+
+                                        <apex:panelGrid columns="1">
+                                            <input type="button" value="►" onclick="movePickList('{!item.index}','SProjectID-','ProjectID-')"/> <p/>
+                                            <input type="button" value="◄" onclick="movePickList('{!item.index}','ProjectID-','SProjectID-')"/>
+                                        </apex:panelGrid>
+
+                                        <apex:outputPanel >
+                                            <p><b>已选择</b></p>
+                                            <select value="{!item.projects}" size="5" multiselect="true" style="width:90px" id="SProjectID-{!item.index}" multiple="TRUE" ondblclick="movePickList('{!item.index}','ProjectID-','SProjectID-')">
+                                                 <apex:repeat var="var" value="{!item.selectedProjectScope}">
+                                                    <option value="{!var}" > {!var} </option>
+                                                 </apex:repeat>
+                                            </select>
+                                        </apex:outputPanel>
+
+                                    </apex:panelGrid>
+                            </apex:outputPanel>
+
+
+                           
+
+                    </apex:column>
+
+
+ 
+                            <apex:column headerValue="周一" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc1}" / >
+                            </apex:column>
+
+                            <apex:column headerValue="周二" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc2}" / >
+                            </apex:column>
+
+                            <apex:column headerValue="周三" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc3}" / >
+                            </apex:column>
+
+
+                            <apex:column headerValue="周四" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc4}" / >
+                            </apex:column>
+
+                            <apex:column headerValue="周五" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc5}" / >
+                            </apex:column>
+         
+                            <apex:column headerValue="周六" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc6}" / >
+                            </apex:column>
+
+
+                            <apex:column headerValue="周日" rendered="{!!weekdayTimeFlag}">
+                                 <apex:inputCheckbox value="{!item.dc7}" / >
+                            </apex:column>
+
+  
+
+                 
+
+
+                                <apex:column headerValue="周一" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d1}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+                                
+                                <apex:column headerValue="周二" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d2}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+
+                                <apex:column headerValue="周三" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d3}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+
+                                 <apex:column headerValue="周四" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d4}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+
+                                <apex:column headerValue="周五" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d5}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+
+                                <apex:column headerValue="周六" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d6}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+
+                                <apex:column headerValue="周日" rendered="{!weekdayTimeFlag}">
+                                     <apex:selectList value="{!item.d7}"  size="1">
+                                              <apex:selectOptions value="{!TimeCustomSetting}" />
+                                     </apex:selectList>
+                                </apex:column>
+
+
+
+                                <apex:column headerValue="工作开始时间" rendered="{!!weekdayTimeFlag}">
+                                     <apex:inputField value="{!item.scheLine.Start_Working_Time__c}" / >
+                                </apex:column>
+                                <apex:column headerValue="工作结束时间" rendered="{!!weekdayTimeFlag}">
+                                     <apex:inputField value="{!item.scheLine.End_Working_Time__c }" / >
+                                </apex:column>
+
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+
+
+            <apex:outputPanel id="savebt">
+               
+               <apex:commandButton value="保存" action="{!saveResult}">
+                    <apex:param value="go" assignTo="{!nextaction}" name="saveParemeter"/>
+               </apex:commandButton>
+
+               
+
+               <apex:commandButton value="保存并编辑顺位"  action="{!saveResult}"  reRender="theForm" status="status-waiting">
+                     <apex:param value="next" assignTo="{!nextaction}" name="saveParemeter"/>
+               </apex:commandButton>
+
+
+               <apex:commandButton action="{!cancel}" value="取消" status="status-waiting" />
+
+            </apex:outputPanel>
+
+
+
+        </apex:pageBlock> 
+        
+        
+
+    </apex:form>
+    
+</apex:page>

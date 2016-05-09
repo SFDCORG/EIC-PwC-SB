@@ -1,0 +1,60 @@
+<apex:component id="SchoolDBSearchWidget">
+  <apex:attribute name="searchkind" description="This is the value for the component. It must be 'school', 'degree', or 'sys_mj'" type="String[]" required="true"/>
+  <apex:attribute name="targetfield" description="This field will be populated by the UUID selected by this dialog" type="String[]"/>
+  <apex:includeScript value="{!$Resource.Jquery}"/>
+  <apex:includeScript value="{!$Resource.BootstrapJS}"/>
+  <apex:includeScript value="{!$Resource.Typeahead}"/>
+  <apex:includeScript value="{!$Resource.SchoolDBSearchWidget}"/>
+  <apex:includeScript value="{!URLFOR($Resource.jqueryuifull,'jquery-ui.min.js')}" />
+  <apex:stylesheet value="{!URLFOR($Resource.jqueryuifull,'jquery-ui.min.css')}" />
+  <apex:stylesheet value="{!$Resource.BootstrapCSS}"/>
+  <apex:inputHidden id="OUTPUT"></apex:inputHidden> 
+  <script>
+    $(document).ready(function(){
+      console.log("TYPE",'{!$Component.SchoolDBSearchWidget}')
+      var sdbsw = new SchoolDBSearchWidget('{!$Component.SchoolDBSearchWidget}','{!searchkind}','{!targetfield}',function(uuid,target){
+        document.getElementById('{!$Component.SchoolDBSearchWidget.OUTPUT}').value = uuid;
+      });
+    })
+  </script>
+  <div class="panel panel-default ">
+    <!--div class="panel-heading"><h2>School Search</h2></div-->
+      <div class="panel-body">
+        <div id="{!$Component.SchoolDBSearchWidget}_search_dialog">
+          <form>
+            <div class="form-group {!$Component.SchoolDBSearchWidget}_hidden-at-first" id="{!$Component.SchoolDBSearchWidget}_f_Country">
+              <label for="{!$Component.SchoolDBSearchWidget}_chooseCountry">Country:</label>
+              <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseCountry">
+              </select>
+            </div>
+            <div class="form-group {!$Component.SchoolDBSearchWidget}_hidden-at-first" id="{!$Component.SchoolDBSearchWidget}_f_Faculty">
+              <label for="{!$Component.SchoolDBSearchWidget}_chooseFacultyType">Faculty Type:</label>
+              <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseFacultyType">
+              </select>
+            </div>
+            <div class="form-group {!$Component.SchoolDBSearchWidget}_hidden-at-first" id="{!$Component.SchoolDBSearchWidget}_f_Degree">
+              <label for="{!$Component.SchoolDBSearchWidget}_chooseDegreeType">Degree Type:</label>
+              <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseDegreeType">
+              </select>
+            </div>
+            <div class="form-group {!$Component.SchoolDBSearchWidget}_hidden-at-first" id="{!$Component.SchoolDBSearchWidget}_f_SystemMajor">
+              <label for="{!$Component.SchoolDBSearchWidget}_chooseSystemMajor">System Major:</label>
+              <select class="form-control" id="{!$Component.SchoolDBSearchWidget}_chooseSystemMajor">
+              </select>
+            </div>
+            <div class="form-group {!$Component.SchoolDBSearchWidget}_hidden-at-first" id="{!$Component.SchoolDBSearchWidget}_f_School">
+              <label for="{!$Component.SchoolDBSearchWidget}_input_db_searchSchool">School Name:</label>
+              <div class="input-group" style="width:100%;">
+                <input type="text" placeholder="School here..." id="{!$Component.SchoolDBSearchWidget}_input_db_searchSchool" class="schoolselect" style="width:100%;"/>
+                <input type="text" style="display:none;" id="schooluuidHidden" class="schoolId"/>
+              </div>
+            </div>
+            <div style="width:100%;height:60px;"></div>
+            <!--<div class="form-group" id="f_submit">
+              <input type="button" value="Submit" id="submit_confirmation_button" />
+            </div>-->
+          </form>
+        </div>
+      </div>
+    </div>
+</apex:component>

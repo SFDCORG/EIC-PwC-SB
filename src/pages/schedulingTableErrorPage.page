@@ -1,0 +1,8 @@
+<apex:page standardController="Scheduling_Table__c">
+    
+    <p> 
+    <apex:outputLink value="https://ap2.salesforce.com/a0C/o"  target="_top"> 
+    <font color="red"> 请前往对应组织架构记录页面创建排班表 </font>
+    </apex:outputLink>
+    </p>
+</apex:page>

@@ -1,0 +1,178 @@
+<apex:page controller="AccountQuickSearch" tabStyle="Account" sidebar="false" readOnly="true" >
+    
+ <style>
+        .hidden {
+            display: none;}                       
+    </style>
+
+    <script type='text/javascript'> 
+        function noenter(ev)  { 
+            if (window.event && window.event.keyCode == 13 || ev.which == 13) {
+                doSearchAF();
+                return false;
+            } else {
+
+              return true;
+            }
+         }
+    </script>
+
+     
+    <div id="main" style="position : relative; width: 98%; margin-left: 10px;">
+        
+        <apex:outputpanel >
+            <apex:actionstatus id="status">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="background-color: #dcdcdc ;
+                           height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                        <div class="waitingHolder" style="position: fixed; top: 30%; left: 30%; width: 50%;">
+                            <img class="waitingImage" src="/img/loading32.gif" title="正在搜索中，请耐心等候......" />
+                            <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                                正在搜索中，请耐心等候......
+                            </span>
+                        </div>
+                    </div>
+                </apex:facet>
+            </apex:actionstatus>
+        </apex:outputpanel>
+
+
+        <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
+        <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/docs/js/jquery-1.2.6.min.js')}" ></script>
+        <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.min.js')}" ></script>
+        <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.widgets.min.js')}" ></script>
+        
+        <apex:form id="theForm">
+
+                <apex:actionFunction name="doSearchAF" action="{!queryStudents}" status="status" />
+
+
+
+ 
+                <apex:pageBlock id="theBlock">
+                    
+
+                    <apex:pageBlockButtons id="pbb">
+                        <apex:commandButton action="{!queryStudents}" value="搜索客户" reRender="searchResult" status="status" id="savebt"/>
+                        <apex:commandButton action="{!cancel}" value="取消" />
+                    </apex:pageBlockButtons>
+
+
+                    <apex:pageBlockSection title="搜索方式" collapsible="false">
+
+                        <apex:outputPanel >
+
+                            <apex:selectList value="{!searchType}" size="1">
+                                <apex:selectOption itemValue="AccountContact" itemLabel="客户联系方式"/>
+                                <apex:selectOption itemValue="AccountName" itemLabel="客户名称"/>
+                                <apex:actionSupport event="onchange" reRender="theForm" >
+                                      <apex:param assignTo="{!searchContent}" value="" name="param1" />
+                                </apex:actionSupport>
+                            </apex:selectList>
+
+                            <apex:inputText value="{!searchContent}"  onkeypress="return noenter(event);"/>
+                        </apex:outputPanel>
+
+                    </apex:pageBlockSection>
+
+                        
+                    
+
+
+                        
+                    <apex:pageBlockSection id="searchResult" title="搜索结果" collapsible="false" columns="1">
+                        
+                        <script>
+                                    $(function(){
+                                            $('table').tablesorter({
+                                            widgets        : ['zebra', 'columns'],
+                                            usNumberFormat : false,
+                                            sortReset      : true,
+                                            sortRestart    : true
+                                             });
+                                    });
+                        </script>
+                        <apex:pageMessages id="idmsg"/>
+                        <apex:outputpanel layout="block" style="overflow:scroll;" rendered="{!PreciseSearchFlag}">
+                          
+                            <apex:pageBlockSection Title="精准查询（全部客户及商机）" columns="1">
+
+                              
+                                <apex:pageBlockTable value="{!preciseSearch}" var="wa" id="PreciseSearch">
+
+                                    <apex:column headerValue="客户名称" width="10%">
+                                        <apex:outputLink value="/{!wa.acount.Id}">{!wa.acount.name}</apex:outputLink>
+                                    </apex:column>
+                                    <apex:column headerValue="别名" value="{!wa.acount.Nickname__c}" width="10%" />
+
+                                    <apex:column headerValue="联系方式" width="15%">
+                                        <apex:pageBlockTable value="{!wa.contacts}" var="contact" headerClass="hidden" style="border:0">
+                                            <apex:column value="{!contact.Contact_Type__c}"  headerValue="联系方式类型"  width="10%" style="border:0"/>
+                                            <apex:column value="{!contact.Encryped_Phone__c}" headerValue="联系电话" width="10%" style="border:0"/>
+                                        </apex:pageBlockTable>
+                                    </apex:column>
+                             
+
+                                    <apex:column headerValue="商机信息" width="75%">
+                                        <apex:pageBlockTable value="{!wa.acount.Opportunities}" var="opp" >
+                                            <apex:column headerValue="商机名称" width="15%">
+                                                <apex:outputLink value="/{!opp.ID}">{!opp.Name}</apex:outputLink>
+                                            </apex:column>
+                                            <apex:column value="{!opp.OwnerId}" width="10%" />
+                                            <apex:column value="{!opp.RecordTypeId}" width="15%" />
+                                             <apex:column value="{!opp.StageName}"  width="10%" />
+                                            <apex:column value="{!opp.Project__c}" width="10%" />
+                                            <apex:column value="{!opp.Intended_City__c}" width="10%" />
+                                            <apex:column value="{!opp.Intended_Office__c}" width="15%" />
+                                        </apex:pageBlockTable>
+                                    </apex:column>
+
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+
+                        </apex:outputpanel>
+
+                        
+                        <apex:outputpanel layout="block" style="overflow:scroll;">
+                            <apex:pageBlockSection Title="模糊查询（正在跟进的客户及商机）, 按联系方式模糊搜索需输入号码前6位或以上" columns="1">
+                                <apex:pageMessages id="msgid"/>
+                                <apex:pageBlockTable value="{!fuzzySearch}" var="wa" id="FuzzySearch">
+
+                                    <apex:column headerValue="客户名称" width="10%">
+                                        <apex:outputLink value="/{!wa.acount.Id}">{!wa.acount.name}</apex:outputLink>
+                                    </apex:column>
+                                    <apex:column headerValue="别名" value="{!wa.acount.Nickname__c}" width="10%" />
+
+                                    <apex:column headerValue="联系方式" width="15%">
+                                        <apex:pageBlockTable value="{!wa.contacts}" var="contact" headerClass="hidden" style="border:0">
+                                             <apex:column value="{!contact.Contact_Type__c}"  headerValue="联系方式类型"  width="10%" style="border:0"/>
+                                            <apex:column value="{!contact.Encryped_Phone__c}" headerValue="联系电话" width="10%" style="border:0"/>
+                                        </apex:pageBlockTable>
+                                    </apex:column>
+                             
+
+                                    <apex:column headerValue="商机信息" width="75%">
+                                        <apex:pageBlockTable value="{!wa.acount.Opportunities}" var="opp" >
+                                            <apex:column headerValue="商机名称" width="15%">
+                                                <apex:outputLink value="/{!opp.ID}">{!opp.Name}</apex:outputLink>
+                                            </apex:column>
+                                            <apex:column value="{!opp.OwnerId}" width="10%" />
+                                            <apex:column value="{!opp.RecordTypeId}" width="15%" />
+                                             <apex:column value="{!opp.StageName}" width="10%" />
+                                            <apex:column value="{!opp.Project__c}" width="10%" />
+                                            <apex:column value="{!opp.Intended_City__c}" width="10%" />
+                                            <apex:column value="{!opp.Intended_Office__c}" width="15%" />
+                                        </apex:pageBlockTable>
+                                    </apex:column>
+
+                                </apex:pageBlockTable>
+                            </apex:pageBlockSection>
+
+                        </apex:outputpanel>
+
+                    </apex:pageBlockSection>
+            
+            </apex:pageBlock>
+        </apex:form>     
+    </div>
+</apex:page>

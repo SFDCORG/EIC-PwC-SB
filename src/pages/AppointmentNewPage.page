@@ -1,0 +1,7 @@
+<apex:page standardController="Appoitment__c" >
+
+
+    <apex:detail relatedList="false" title="true"/>
+
+    
+</apex:page>

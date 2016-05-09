@@ -1,0 +1,787 @@
+<apex:page controller="CampaignUploaderCtrl" sidebar="false" showHeader="false" standardStylesheets="false">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        <!-- jquery and bootstrap lib -->
+        <apex:includeScript value="{!$Resource.jquery110}" />
+        <apex:stylesheet value="{!URLFOR($Resource.bootstrap3, '/css/bootstrap.min.css')}" />
+        <apex:includeScript value="{!URLFOR($Resource.bootstrap3, '/js/bootstrap.min.js')}" />
+
+        <!-- JSON to HTML Lib -->
+        <apex:includeScript value="{!$Resource.json2html}" />
+
+        <!-- JS XLSX Lib -->
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/jszip.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/cpexcel.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/ods.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/util.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.jsxlsx, '/xlsx.full.min.js')}" />
+
+        <apex:includeScript value="{!URLFOR($Resource.layoutit, '/js/jquery-ui.js')}" />
+        <apex:includeScript value="{!$Resource.underscore}" />
+        <script>
+            var XW = {
+                /* worker message */
+                msg: 'xlsx',
+                /* worker scripts */
+                rABS: '{!URLFOR($Resource.jsxlsx, "/xlsxworker2.js")}',
+                norABS: '{!URLFOR($Resource.jsxlsx, "/xlsxworker1.js")}',
+                noxfer: '{!URLFOR($Resource.jsxlsx, "/xlsxworker.js")}'
+            };
+
+            var data = '';
+        </script>
+
+        <style type="text/css">
+            #drop {
+                border: 2px dashed #bbb;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+                text-align: center;
+                font: 15px bold,"Vollkorn";
+                color: gray;
+                background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#ECECEC), to(#FEE0C6));
+                background: -webkit-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -moz-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -ms-linear-gradient(top, #ECECEC, #FEE0C6);
+                background: -o-linear-gradient(top, #ECECEC, #FEE0C6);
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                height: 60px;
+                line-height: 60px;
+                width: 100%;
+            }
+
+            #mask {
+                display: none;
+                background-color: #FFF;
+                position:fixed;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 100%;
+                width: 100%;
+                z-index: 9999;
+                cursor: pointer;
+                opacity: 0.75;
+            }
+
+            #dataArea {
+                padding-top: 20px;
+            }
+
+            .fieldsArea {
+                padding-left: 0;
+                list-style: none;
+            }
+
+            @media (min-width: 768px)
+            .bs-glyphicons li {
+                width: 12.5%;
+                font-size: 12px;
+            }
+
+            .fieldsArea li {
+                float: left;
+                width: 20%;
+                height: 35px;
+                padding: 10px;
+                font-size: 10px;
+                line-height: 1.4;
+                background-color: #f9f9f9;
+                border: 1px solid #fff;
+            }
+
+            .fieldsArea li:hover {
+                cursor: move;
+                color: #fff;
+                background-color: #563d7c
+            }
+
+            li.moving {
+                list-style: none;
+                opacity: 0.35;
+                width: auto;
+                height: 35px;
+                padding: 10px;
+                font-size: 14px;
+                line-height: 1.4;
+                border: 1px solid #fff;
+                cursor: move;
+                color: #fff;
+                background-color: #563d7c
+            }
+
+            .ui-sortable-placeholder {
+                outline: 1px dashed #ddd;
+                visibility: visible !important; 
+                border: 2px dashed #bbb;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+            }
+
+            .ui-state-hover {
+                font-size: 16px;
+                font-weight: bold;
+                background-color: #ececec;
+            }
+        </style>
+    </head>
+
+    <apex:form >
+        <div class="container" style="width: 98%; padding-top: 15px; margin-bottom: 50px;">
+            <div class="row">
+                <div class="panel panel-info">
+                    <div class="panel-heading" id="output">
+                        {!$Label.Your_Output}
+                    </div>
+                    <div class="panel-body">
+                        <fieldset style="margin-bottom: 15px; display:none">
+                            <legend style="margin-bottom: 5px;">Parse Settings:</legend>
+                            <div>
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="useworker" checked="true" /> Use Web Workers
+                                </label>
+
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="xferable" checked="true" /> Use Transferrables
+                                </label>
+
+                                <label class="checkbox-inline">
+                                    <input type="checkbox" name="userabs" checked="true" /> Use readAsBinaryString
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <div class="row" id="controls">
+                            <div class="col-md-12">
+                                <center>
+                                    <div class="btn-group" role="group" aria-label="...">
+                                        <button type="button" id="upload" class="btn btn-default">{!$Label.Upload_Campaign}</button>
+                                        <a href="{!URLFOR($Resource.templates, 'Campaign.xlsx')}" class="btn btn-default">{!$Label.Download}</a>
+                                        <button type="button" id="back2Campaign" class="btn btn-default">{!$Label.Back_to_Campaign}</button>
+                                    </div>
+                                </center>
+                            </div>
+                        </div>
+
+                        <div id="dataArea" class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-danger">
+                                    <div class="panel-heading">{!$Label.Your_Excel_Data_Will_Be_Shown_Here}</div>
+                                    <div class="panel-body">
+                                        <div id="tabs" style="overflow: auto;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row" id="notes">
+                            <ul>
+                                <li><small style="color: #a94442;">{!$Label.Null_Value}</small></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="waitingSearchDiv" id="mask" style=" background-color: #dcdcdc;height: 300%;opacity: 0.80;filter: alpha(opacity=80);width: 100%;">
+            <div class="waitingHolder" style="position: fixed;top: 50%;left: 45%;width: 50%;">
+                <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                <span class="waitingDescription" style="font-size: 20px;font-weight: bold;color: red;">
+                    {!$Label.Loading}
+                </span>
+            </div>
+        </div>
+
+        <div id="drop">
+            {!$Label.Drop_A_File}
+        </div>
+
+        <div class="modal" id="errorDialog">
+            <div class="modal-dialog" style="top: 35%;">
+                <div class="modal-content" style="text-align: center;">
+                    <div class="modal-header">
+                        <span class="glyphicon glyphicon-warning-sign" style="font-size:26px; color:orange;margin: 0 10px 0 0;vertical-align: bottom;" aria-hidden="true"></span> 
+                        {!$Label.Error_Occurred}
+                    </div>
+                      <div class="modal-body">
+                            <div id="errorText"></div>
+                      </div>
+                    <div class="modal-footer" style="text-align: center;">
+                        <button id="scanButton" class="btn btn-warning" type="button" onclick="jQuery('#errorDialog').modal('hide');">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </apex:form>
+
+    <script>
+
+        $(function() {
+            $("#back2Campaign").click(function(){
+                window.location.href = '/701';
+            })
+        })
+
+        // read excel
+        $(function() {
+            var X = XLSX;
+
+            var rABS = typeof FileReader !== "undefined" 
+                && typeof FileReader.prototype !== "undefined" 
+                && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+            if(!rABS) {
+                document.getElementsByName("userabs")[0].disabled = true;
+                document.getElementsByName("userabs")[0].checked = false;
+            }
+
+            var use_worker = typeof Worker !== 'undefined';
+            if(!use_worker) {
+                document.getElementsByName("useworker")[0].disabled = true;
+                document.getElementsByName("useworker")[0].checked = false;
+            }
+
+            var transferable = use_worker;
+            if(!transferable) {
+                document.getElementsByName("xferable")[0].disabled = true;
+                document.getElementsByName("xferable")[0].checked = false;
+            }
+
+            var wtf_mode = false;
+
+            function fixdata(data) {
+                var o = "", l = 0, w = 10240;
+                for(; l<data.byteLength/w;  ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+                o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+                return o;
+            }
+
+            function ab2str(data) {
+                var o = "", l = 0, w = 10240;
+                for(; l<data.byteLength/w;  ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
+                o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
+                return o;
+            }
+
+            function s2ab(s) {
+                var b = new ArrayBuffer(s.length*2), v = new Uint16Array(b);
+                for (var i=0; i != s.length;  ++i) v[i] = s.charCodeAt(i);
+                return [v, b];
+            }
+
+            function xw_noxfer(data, cb) {
+                var worker = new Worker(XW.noxfer);
+                worker.onmessage = function(e) {
+                    switch(e.data.t) {
+                        case 'ready': break;
+                        case 'e': console.error(e.data.d); break;
+                        case XW.msg: cb(JSON.parse(e.data.d)); break;
+                    }
+                };
+                var arr = rABS ? data : btoa(fixdata(data));
+                worker.postMessage({d:arr,b:rABS});
+            }
+
+            function xw_xfer(data, cb) {
+                var worker = new Worker(rABS ? XW.rABS : XW.norABS);
+                worker.onmessage = function(e) {
+                    switch(e.data.t) {
+                        case 'ready': break;
+                        case 'e': console.error(e.data.d); break;
+                        default: xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); /*console.log("done");*/ cb(JSON.parse(xx)); break;
+                    }
+                };
+                if(rABS) {
+                    var val = s2ab(data);
+                    worker.postMessage(val[1], [val[1]]);
+                } else {
+                    worker.postMessage(data, [data]);
+                }
+            }
+
+            function xw(data, cb) {
+                transferable = document.getElementsByName("xferable")[0].checked;
+                if(transferable) xw_xfer(data, cb);
+                else xw_noxfer(data, cb);
+            }
+
+            function to_json(workbook) {
+                var result = {};
+                workbook.SheetNames.forEach(function(sheetName) {
+                    var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                    if(roa.length > 0){
+                        result[sheetName] = roa;
+                    }
+                });
+                return result;
+            }
+
+            function process_wb(wb) {
+                data = JSON.stringify(to_json(wb), 2, 2);
+                data = JSON.parse(data);
+
+                // create table structure
+                tabsEle = '<ul id="myTabs" class="nav nav-tabs" role="tablist">';
+                tabContentEle = '<div id="myTabContent" class="tab-content">';
+
+                Object.keys(data).forEach(function(sheetName, idx) {
+                    if(idx == 0){
+                        var targetDivId = 'Campaign';
+                        liEle = 
+                            '<li role="presentation" class="{2}">' +
+                                '<a href="#{0}" id="{0}-tab" role="tab" data-toggle="tab" ' +
+                                    'aria-controls="{0}" aria-expanded="false">{1}' +
+                                '</a>' +
+                            '</li>';
+                        tabsEle += liEle.format(
+                            targetDivId, sheetName, idx == 0 ? 'active' : ''
+                        );
+
+                        contentEle = 
+                            '<div role="tabpanel" class="tab-pane fade {1}" ' +
+                            'id="{0}" aria-labelledby="{0}-tab" />';
+                        tabContentEle += contentEle.format(
+                            targetDivId, idx == 0 ? 'active in' : ''
+                        );
+                    }
+                });
+
+                tabsEle += '</ul>';
+                tabContentEle += '</div>';
+                
+                $("#tabs").html(tabsEle + tabContentEle);
+
+                // display table data
+                var error = false;
+                Object.keys(data).forEach(function(sheetName, idx) {
+                    if(idx == 0){
+                        var uploadedDate = new Array();
+                        for(var i = 0; i < data[sheetName].length; i ++){
+                            var o = data[sheetName][i];
+                            //if(sheetName == '市场推广'){
+                                var name = '',
+                                    recordType = '',
+                                    startDate = '',
+                                    endDate = '',
+                                    approver = '',
+                                    city = '',
+                                    businessLine = '',
+                                    marketingChannelLv1 = '',
+                                    marketingChannelLv2 = '',
+                                    marketingChannelLv3 = '',
+                                    budgetedCost = '',
+                                    description = '',
+                                    e = '错误信息',
+                                    m = '信息缺失', // missing
+                                    f = '信息错误', // fault
+                                    d = '信息重复', // duplicated
+                                    nm = '信息不匹配'; // not matching
+                                
+                                // get values of each field
+                                <apex:repeat value="{!ExcelUploaderCampaignFieldMapping}" var="k">
+                                    var en = '{!k}',
+                                        cn = '{!ExcelUploaderCampaignFieldMapping[k]}';
+                                    if(en != 'errorMessage' && (typeof(o[cn]) == 'undefined' || o[cn].trim() == '')){
+                                        o[cn] = ' ';
+                                    }
+                                    
+                                    if(en == 'name'){
+                                        name = o[cn];
+                                    }
+                                    if(en == 'recordType'){
+                                        recordType = o[cn];
+                                    }
+                                    if(en == 'startDate'){
+                                        startDate = o[cn];
+                                    }
+                                    if(en == 'endDate'){
+                                        endDate = o[cn];
+                                    }
+                                    if(en == 'approver'){
+                                        approver = o[cn];
+                                    }
+                                    if(en == 'city'){
+                                        city = o[cn];
+                                    }
+                                    if(en == 'businessLine'){
+                                        businessLine = o[cn];
+                                    }
+                                    if(en == 'marketingChannelLv1'){
+                                        marketingChannelLv1 = o[cn];
+                                    }
+                                    if(en == 'marketingChannelLv2'){
+                                        marketingChannelLv2 = o[cn];
+                                    }
+                                    if(en == 'marketingChannelLv3'){
+                                        marketingChannelLv3 = o[cn];
+                                    }
+                                    if(en == 'budgetedCost'){
+                                        budgetedCost = o[cn];
+                                    }
+                                    if(en == 'description'){
+                                        description = o[cn];
+                                    }
+                                </apex:repeat>
+
+                                o[e] = ' ';
+
+                                // validate mandatory field
+                                if(typeof(name) == "undefined" || name.trim() == ''){
+                                    var key = '名称';
+                                    o[key] = 'N/A';
+                                    o[e] += '名称缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(recordType) == "undefined" || recordType.trim() == ''){
+                                    var key = '记录类型';
+                                    o[key] = 'N/A';
+                                    o[e] += '记录类型缺失; ';
+                                    error = true;
+                                }                                
+                                if(typeof(startDate) == "undefined" || startDate.trim() == ''){
+                                    var key = '开始日期';
+                                    o[key] = 'N/A';
+                                    o[e] += '开始日期缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(endDate) == "undefined" || endDate.trim() == ''){
+                                    var key = '结束日期';
+                                    o[key] = 'N/A';
+                                    o[e] += '结束日期缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(approver) == "undefined" || approver.trim() == ''){
+                                    var key = '审批人';
+                                    o[key] = 'N/A';
+                                    o[e] += '审批人缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(city) == "undefined" || city.trim() == ''){
+                                    var key = '城市';
+                                    o[key] = 'N/A';
+                                    o[e] += '城市缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(businessLine) == "undefined" || businessLine.trim() == ''){
+                                    var key = '业务线';
+                                    o[key] = 'N/A';
+                                    o[e] += '业务线缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(marketingChannelLv1) == "undefined" || marketingChannelLv1.trim() == ''){
+                                    var key = '一级市场推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '一级市场推广方式缺失; ';
+                                    error = true;
+                                }
+                                if(typeof(marketingChannelLv2) == "undefined" || marketingChannelLv2.trim() == ''){
+                                    var key = '二级市场推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '二级市场推广方式缺失; ';
+                                    error = true;
+                                }
+                                /*if(typeof(marketingChannelLv3) == "undefined" || marketingChannelLv3.trim() == ''){
+                                    var key = '三级市场推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '三级市场推广方式缺失; ';
+                                    error = true;
+                                }*/
+                                // validate format and mapping
+                                if(!validateBudgetedCost(budgetedCost)){
+                                    var key = '预算成本';
+                                    o[key] = 'N/A';
+                                    o[e] += '预算成本必须是数字; ';
+                                    error = true;
+                                }
+                                if(!validateMarketingChannelLv1(marketingChannelLv1)){
+                                    var key = '一级市场推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '一级市场推广方式不存在; ';
+                                    error = true;
+                                }
+                                if(!validateMarketingChannelLv2(marketingChannelLv2)){
+                                    var key = '二级市场推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '二级市场推广方式不存在; ';
+                                    error = true;
+                                }
+                                if(!validateMarketingChannelLv3(marketingChannelLv3)){
+                                    var key = '三级市场推广方式';
+                                    o[key] = 'N/A';
+                                    o[e] += '三级市场推广方式不存在; ';
+                                    error = true;
+                                }
+                                if(!validateCity(city)){
+                                    var key = '城市';
+                                    o[key] = 'N/A';
+                                    o[e] += '城市不匹配; ';
+                                    error = true;
+                                }
+                            //}
+                            uploadedDate.push(data[sheetName][i]);
+                        }
+
+                        targetDivId = 'Campaign';
+                        $.jsontotable(uploadedDate, {
+                            id: '#' + targetDivId, 
+                            header: true,
+                            className: 'table table-bordered table-hover table-condensed'
+                        });
+                    }
+                });
+
+                // highlight N/A
+                $('td:contains("N/A")').css('color', '#FF0000');
+                $('#Campaign').find('table:first').find('tr').find('td:last').css('color', '#FF0000');
+
+                // enable upload button and show result
+                var output = '{!$Label.Your_Output} ';
+                $("#upload").html('{!$Label.Upload_Campaign}');
+                if(error == true){
+                    $("#upload").attr('disabled', true);
+                    $("#upload").addClass('disabled');
+                    $('#output').html(output + '导入信息有误, 请修改相关信息后重新导入!');
+                }else{
+                    $("#upload")[0].removeAttribute('disabled');
+                    $("#upload").removeClass('disabled');
+                    $('#output').html(output + '初步验证无误, 请点击"导入市场推广"按钮进行数据导入!');
+                }
+
+                $("#mask").hide();
+            }
+
+            function validateBudgetedCost(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(!r){
+                    var reg = /^[0-9].*$/;
+                    return reg.test(v);
+                }else{
+                    return true;
+                }
+            }
+
+            function validateMarketingChannelLv1(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(r){
+                    return true;
+                }else{
+                    var f = false;
+                    <apex:repeat value="{!marketingChannelLv1Set}" var="k">
+                        if(v.trim() == '{!k}'){
+                            f = true;
+                        }
+                    </apex:repeat>
+                    return f;
+                }
+            }
+
+            function validateMarketingChannelLv2(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(r){
+                    return true;
+                }else{
+                    var f = false;
+                    <apex:repeat value="{!marketingChannelLv2Set}" var="k">
+                        if(v.trim() == '{!k}'){
+                            f = true;
+                        }
+                    </apex:repeat>
+                    return f;
+                }
+            }
+
+            function validateMarketingChannelLv3(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(r){
+                    return true;
+                }else{
+                    var f = false;
+                    <apex:repeat value="{!marketingChannelLv3Set}" var="k">
+                        if(v.trim() == '{!k}'){
+                            f = true;
+                        }
+                    </apex:repeat>
+                    return f;
+                }
+            }
+
+            function validateCity(v){
+                var r = typeof(v) == "undefined" || v.trim() === '';
+                if(r){
+                    return true;
+                }else{
+                    var f = false;
+                    <apex:repeat value="{!Cities}" var="k">
+                        if(v.trim() == '{!k}'){
+                            f = true;
+                        }
+                    </apex:repeat>
+                    return f;
+                }
+            }
+
+            function handleDrop(e) {
+                $("#mask").show();
+                e.stopPropagation();
+                e.preventDefault();
+                rABS = document.getElementsByName("userabs")[0].checked;
+                use_worker = document.getElementsByName("useworker")[0].checked;
+                var files = e.dataTransfer.files;
+                var f = files[0];
+                {
+                    var reader = new FileReader();
+                    var name = f.name;
+                    reader.onload = function(e) {
+                        /*if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);*/
+                        var data = e.target.result;
+                        if(use_worker) {
+                            xw(data, process_wb);
+                        } else {
+                            var wb;
+                            if(rABS) {
+                                wb = X.read(data, {type: 'binary'});
+                            } else {
+                            var arr = fixdata(data);
+                                wb = X.read(btoa(arr), {type: 'base64'});
+                            }
+                            process_wb(wb);
+                        }
+                    };
+                    if(rABS) reader.readAsBinaryString(f);
+                    else reader.readAsArrayBuffer(f);
+                }
+            }
+
+            function handleDragover(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
+            }
+
+            var drop = document.getElementById('drop');
+            if (drop.addEventListener) {
+                drop.addEventListener('dragenter', handleDragover, false);
+                drop.addEventListener('dragover', handleDragover, false);
+                drop.addEventListener('drop', handleDrop, false);
+            }
+        });
+
+        // upload excel
+        $(function() {
+            $("#upload").click(function() {
+                if (!data) {
+                    /*alert('Please upload your excel.');*/
+                    $('#errorText').text('{!$Label.Please_Upload_Your_Excel}');
+                    $('#errorDialog').modal();
+                    return true;
+                }
+
+                $("#mask").show();
+
+                Visualforce.remoting.timeout = 120000; // Set timeout at page level
+
+                $btn = this;
+                $($btn).html('{!$Label.Uploading}');
+                $btn.disabled = true;
+                $btn.className = 'btn btn-default disabled';
+
+                var sn = '';
+                Object.keys(data).forEach(function(sheetName, idx) {
+                    if(idx == 0){
+                        sn = sheetName;
+                    }
+                })
+                data['Campaign'] = data[sn];
+                data[sn] = '';
+
+                var translatedData = JSON.stringify(data);
+                
+                <apex:repeat value="{!ExcelUploaderCampaignFieldMapping}" var="k">
+                    var key = '{!k}';
+                    var value = '{!ExcelUploaderCampaignFieldMapping[k]}';
+                    var reg = new RegExp('"' + value + '"',"g");
+                    if(typeof(translatedData) != 'undefined' && translatedData != ''){
+                        translatedData = translatedData.replace(reg, '"' + key + '"');
+                    }
+                </apex:repeat>
+                
+                Visualforce.remoting.Manager.invokeAction(
+                    '{!$RemoteAction.CampaignUploaderCtrl.uploadData}',
+                    translatedData,
+                    function(result, event) {
+                        /*console.log(event.status);*/
+                        if(event.status){
+                            $($btn).html('{!$Label.Uploaded}');
+                            /*console.log(_.unescape(result));*/
+                            displayDMLResult(_.unescape(result));
+
+                            // highlight N/A
+                            $('td:contains("N/A")').css('color', '#FF0000');
+                            // highlight error message
+                            $('#Campaign').find('table:first').find('tr').find('td:last').css('color', '#FF0000');
+                        }else{
+                            // Error occurred
+                            $('#errorText').text(event.message);
+                            $('#errorDialog').modal();
+                        }
+
+                        $("#mask").hide();
+                    }, 
+                    {escape: true}
+                );
+            });
+        });
+
+        function displayDMLResult(result) {
+            data = JSON.parse(result)
+            tabsEle = '<ul id="myTabs" class="nav nav-tabs" role="tablist">';
+            tabContentEle = '<div id="myTabContent" class="tab-content">';
+            data.forEach(function(row, idx) {
+                var output = '{!$Label.Your_Output} ' + '{!$Label.Campaign_Output}';
+                $('#output').html(output.format(row['noOfCampaigns']));
+
+                sheetName = row['sObjectName'];
+                targetDivId = sheetName.replace(' ', '');
+                var translatedSheetName = '市场推广';
+                liEle = 
+                    '<li role="presentation" class="{2}">' +
+                        '<a href="#{0}" id="{0}-tab" role="tab" data-toggle="tab" ' +
+                            'aria-controls="{0}" aria-expanded="false">{1}' +
+                        '</a>' +
+                    '</li>';
+                tabsEle += liEle.format(
+                    targetDivId, translatedSheetName, idx == 0 ? 'active' : ''
+                );
+
+                contentEle = 
+                    '<div role="tabpanel" class="tab-pane fade {1}" ' +
+                    'id="{0}" aria-labelledby="{0}-tab" />';
+                tabContentEle += contentEle.format(
+                    targetDivId, idx == 0 ? 'active in' : ''
+                );
+            });
+            tabsEle += '</ul>';
+            tabContentEle += '</div>';
+            
+            $("#tabs").html(tabsEle + tabContentEle)
+
+            data.forEach(function(row, idx) {
+                sheetName = row['sObjectName'];
+                targetDivId = sheetName.replace(' ', '');
+                $.jsontotable(row['records'], {
+                    id: '#' + targetDivId, 
+                    header: true,
+                    className: 'table table-bordered table-hover table-condensed'
+                });
+            });
+        }
+
+    </script>
+</apex:page>

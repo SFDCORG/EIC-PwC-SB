@@ -1,0 +1,19 @@
+{
+    "success": true, 
+    "X-SFDC-Session": "00Dp000000016VS!AQ4AQE8OFxca8u.ES_tAtEjLJdH8J5qXnKl2N39OU.ESNDwpzDsdb6ReYxuxge8g2LR2njpLezK9tW6NX7LR6VxAxZXa8hA0", 
+    "time_stamp": "2016-05-09 13:53:33", 
+    "user_id": "00528000000U6POAA0", 
+    "server_url": "https://lita--pwc.cs31.my.salesforce.com/services/Soap/u/5.0/00Dp000000016VS", 
+    "headers": {
+        "Content-Type": "application/json; charset=UTF-8", 
+        "Accept": "application/json", 
+        "Authorization": "OAuth 00Dp000000016VS!AQ4AQE8OFxca8u.ES_tAtEjLJdH8J5qXnKl2N39OU.ESNDwpzDsdb6ReYxuxge8g2LR2njpLezK9tW6NX7LR6VxAxZXa8hA0"
+    }, 
+    "session_id": "00Dp000000016VS!AQ4AQE8OFxca8u.ES_tAtEjLJdH8J5qXnKl2N39OU.ESNDwpzDsdb6ReYxuxge8g2LR2njpLezK9tW6NX7LR6VxAxZXa8hA0", 
+    "metadata_url": "https://lita--pwc.cs31.my.salesforce.com/services/Soap/m/35.0", 
+    "instance_url": "https://lita--pwc.cs31.my.salesforce.com", 
+    "project name": "EIC PwC SB", 
+    "apex_url": "https://lita--pwc.cs31.my.salesforce.com/services/Soap/s/35.0", 
+    "rest_url": "https://lita--pwc.cs31.my.salesforce.com/services/data/v35.0", 
+    "partner_url": "https://lita--pwc.cs31.my.salesforce.com/services/Soap/u/35.0"
+}

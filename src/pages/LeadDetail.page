@@ -1,0 +1,82 @@
+<apex:page tabStyle="Lead"  standardController="Lead" >
+    <head>
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <apex:includeScript value="/soap/ajax/34.0/connection.js" />
+    <apex:includeScript value="/soap/ajax/34.0/apex.js" />
+    <script type="text/javascript">
+    j$ = jQuery.noConflict();
+    j$(document).ready(function() {
+        if('{!Lead.MobilePhone}'!=''){
+             var mobile = '<a class="clickcall" name="mobileNum" href="#">'+'{!Lead.MobilePhone}'+'</a><img src="/img/btn_dial_inline.gif">';
+            j$("div[id^=lea9]").html(''); 
+            j$("div[id^=lea9]").html(mobile); 
+        }
+        if('{!lead.phone}'!=''){
+             var phone = '<a class="clickcall" name="phoneNum" href="#">'+'{!lead.phone}'+'</a><img src="/img/btn_dial_inline.gif">';
+            j$("div[id^=lea8]").html('');
+            j$("div[id^=lea8]").html(phone); 
+        }
+
+        j$(".clickcall").click(function(){
+            var num =  j$(".clickcall").html();
+            if(j$(this).prop('name')=='phoneNum'){
+                num = '{!lead.Area_Code__c}'+num;
+            }
+            sforce.connection.sessionId = '{!$Api.Session_ID}';
+            var t = new sforce.SObject('Task');
+            t.Subject = 'call out';
+            t.Status = 'Completed';
+            t.WhoId ='{!Lead.Id}';
+            t.OwnerId = sforce.connection.getUserInfo().userId;
+            var result = sforce.connection.create([t]); 
+            if (result[0].getBoolean('success')){ 
+                var s = {phone:num,idstr:result[0].id}; 
+                var ret=sforce.apex.execute( 'CallOutSingle','send',s);
+                alert(ret);
+                window.location.href = window.location.href;
+            }else{
+                alert('创建Activity失败'+result[0].toString());
+            }
+        });
+
+        j$("div[id$=test]").load(function(){
+            if('{!Lead.MobilePhone}'!=''){
+                var mobile = '<a class="clickcall" name="mobileNum" href="#">'+'{!Lead.MobilePhone}'+'</a><img src="/img/btn_dial_inline.gif">';
+                j$("div[id^=lea9]").html(''); 
+                j$("div[id^=lea9]").html(mobile); 
+            }
+            if('{!lead.phone}'!=''){
+                 var phone = '<a class="clickcall" name="phoneNum" href="#">'+'{!lead.phone}'+'</a><img src="/img/btn_dial_inline.gif">';
+                j$("div[id^=lea8]").html('');
+                j$("div[id^=lea8]").html(phone); 
+            }   
+
+            j$(".clickcall").click(function(){
+                var num =  j$(".clickcall").html();
+                if(j$(this).prop('name')=='phoneNum'){
+                    num = '{!lead.Area_Code__c}'+num;
+                }
+                sforce.connection.sessionId = '{!$Api.Session_ID}';
+                var t = new sforce.SObject('Task');
+                t.Subject = 'call out';
+                t.Status = 'Completed';
+                t.WhoId ='{!Lead.Id}';
+                t.OwnerId = sforce.connection.getUserInfo().userId;
+                var result = sforce.connection.create([t]); 
+                if (result[0].getBoolean('success')){ 
+                    var s = {phone:num,idstr:result[0].id}; 
+                    var ret=sforce.apex.execute( 'CallOutSingle','send',s);
+                    alert(ret);
+                    window.location.href = window.location.href;
+                }else{
+                    alert('创建Activity失败'+result[0].toString());
+                }
+            });
+        });
+        
+        
+    });
+    </script>
+    </head>
+    <apex:detail relatedList="true" inlineEdit="true" id="test"/>
+</apex:page>

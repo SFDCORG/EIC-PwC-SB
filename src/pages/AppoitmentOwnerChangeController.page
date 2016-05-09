@@ -1,0 +1,133 @@
+<apex:page standardController="Appoitment__c" extensions="AppointmentOwnerChangeController"  recordSetVar="Appoitments">
+
+    <style>
+        body .bPageTitle {
+            padding: 15px 0 0;
+        }
+        .bPageTitle {
+            margin-bottom: 15px;
+        }
+        body .bPageTitle .ptBody {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+        }
+        .bPageTitle .ptBody {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .bPageTitle .ptBody .content {
+            float: left;
+            vertical-align: middle;
+            padding-left: 5px;
+            width: 70%;
+        }
+        body .bPageTitle .pageTitleIcon {
+            margin-top: 5px;
+        }
+        body .bPageTitle .ptBody .pageType, body .bPageTitle .ptBody .pageDescription {
+            margin-left: 37px;
+        }
+        body .bPageTitle .ptBody .pageType {
+            font-size: .9em;
+            font-weight: bold;
+            color: #4a4a56;
+            padding-left: 1px;
+        }
+        .titleSeparatingColon {
+            display: none;
+        }
+        body .bPageTitle .ptBody .pageDescription {
+            font-size: 1.8em;
+            font-weight: normal;
+            line-height: 1.1em;
+        }
+    </style>
+
+    
+    <script type='text/javascript'>
+
+    function chooseUser(){
+            window.open('/apex/LookupUserofAppoitnment', 'newwindow', 'height=500, width=750, top=100, left=200, toolbar=no, menubar=no, scrollbars=yes, resizable=yes, location=no, status=no');
+    }
+
+
+     function setUserValue(cId, cName){
+            $("[id$='UserId']").val(cId);
+            $("[id$='UserField']").val(cName);
+    }
+
+    </script>
+
+   <apex:includeScript value="{!$Resource.jquery110}" /> 
+
+    <apex:actionStatus id="status-waiting">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                                    <div class="waitingHolder" style="top: 100px; width: 50%;">
+
+                                    <b>Loading....</b> <br/>   
+                
+                                      <img class="waitingImage" src="{!$Resource.AjaxLoader}" title="正在操作中，请耐心等候......" />
+                                    </div>
+                            </div>
+                        </apex:facet>
+    </apex:actionStatus> 
+
+
+   
+
+   <p><img src="{!URLFOR($Resource.SiteSamples, '/img/maintenance.png')}" width="40px" height="40px" /><font size="5"> 更改第五天任务跟进人</font></p>
+
+
+    <font size="2"> <p>  此屏幕允许将工作记录的跟进人移到另一个用户。转移跟进人所有权时，新跟进人将不会拥有： <br/>
+ 			• 当前所有人记录的所有备注和附件 <br/>
+ 			• 当前所有人拥有的所有打开的活动（任务和事件）</p><br/></font>
+    
+
+    <apex:form >
+
+	   <apex:pageBlock id="pb1"> 
+
+          <apex:pageMessages id="pbmessgae" />
+ 
+	      <apex:pageBlockSection title="选择跟进人 " collapsible="false" columns="3">
+
+	            <div class = "requiredInput" width="70%">
+		            <div class = "requiredBlock"></div>
+			            <apex:outputPanel >
+			                选择跟进人 &nbsp;&nbsp;<font color="red"> ▎</font> <apex:inputText value="{!user}" id="UserField" html-placeholder="单击查找图标..." style="background-color: #e6e6e6; border: 2px solid #e6e6e6;" />
+			                <apex:inputHidden value="{!newOwnerID}" id="UserId"/>
+			                <apex:image value="/s.gif" id="UserLookupIcon" style="cursor: pointer;" alt="User Lookup (New Window)" styleClass="lookupIcon" html-onblur="this.className = 'lookupIcon';" html-onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" onclick="chooseUser();" title="User Lookup (New Window) "/>
+			            </apex:outputPanel>
+	            </div>
+
+	    
+	     </apex:pageBlockSection> 
+
+         <apex:pageBlockSection >
+            <apex:outputPanel >
+                <apex:commandButton value="分配"  rendered="{!saveFlag}" action="{!AssignOwnerChange}" oncomplete="quit('{!succcess}','{!selectedRows-succcess}');" status="status-waiting"/>
+                <apex:commandButton action="{!cancel}" value="取消" />
+            </apex:outputPanel>
+         </apex:pageBlockSection>
+
+              <script type='text/javascript'>
+                 
+                 function quit(ev1,ev2)
+                 {  
+                    if(ev2>0) 
+                        alert('分配失败，只能修改下属未完成第五天任务的指定接收人，请检查您的视图筛选条件！');
+                    window.location='/a0p'; 
+ 
+                 }
+
+            </script>
+
+	   </apex:pageBlock>
+	</apex:form>
+    
+</apex:page>

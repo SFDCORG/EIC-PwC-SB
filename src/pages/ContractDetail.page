@@ -1,0 +1,26 @@
+<apex:page standardController="Contract__c" extensions="ContractInfoController" docType="html-5.0">
+     
+    <style type="text/css">
+    .primarySet{
+             color:#228B22;
+             background:#FFFFF0;
+            }
+    </style>
+
+    <script>
+      function refreshPage(){ 
+      } 
+    </script>
+    
+    <apex:form id="Contractinfo">
+        <apex:pageblock >
+            <apex:pageBlockTable value="{!ContractDetailList}" var="con" id="ContractDetailTable" align="center" width="100%"> 
+                <apex:column headerValue="模块名称" Value="{!con.Module}"/>
+                <apex:column headerValue="状态" Value="{!con.Status}"/>
+                <apex:column headerValue="当前处理人姓名" Value="{!con.uname}"/>     
+                <apex:column headerValue="备注" Value="{!con.memo}"/>                  
+            </apex:pageBlockTable>
+        </apex:pageblock>    
+    </apex:form>
+    
+</apex:page>

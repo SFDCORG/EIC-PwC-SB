@@ -1,0 +1,232 @@
+<apex:page tabStyle="Appoitment__c" showHeader="false" sidebar="false" controller="lookupUserforAppoimentController">
+
+
+   <apex:includeScript value="{!$Resource.jquery110}"/>
+    <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.widgets.min.js')}" ></script>
+    <script src="{!URLFOR($Resource.layer, '/layer-v2.0/layer/layer.js')}"/>
+
+    <style>
+        .waitingSearchDiv {
+            position: absolute;
+            text-align: center;
+            top: 0;
+            z-index: 80;
+            left: 0;
+        }
+        .waitingHolder {
+            border: none;
+            background-color: transparent;
+            font-size: 1em;
+            font-weight: normal;
+            padding: 0;
+        }
+        .waitingImage {
+            vertical-align: middle;
+        }
+        .lookup {
+            padding: 0;
+        }
+        .bPageTitle {
+            margin: 0 ;
+            padding: 0 !important;
+        }
+        .ptBody {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .secondaryPalette {
+            background-color: #737e96;
+            border-color: #737e96;
+        }
+        .content {
+            float: left;
+            vertical-align: middle;
+            padding-left: 10px !important;
+            width: 70%;
+        }
+        .pageTitleIcon {
+            margin-top: 5px;
+            background-image: url(/img/sprites/master.png);
+            background-position: 0 -1202px;
+            width: 32px;
+            height: 32px;
+        }
+        h1 {
+            font-size: 1.8em !important;
+            color: #333435;
+            margin: 8px 0 4px;
+        }
+        .pBody {
+            padding-left: 10px !important;
+            margin-top: -10px !important;
+        }
+        .searchText {
+            height: 20px;
+        }
+        .lookupSearch {
+            padding: 12px 0;
+            padding-left: 10px;
+        }
+        .clearResults {
+            display: none;
+            margin-top: 6px;
+            margin-bottom: 0;
+            margin-left: 2px;
+        }
+        .pbTitle {
+            padding-left: 0 !important;
+        }
+        .relatedListIcon {
+            background-image: url(/img/icon/campaigns32.png);
+            background-position: 50% 50%;
+            width: 24px;
+            height: 24px;  
+            display: inline;
+        }
+        .searchFirstCell {
+            white-space: nowrap;
+        }
+        .helpTxt {
+            font-weight: normal;
+            padding-top: 5px;
+            font-size: .9em;
+        }
+        table#navBar {
+            width: 100%;
+            padding-top: 10px;
+        }
+        table#navBar td.nav {
+            min-width: 200px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        table#navBar td.nav a {
+            padding: 3px;
+        }
+        .tabHeader {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        </style>
+
+        <script type="text/javascript">
+            function search(){
+                searchUser();
+            }
+
+            function noenter(ev){
+            if (window.event && window.event.keyCode == 13 || ev.which == 13){
+                search();
+                return false;
+            }else{
+                return true;
+            }
+
+           
+
+        }
+
+
+        </script>
+	<apex:pageMessages />
+
+    <apex:form id="theForm">
+
+        <div class="lookup">
+
+            <div class="bPageTitle">
+                <div class="ptBody secondaryPalette">
+                    <div class="content">
+                        <img src="/s.gif" alt="" class="pageTitleIcon" title="" />
+                        <h1>查找</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pBody">
+                <apex:inputText styleClass="searchText" id="lksrch" html-placeholder=" " value="{!searchText}" onkeypress="return noenter(event);"/>
+
+                <apex:actionFunction name="searchUser" action="{!searchUser}" status="statusWaiting" reRender="usertable" />
+                <input value=" 转至! " class="btn" id="go" name="go" title="Go!" type="button" onclick="search();" />
+            </div>
+
+        </div>
+
+
+        <p>You can use "*" as a wildcard next to other characters to improve your search results.</p>
+
+
+        <apex:pageBlock >
+
+           <p>Available User</p>
+
+                <apex:outputPanel id="usertable">        
+	                    <script>
+
+	                           $(function(){
+	                                $('table').tablesorter({
+	                                    widgets        : ['zebra', 'columns'],
+	                                    usNumberFormat : false,
+	                                    sortReset      : true,
+	                                    sortRestart    : true
+	                                });
+	                            });
+
+                                function confirmuser(cId, cName){
+                                   window.opener.setUserValue(cId, cName);
+                                   window.close();
+                               }
+
+	                     </script>
+                         <table class="tablesorter">
+                                    <thead>
+                                            <tr>
+                                                <th width="50%">Full Name</th>
+                                                <th width="50%">Role</th>
+                             
+                                            </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <apex:repeat var="user" value="{!userlist }">
+                                            <tr>
+                                                <td >  
+	                                                 <a href="#" onclick="confirmuser('{!user.ID}','{!user.Name}'); return false;">
+                                                           {!user.Name} 
+                                                     </a>
+                                                </td>
+                                                <td>{!user.userRole.Name}</td>
+                                            </tr>
+                                        </apex:repeat>  
+                                    </tbody>
+                        </table>
+                 </apex:outputPanel>
+
+
+        </apex:pageBlock>
+
+
+         <apex:actionstatus id="statusWaiting">
+            <apex:facet name="start">
+                <div class="waitingSearchDiv" style="background-color:#dcdcdc;height:300%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                    <div class="waitingHolder" style="position:fixed;top:50%;left:30%;width:50%;">
+                        <img class="waitingImage" src="/img/loading32.gif" title="Loading....." />
+                        <span style="font-size:20px;font-weight:bold;color:red;">
+                            正在搜索中
+                        </span>
+                    </div>
+                </div>
+            </apex:facet>
+        </apex:actionstatus>
+    </apex:form>
+    
+</apex:page>

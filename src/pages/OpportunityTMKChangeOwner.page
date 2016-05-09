@@ -1,0 +1,115 @@
+<apex:page standardController="Opportunity" extensions="OpportunityTMKChangeOwnerCtl">
+     <style>
+        body .bPageTitle {
+            padding: 15px 0 0;
+        }
+        .bPageTitle {
+            margin-bottom: 15px;
+        }
+        body .bPageTitle .ptBody {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+        }
+        .bPageTitle .ptBody {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .bPageTitle .ptBody .content {
+            float: left;
+            vertical-align: middle;
+            padding-left: 5px;
+            width: 70%;
+        }
+        body .bPageTitle .pageTitleIcon {
+            margin-top: 5px;
+        }
+        body .bPageTitle .ptBody .pageType, body .bPageTitle .ptBody .pageDescription {
+            margin-left: 37px;
+        }
+        body .bPageTitle .ptBody .pageType {
+            font-size: .9em;
+            font-weight: bold;
+            color: #4a4a56;
+            padding-left: 1px;
+        }
+        .titleSeparatingColon {
+            display: none;
+        }
+        body .bPageTitle .ptBody .pageDescription {
+            font-size: 1.8em;
+            font-weight: normal;
+            line-height: 1.1em;
+        }
+    </style>
+
+    <script type='text/javascript'>
+
+    function chooseUser(){
+            window.open('/apex/lookupUserforOpportunity', 'newwindow', 'height=500, width=750, top=100, left=200, toolbar=no, menubar=no, scrollbars=yes, resizable=yes, location=no, status=no');
+    }
+
+
+     function setUserValue(cId, cName){
+            $("[id$='UserId']").val(cId);
+            $("[id$='UserField']").val(cName);
+    }
+
+    </script>
+
+   <apex:includeScript value="{!$Resource.jquery110}" /> 
+
+    <apex:actionStatus id="status-waiting">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                                    <div class="waitingHolder" style="top: 100px; width: 50%;">
+
+                                    <b>Loading....</b> <br/>   
+                
+                                      <img class="waitingImage" src="{!$Resource.AjaxLoader}" title="正在操作中，请耐心等候......" />
+                                    </div>
+                            </div>
+                        </apex:facet>
+    </apex:actionStatus> 
+
+
+   
+
+   <p><img src="{!URLFOR($Resource.StandardCoinImage, '/oppcoin.png')}" width="40px" height="40px" /><font size="5"> 更改商机所有人</font></p>
+   <font size="2"> <p>  此屏幕允许将商机的所有权转移到另一个用户。转移商机所有权时，新所有人将不会拥有： <br/>
+ 			• 当前所有人记录的所有备注和附件 <br/>
+ 			• 当前所有人拥有的所有打开的活动（任务和事件）</p><br/></font>
+    <apex:form >
+
+	   <apex:pageBlock id="pb1"> 
+
+          <apex:pageMessages id="pbmessgae" />
+ 
+	      <apex:pageBlockSection title="选择新所有人 " collapsible="false" columns="3">
+
+	            <div class = "requiredInput" width="70%">
+		            <div class = "requiredBlock"></div>
+			            <apex:outputPanel >
+			                新所有人 &nbsp;&nbsp;<font color="red"> ▎</font> <apex:inputText value="{!user}" id="UserField" html-placeholder="单击查找图标..." style="background-color: #e6e6e6; border: 2px solid #e6e6e6;" />
+			                <apex:inputHidden value="{!newOwnerID}" id="UserId"/>
+			                <apex:image value="/s.gif" id="UserLookupIcon" style="cursor: pointer;" alt="User Lookup (New Window)" styleClass="lookupIcon" html-onblur="this.className = 'lookupIcon';" html-onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" onclick="chooseUser();" title="User Lookup (New Window) "/>
+			            </apex:outputPanel>
+	            </div>
+
+	    
+	     </apex:pageBlockSection> 
+
+         <apex:pageBlockSection >
+            <apex:outputPanel >
+                <apex:commandButton value="分配"  action="{!AssignOpp}" status="status-waiting"/>
+                <apex:commandButton action="{!cancel}" value="取消" />
+            </apex:outputPanel>
+         </apex:pageBlockSection>
+
+	   </apex:pageBlock>
+	</apex:form>
+    
+</apex:page>

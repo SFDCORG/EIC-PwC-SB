@@ -1,0 +1,582 @@
+<apex:page standardController="Lead" extensions="NewLeadV2Ext" tabStyle="Lead" sidebar="false">
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <style>
+        body .bPageTitle {
+            padding: 15px 0 0;
+        }
+        .bPageTitle {
+            margin-bottom: 15px;
+        }
+        body .bPageTitle .ptBody {
+            background-color: transparent;
+            color: #000;
+            padding: 0;
+        }
+        .bPageTitle .ptBody {
+            padding-top: 5px;
+            padding-bottom: 5px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .bPageTitle .ptBody .content {
+            float: left;
+            vertical-align: middle;
+            padding-left: 5px;
+            width: 70%;
+        }
+        body .bPageTitle .pageTitleIcon {
+            margin-top: 5px;
+        }
+        body .bPageTitle .ptBody .pageType, body .bPageTitle .ptBody .pageDescription {
+            margin-left: 37px;
+        }
+        body .bPageTitle .ptBody .pageType {
+            font-size: .9em;
+            font-weight: bold;
+            color: #4a4a56;
+            padding-left: 1px;
+        }
+        .titleSeparatingColon {
+            display: none;
+        }
+        body .bPageTitle .ptBody .pageDescription {
+            font-size: 1.8em;
+            font-weight: normal;
+            line-height: 1.1em;
+        }
+    </style>
+    <apex:form id="theForm">
+
+        <div class="bPageTitle">
+            <div class="ptBody">
+                <div class="content">
+                    <img src="/s.gif" alt="{!$ObjectType.Lead.Label}" class="pageTitleIcon" title="{!$ObjectType.Lead.Label}"/>
+                        <h1 class="pageType">{!$Label.Sales_Leads_Editor_Page_Title}
+                            <span class="titleSeparatingColon">:</span>
+                        </h1>
+                        <h2 class="pageDescription"> {!$Label.Sales_Leads_Create_Page_Description}</h2>
+                        <div class="blank">&nbsp;</div>
+                </div>
+                <div class="links">
+                    <a href="javascript:openPopupFocusEscapePounds(%27https://login.salesforce.com/services/auth/sso/00D30000000XsfGEAS/HTAuthProvider?startURL=%252Fapex%252Fhtdoor%253Floc%253Dhelp%2526target%253Dleads_edit.htm%2526section%253DLeads%2526language%253Dzh_CN%2526release%253D198.10.2%2526instance%253DAP2&amp;site=https%3A%2F%2Fhelp.salesforce.com&amp;showSplash=true%27, %27Help%27, 1024, 768, %27width=1024,height=768,resizable=yes,toolbar=yes,status=yes,scrollbars=yes,menubar=yes,directories=no,location=yes,dependant=no%27, false, false);" title="此页面的帮助 （新窗口）">
+                        <span class="helpLink">{!$Label.Help_For_This_Page}</span>
+                        <img src="/s.gif" alt="" class="helpIcon"/>
+                    </a>
+                </div>
+            </div>
+            <div class="ptBreadcrumb"></div>
+        </div>
+
+        <apex:pageBlock title="{!$Label.Sales_Leads_Editor_Page_Title}" mode="edit">
+            <apex:pageMessages escape="false"/>
+            <apex:pageBlockButtons >
+                <apex:commandButton action="{!save}" value="{!$Label.Save}" rendered="{!editable}" onclick="return validate();" id="savebtn" />
+                <apex:commandButton action="{!cancel}" value="{!$Label.Cancel}" id="cancelbtn"/>
+            </apex:pageBlockButtons>
+
+            <apex:actionRegion >
+            <apex:pageBlockSection title="{!$Label.Lead_Required_Information}" columns="2" rendered="{!editable}" id="cancelbtn">
+                <apex:actionFunction name="clearProjectsAndCheckCities" action="{!clearProjectsAndCheckCities}" oncomplete="afterClearProjectsAndCheckCities()" reRender="IntendedInfoSection" immediate="true">
+                    <apex:param name="city" value=""/>
+                </apex:actionFunction>
+                <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$Label.Name}" for="LastName"/>
+                    <apex:inputField value="{!lead.LastName}" id="LastName"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!AND(FollowupResultSetting == 'Required', mode == '1')}">
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Followup_Result__c.Label}" for="Followup_Result__c" id="followupResultLabel"/>
+                    <apex:inputField value="{!lead.Followup_Result__c}" id="Followup_Result__c" required="true"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!OR(FollowupResultSetting != 'Required', mode == '2')}"></apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.MobilePhone.Label}" for="mPhone"/>
+                    <apex:inputText value="{!mPhone}" id="mPhone" html-placeholder="{!$Label.At_Least_One_Phone_Number}"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Intended_City__c.Label}" for="Intended_City__c"/>
+                    <apex:inputField value="{!lead.Intended_City__c}" id="Intended_City__c" required="true" onchange="invokeCityChangeChecks(this)"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Area_Code__c.Label}" for="Area_Code__c"/>
+                    <apex:inputField value="{!lead.Area_Code__c}" id="Area_Code__c"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Phone.Label}" for="phoneNumber"/>
+                    <apex:inputText value="{!phoneNumber}" id="phoneNumber" html-placeholder="{!$Label.At_Least_One_Phone_Number}"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+
+                <apex:outputLabel value="{!$ObjectType.Lead.fields.Campaign__c.Label}" id="campaignLabel"/>
+                <apex:outputPanel id="campaignLookupPanel">
+                    <div class = "requiredInput">
+                        <div class = "requiredBlock"></div>
+                            <apex:inputText value="{!campaignName}" id="campaignField" html-placeholder="{!$Label.Click_Icon_To_Find}" style="background-color: #e6e6e6; border: 2px solid #e6e6e6;" required="true"/>
+                            <apex:inputHidden value="{!campaignId}" id="campaignId"/>
+                            <apex:image value="/s.gif" id="campaignLookupIcon" style="cursor: pointer;" alt="Campaign Lookup (New Window)" styleClass="lookupIcon" html-onblur="this.className = 'lookupIcon';" html-onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" onclick="chooseCampaign();" title="Campaign Lookup (New Window) "/>
+                    </div>
+                </apex:outputPanel>
+
+                <apex:outputLabel value="{!$ObjectType.Lead.fields.Consultation_Mode__c.Label}" id="consultationModeLabel1" for="Consultation_Mode__c" rendered="{!mode == '1'}"/>
+                <apex:outputPanel id="consultationModePanel1" rendered="{!mode == '1'}">
+                    <div class = "requiredInput">
+                        <div class = "requiredBlock"></div>
+                        <apex:selectList size="1" value="{!consultationMode}" id="Consultation_Mode__c1" required="true" onchange="changeConsultationMode()">
+                            <apex:selectOptions value="{!ConsultationModes}"/>
+                        </apex:selectList>
+                    </div>
+                </apex:outputPanel>
+
+                <apex:pageBlockSectionItem rendered="{!mode == '2'}">
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Consultation_Mode__c.Label}" id="consultationModeLabel2" for="Consultation_Mode__c"/>
+                    <apex:outputField value="{!lead.Consultation_Mode__c}" id="Consultation_Mode__c2"/>
+                </apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem rendered="{!mode == '2'}"></apex:pageBlockSectionItem>
+
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Is_Local__c.Label}" for="Is_Local__c" id="olIsLocal"/>
+                    <apex:inputField value="{!lead.Is_Local__c}" id="ifIsLocal"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            </apex:actionRegion>
+            <apex:actionRegion >
+                <apex:pageBlockSection title="{!$Label.Lead_Intent_Section}" columns="2" rendered="{!editable}" id="IntendedInfoSection">
+                        <apex:actionFunction name="clearCounselling" action="{!clearCounselling}" oncomplete="afterClearCounselling()" reRender="IntendedInfoSection"/>
+                        <apex:actionFunction name="clearCooperativeEducation" action="{!clearCooperativeEducation}" oncomplete="afterClearCooperativeEducation()" reRender="IntendedInfoSection"/>
+                        <apex:actionFunction name="clearTestPrepProject" action="{!clearTestPrepProject}" oncomplete="afterClearTestPrep()" reRender="IntendedInfoSection"/>
+                        <apex:pageBlockSectionItem ></apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Is_Counselling__c.Label}" for="Is_Counselling__c"/>
+                            <apex:inputField value="{!lead.Is_Counselling__c}" id="Is_Counselling__c" onchange="selectIsCounselling()" styleClass="counsellinginput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem id="pbsiCounsellingProject">
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Counselling_Project__c.Label}" for="Counselling_Project__c"/>
+                            <apex:inputField value="{!lead.Counselling_Project__c}" id="Counselling_Project__c" onchange="selectCounsellingProject()" styleClass="counsellinginput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!showTestprep}">
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Is_TestPrep__c.Label}" for="Is_TestPrep__c"/>
+                            <apex:inputField value="{!lead.Is_TestPrep__c}" id="Is_TestPrep__c" onchange="selectIsTestPrep()" styleClass="testPrepinput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem id="pbsiTestPrepProject" rendered="{!showTestprep}">
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.TestPrep_Project__c.Label}" for="TestPrep_Project__c"/>
+                            <apex:inputField value="{!lead.TestPrep_Project__c}" id="TestPrep_Project__c" onchange="selectTestPrepProject()" styleClass="testPrepinput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem rendered="{!showCoop}">
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Is_Cooperative_Education__c.Label}" for="Is_Cooperative_Education__c"/>
+                            <apex:inputField value="{!lead.Is_Cooperative_Education__c}" id="Is_Cooperative_Education__c" onchange="selectIsCooperativeEducation()" styleClass="cooperativeinput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem id="pbsiCooperativeEducationProject" rendered="{!showCoop}">
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Cooperative_Education_Project__c.Label}" for="Cooperative_Education_Project__c"/>
+                            <apex:inputField value="{!lead.Cooperative_Education_Project__c}" id="Cooperative_Education_Project__c" onchange="selectCooperativeEducationProject()" styleClass="cooperativeinput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.StudyTourResource__c.Label}" />
+                            <apex:inputField value="{!lead.StudyTourResource__c}" />
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem id="pbsiOtherProduct">
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Other_Product__c.Label}" for="Other_Product__c"/>
+                            <apex:inputField value="{!lead.Other_Product__c}" id="Other_Product__c" onchange="selectOtherProduct()" styleClass="otherinput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Is_Scholar_Tree__c.Label}" for="Is_Scholar_Tree__c"/>
+                            <apex:inputField value="{!lead.Is_Scholar_Tree__c}" id="Is_Scholar_Tree__c" styleClass="otherinput"/>
+                        </apex:pageBlockSectionItem>
+                        <apex:pageBlockSectionItem >
+                            <apex:outputLabel value="{!$ObjectType.Lead.fields.Intended_Office__c.Label}" for="Intended_Office__c"/>
+                            <apex:inputField value="{!lead.Intended_Office__c}" id="Intended_Office__c"/>
+                        </apex:pageBlockSectionItem>
+                </apex:pageBlockSection>
+            </apex:actionRegion>
+
+            <apex:pageBlockSection title="{!$Label.Referral_Information_Section}" columns="1" rendered="{!editable}">
+                <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$ObjectType.Lead.fields.Recommend_Account__c.Label}" id="recommendAccountLabel"/>
+                <apex:outputPanel id="recommendAccountLookupPanel">
+                    <apex:inputText value="{!recommendAccountName}" id="recommendAccountField" html-placeholder="{!$Label.Click_Icon_To_Find}" style="background-color: #e6e6e6; border: 2px solid #e6e6e6;"/>
+                    <apex:inputHidden value="{!recommendAccountId}" id="recommendAccountId"/>
+                    <apex:image value="/s.gif" id="recommendAccountLookupIcon" style="cursor: pointer;" alt="Account Lookup (New Window)" styleClass="lookupIcon" html-onblur="this.className = 'lookupIcon';" html-onfocus="this.className = 'lookupIconOn';" onmouseout="this.className = 'lookupIcon';this.className = 'lookupIcon';" onmouseover="this.className = 'lookupIconOn';this.className = 'lookupIconOn';" onclick="chooseRecommendAccount();" title="Account Lookup (New Window) "/>
+                </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.OtherRecommend__c.Label}" />
+                    <apex:inputField value="{!lead.OtherRecommend__c}" id="Other_Recommend_Account" />
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Recommend_User__c.Label}" for="Recommend_User__c"/>
+                    <apex:inputField value="{!lead.Recommend_User__c}" id="Recommend_User__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Recommend_SA__c.Label}" for="Recommend_SA__c"/>
+                    <apex:inputField value="{!lead.Recommend_SA__c}" id="Recommend_SA__c"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="{!$Label.Other_Information_Section}" columns="2" rendered="{!editable}">
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Country__c.Label}" for="Country__c"/>
+                    <apex:inputField value="{!lead.Country__c}" id="Country__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Gender__c.Label}" for="Gender__c"/>
+                    <apex:inputField value="{!lead.Gender__c}" id="Gender__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.ProvinceLookup__c.Label}" for="ProvinceLookup__c"/>
+                    <apex:inputField value="{!lead.ProvinceLookup__c}" id="ProvinceLookup__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Birthday__c.Label}" for="Birthday__c"/>
+                    <apex:inputField value="{!lead.Birthday__c}" id="Birthday__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.City__c.Label}" for="City__c"/>
+                    <apex:inputField value="{!lead.City__c}" id="City__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.ID_Type__c.Label}" for="ID_Type__c"/>
+                    <apex:inputField value="{!lead.ID_Type__c}" id="ID_Type__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.District__c.Label}" for="District__c"/>
+                    <apex:inputField value="{!lead.District__c}" id="District__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.ID_Number__c.Label}" for="ID_Number__c"/>
+                    <apex:inputField value="{!lead.ID_Number__c}" id="ID_Number__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Town__c.Label}" for="Town__c"/>
+                    <apex:inputField value="{!lead.Town__c}" id="Town__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.QQ__c.Label}" for="QQ__c"/>
+                    <apex:inputField value="{!lead.QQ__c}" id="QQ__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.College__c.Label}" for="College__c"/>
+                    <apex:inputField value="{!lead.College__c}" id="College__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Wechat__c.Label}" for="Wechat__c"/>
+                    <apex:inputField value="{!lead.Wechat__c}" id="Wechat__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Education_Level__c.Label}" for="Education_Level__c"/>
+                    <apex:inputField value="{!lead.Education_Level__c}" id="Education_Level__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Email.Label}" for="Email"/>
+                    <apex:inputField value="{!lead.Email}" id="Email"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Convenient_Time__c.Label}" for="Convenient_Time__c"/>
+                    <apex:inputField value="{!lead.Convenient_Time__c}" id="Convenient_Time__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.GPA__c.Label}" for="GPA__c"/>
+                    <apex:inputField value="{!lead.GPA__c}" id="GPA__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Grade__c.Label}" for="Grade__c"/>
+                    <apex:inputField value="{!lead.Grade__c}" id="Grade__c"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Description.Label}" for="Description"/>
+                    <apex:inputField value="{!lead.Description}" id="Description"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Schedule_Abroad_Year__c.Label}" for="Schedule_Abroad_Year__c"/>
+                    <apex:inputField value="{!lead.Schedule_Abroad_Year__c}" id="Schedule_Abroad_Year__c"/>
+                </apex:pageBlockSectionItem>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+    </apex:form>
+
+    <script>
+        var btnflag = true;
+        $(function(){
+            adjustPageLayout();
+            if('{!referralType}'=='1'){
+                $('.counsellinginput').prop('disabled',true);
+                $('.otherinput').prop('disabled',true);
+            }else if('{!referralType}'=='2'){
+                $('.testPrepinput').prop('disabled',true);
+                $('.otherinput').prop('disabled',true);
+            }
+        })
+        function validate(){
+            if(!btnflag){
+                return false;
+            }
+            if($("[id$='campaignField']").val().indexOf('留学文案推荐')!=-1){
+                var re = /^(?:\w+\.?)*\w*([a-zA-Z0-9_-])+@eiceducation.com.cn$/;
+                if(!re.test($("[id$='Recommend_SA__c']").val())){
+                    alert('其他员工推荐请按xxx@eiceducation.com.cn的格式输入');
+                    return false;
+                }
+            }else if($("[id$='campaignField']").val().indexOf('老客户推荐')!=-1){
+                //alert($("[id$='Other_Recommend_Account']").prop('checked'));
+                if(($("[id$='recommendAccountField']").val()=='' || $("[id$='recommendAccountField']").val()==null) && ($("[id$='Other_Recommend_Account']").prop('checked')==false)){
+                    alert('请输入老客户或是否其他客户推荐信息');
+                    return false;
+                }
+            }else if($("[id$='campaignField']").val().indexOf('其他员工推荐')!=-1){
+                if(($("[id$='Recommend_User__c']").val()=='' || $("[id$='Recommend_User__c']").val()==null) && ($("[id$='Recommend_SA__c']").val()==''  || $("[id$='Recommend_SA__c']").val()==null)){
+                    alert('请输入系统用户或其他推荐人信息');
+                    return false;
+                }
+            }
+            btnflag = false;
+            $("[id$='savebtn']").val('{!$Label.Saving}');
+            return true;
+        }
+
+        function adjustPageLayout(){
+            $("[id$='campaignLabel']").parent().addClass('labelCol vfLabelColTextWrap');
+            $("[id$='campaignLabel']").parent().removeClass('dataCol');
+            $("[id$='campaignLabel']").parent().attr('colspan','1');
+            $("[id$='campaignLookupPanel']").parent().attr('colspan','1');
+
+            $("[id$='consultationModeLabel1']").parent().addClass('labelCol vfLabelColTextWrap');
+            $("[id$='consultationModeLabel1']").parent().removeClass('dataCol');
+            $("[id$='consultationModeLabel1']").parent().attr('colspan','1');
+            $("[id$='consultationModePanel1']").parent().attr('colspan','1');
+
+            $("[id$='recommendAccountLabel']").parent().addClass('labelCol vfLabelColTextWrap');
+            $("[id$='recommendAccountLabel']").parent().removeClass('dataCol');
+            $("[id$='recommendAccountLabel']").parent().attr('colspan','1');
+            $("[id$='recommendAccountLookupPanel']").parent().attr('colspan','1');
+
+            if('{!mobilePhoneEditable}' == '0'){
+                $("[id$='MobilePhone']").attr('disabled', true);
+            }
+            if('{!areaCodeEditable}' == '0'){
+                $("[id$='Area_Code__c']").attr('disabled', true);
+            }
+            if('{!phoneEditable}' == '0'){
+                $("[id$='phoneNumber']").attr('disabled', true);
+            }
+
+            $('input[id$=campaignField]').attr('readOnly', true);
+            $('input[id$=recommendAccountField]').attr('readOnly', true);
+
+            var errorCom = $("li:contains(':campaignField: Validation Error: Value is required.')");
+            if(errorCom.length && errorCom.length > 0){
+                $("[id$='campaignField']").css("border", "2px solid #c00");
+                $("[id$='campaignField']").next().next().next().after('<div class="errorMsg"><strong>{!$Label.Error}`</strong> {!$Label.Value_not_entered}</div>');
+                errorCom.html('{!$Label.Campaign_Not_Selected_Error}');
+            }else{
+                errorCom = $("div:contains(':campaignField: Validation Error: Value is required.')[class='messageText']");
+                if(errorCom.length && errorCom.length > 0){
+                    $("[id$='campaignField']").css("border", "2px solid #c00");
+                    $("[id$='campaignField']").next().next().next().after('<div class="errorMsg"><strong>{!$Label.Error}</strong> {!$Label.Value_not_entered}</div>');
+                    errorCom.html('<span style="color:#cc0000"><h4>Error:</h4></span>{!$Label.Campaign_Not_Selected_Error}<br>');
+                }
+            }
+
+            var mode = '{!mode}';
+            if(mode == '2'){
+                $("[id$='campaignLookupIcon']").hide();
+                var sta = '{!Lead.status}';
+                if($("[id$='Intended_City__c']").val() != '' && (sta.indexOf('全部转化')!=-1 || sta.indexOf('部分转化')!=-1)){
+                    $("[id$='Intended_City__c']").attr('disabled', true).css('background-color', '#e6e6e6;');
+                }
+            }
+            changeConsultationMode();
+            showRecommendInfo();
+        }
+
+        function selectCounsellingProject(){
+            var counsellingProjectSelect = $("[id$='Counselling_Project__c_selected']");
+            var otherProjectSelect = $("[id$='Other_Product__c_selected']");
+            if(counsellingProjectSelect[0].options.length > 0 || otherProjectSelect[0].options.length > 0){
+                $("[id$='Is_Counselling__c']").prop('checked', true);
+            }else{
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+            }
+        }
+
+        function selectCooperativeEducationProject(){
+            var cooperativeEducationProjectSelect = $("[id$='Cooperative_Education_Project__c_selected']");
+            var otherProjectSelect = $("[id$='Other_Product__c_selected']");
+            if(cooperativeEducationProjectSelect[0].options.length > 0 || otherProjectSelect[0].options.length > 0){
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', true);
+            }else{
+                $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+            }
+        }
+
+        function selectTestPrepProject(){
+            var select = $("[id$='TestPrep_Project__c_selected']");
+            if(select[0].options.length > 0){
+                $("[id$='Is_TestPrep__c']").prop('checked', true);
+            }else{
+                $("[id$='Is_TestPrep__c']").prop('checked', false);
+            }
+        }
+
+        function selectIsCounselling(){
+            if($("[id$='Is_Counselling__c']").prop('checked') == false){
+                var counsellingProjectSelect = $("[id$='Counselling_Project__c_selected']");
+                var otherProjectSelect = $("[id$='Other_Product__c_selected']");
+                if(counsellingProjectSelect[0].options.length > 0 || otherProjectSelect[0].options.length > 0){
+                    clearCounselling();
+                }
+            }
+        }
+
+        function selectIsCooperativeEducation(){
+            if($("[id$='Is_Cooperative_Education__c']").prop('checked') == false){
+                var cooperativeEducationProjectSelect = $("[id$='Cooperative_Education_Project__c_selected']");
+                if(cooperativeEducationProjectSelect[0].options.length > 0){
+                    clearCooperativeEducation();
+                }
+            }
+        }
+
+        function afterClearCounselling(){
+            adjustPageLayout();
+            if($("[id$='Is_Counselling__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_Counselling__c']").prop('checked', true);
+            }
+        }
+
+        function afterClearCooperativeEducation(){
+            adjustPageLayout();
+            if($("[id$='Is_CooperativeEducation__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_CooperativeEducation__c']").prop('checked', true);
+            }
+        }
+
+        function selectIsTestPrep(){
+            if($("[id$='Is_TestPrep__c']").prop('checked') == false){
+                var select = $("[id$='TestPrep_Project__c_selected']");
+                if(select[0].options.length > 0){
+                    clearTestPrepProject();
+                }
+            }
+        }
+
+        function invokeCityChangeChecks(city){
+            $("[id$='Is_TestPrep__c']").prop('checked', false);
+            $("[id$='Is_Cooperative_Education__c']").prop('checked', false);
+            $("[id$='Is_Counselling__c']").prop('checked', false);
+            clearProjectsAndCheckCities(city.value);
+        }
+
+        function afterClearProjectsAndCheckCities(){
+            afterClearTestPrep();
+            afterClearCooperativeEducation();
+            afterClearCounselling();
+        }
+
+        function afterClearTestPrep(){
+            adjustPageLayout();
+            if($("[id$='Is_TestPrep__c']").prop('checked') == false && $(".messageTable").length && $(".messageTable").length > 0){
+                $("[id$='Is_TestPrep__c']").prop('checked', true);
+            }
+        }
+
+        function selectOtherProduct(){
+            var counsellingProjectSelect = $("[id$='Counselling_Project__c_selected']");
+            var otherProjectSelect = $("[id$='Other_Product__c_selected']");
+            if(counsellingProjectSelect[0].options.length > 0 || otherProjectSelect[0].options.length > 0){
+                $("[id$='Is_Counselling__c']").prop('checked', true);
+            }else{
+                $("[id$='Is_Counselling__c']").prop('checked', false);
+            }
+        }
+
+        function chooseCampaign(){
+            window.open('/apex/LookupCampaign', 'newwindow', 'height=500, width=750, top=100, left=200, toolbar=no, menubar=no, scrollbars=yes, resizable=yes, location=no, status=no');
+        }
+
+        function setCampaignValue(cId, cName){
+            $("[id$='campaignId']").val(cId);
+            $("[id$='campaignField']").val(cName);
+            showRecommendInfo();
+        }
+
+        function showRecommendInfo(){
+            var cName = $("[id$='campaignField']").val();
+            if(cName.indexOf('老客户推荐')!=-1){
+                $("[id$='recommendAccountField']").parent().parent().parent().show();
+                $("[id$='Other_Recommend_Account']").parent().parent().show();
+                $("[id$='Recommend_User__c']").parent().parent().parent().hide();
+                $("[id$='Recommend_User__c']").val('');
+                $("[id$='Recommend_User__c_lkid']").val('');
+                $("[id$='Recommend_SA__c']").parent().parent().hide();
+                $("[id$='Recommend_SA__c']").val('');
+            }else if(cName.indexOf('其他员工推荐')!=-1){
+                $("[id$='recommendAccountField']").parent().parent().parent().hide();
+                $("[id$='recommendAccountField']").val('');
+                $("[id$='recommendAccountId']").val('');
+                $("[id$='Other_Recommend_Account']").parent().parent().hide();
+                $("[id$='Other_Recommend_Account']").prop('checked',false);
+                $("[id$='Recommend_User__c']").parent().parent().parent().show();
+                $("[id$='Recommend_SA__c']").parent().parent().show();
+            }else if(cName.indexOf('留学文案推荐')!=-1){
+                $("[id$='recommendAccountField']").parent().parent().parent().hide();
+                $("[id$='recommendAccountField']").val('');
+                $("[id$='recommendAccountId']").val('');
+                $("[id$='Other_Recommend_Account']").parent().parent().hide();
+                $("[id$='Other_Recommend_Account']").prop('checked',false);
+                $("[id$='Recommend_User__c']").parent().parent().parent().hide();
+                $("[id$='Recommend_User__c']").val('');
+                $("[id$='Recommend_User__c_lkid']").val('');
+                $("[id$='Recommend_SA__c']").parent().parent().show();
+
+            }else if(cName.indexOf('亲友推荐')!=-1){
+                $("[id$='recommendAccountField']").parent().parent().parent().hide();
+                $("[id$='recommendAccountField']").val('');
+                $("[id$='recommendAccountId']").val('');
+                $("[id$='Other_Recommend_Account']").parent().parent().hide();
+                $("[id$='Other_Recommend_Account']").prop('checked',false);
+                $("[id$='Recommend_User__c']").parent().parent().parent().hide();
+                $("[id$='Recommend_User__c']").val('');
+                $("[id$='Recommend_User__c_lkid']").val('');
+                $("[id$='Recommend_SA__c']").parent().parent().hide();
+                $("[id$='Recommend_SA__c']").val('');
+            }
+        }
+
+        function clearValue(){
+            $("[id$='campaignId']").val('');
+            $("[id$='campaignField']").val('');
+        }
+
+        function setAccountValue(cId, cName, uId, uName){
+            $("[id$='recommendAccountId']").val(cId);
+            $("[id$='recommendAccountField']").val(cName);
+            $("[id$='Recommend_User__c_lkid']").val(uId);
+            $("[id$='Recommend_User__c']").val(uName);
+        }
+
+        function chooseRecommendAccount(){
+            window.open('/apex/LookupRecommendAccount', 'newwindow', 'height=500, width=750, top=100, left=200, toolbar=no, menubar=no, scrollbars=yes, resizable=yes, location=no, status=no');
+        }
+
+        function changeConsultationMode(){
+            var consultationMode = $("[id$='Consultation_Mode__c1']").val();
+            if(consultationMode == '网询'){
+                $("[id$='olIsLocal']").show();
+                $("[id$='ifIsLocal']").show();
+            }else{
+                $("[id$='olIsLocal']").hide();
+                $("[id$='ifIsLocal']").hide();
+            }
+        }
+    </script>
+</apex:page>

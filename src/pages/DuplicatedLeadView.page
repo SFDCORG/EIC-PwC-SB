@@ -1,0 +1,19 @@
+<apex:page standardController="Lead" extensions="DuplicatedLeadViewController">
+    <apex:form id="LeadInfo">        
+        <apex:pageblock >
+            <apex:pageBlockTable value="{!dupLeadItems}" var="item">
+                <apex:column headerValue="线索名称" width="7%">
+                    <apex:outputLink value="/{!item.Lead__c}" target="_blank">{!item.Lead__r.Name}</apex:outputLink>
+                </apex:column>
+                <apex:column headerValue="线索所有人" value="{!lead.OwnerId}"/>
+                <apex:column headerValue="状态" value="{!item.Status__c}"/>                
+                <apex:column headerValue="创建时间" value="{!item.Lead__r.CreatedDate}"/>
+                <apex:column headerValue="四级推广方式" value="{!item.Lead__r.Campaign__c}"/>
+                <apex:column headerValue="咨询方式" value="{!item.Lead__r.Consultation_Mode__c}"/>                
+                <apex:column headerValue="意向城市" value="{!lead.Intended_City__c}"/>
+                <apex:column headerValue="业务线" value="{!item.Business_Line__c}"/>
+                <apex:column headerValue="意向国家" value="{!item.Intended_Country__c}"/>
+            </apex:pageBlockTable>
+        </apex:pageblock>
+     </apex:form>
+</apex:page>

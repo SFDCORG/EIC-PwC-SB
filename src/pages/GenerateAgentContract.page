@@ -1,0 +1,4 @@
+<apex:page Controller="GenerateAgentContractController" action="{!sendPostRequest}">
+    <apex:pageMessages />
+    
+</apex:page>

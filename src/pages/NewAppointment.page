@@ -1,0 +1,97 @@
+<apex:page controller="NewAppointmentController" tabStyle="Appoitment__c">
+<apex:form >
+<apex:outputPanel rendered="{!isValid}">
+<apex:sectionHeader title="工作记录编辑" subtitle="新建工作记录" />
+<apex:pageMessages />
+<apex:pageBlock title="工作记录编辑" rendered="{!IF(rtype='Follow_Up',true,false)}">
+<apex:pageBlockButtons >
+    <apex:commandButton value="保存" action="{!save}"/>
+	<apex:commandButton value="取消" action="{!cancel}" immediate="true"/>
+</apex:pageBlockButtons>
+<apex:pageBlockSection title="信息" columns="2">
+<apex:inputField value="{!app.Opportunity__c}" required="true"/>
+<apex:outputField value="{!app.RecordTypeId}" />
+<apex:inputField value="{!app.Contact_Method__c}"  required="true"/>
+</apex:pageBlockSection>
+<apex:pageBlockSection title="跟进详情" columns="2">
+<apex:inputField value="{!app.Follow_Up_Result__c}" required="true"/>
+<apex:inputField value="{!app.Follow_Up_Date__c}"  required="true"/>
+<apex:inputField value="{!app.Description__c}"  required="true"/>
+</apex:pageBlockSection>
+</apex:pageBlock>
+
+<apex:pageBlock title="工作记录编辑" rendered="{!IF(rtype='Invitation',true,false)}">
+<apex:pageBlockButtons >
+    <apex:commandButton value="保存" action="{!save}"/>
+	<apex:commandButton value="取消" action="{!cancel}"  immediate="true"/>
+</apex:pageBlockButtons>
+<apex:pageBlockSection title="信息" columns="2">
+<apex:inputField value="{!app.Opportunity__c}" required="true" />
+<apex:outputField value="{!app.RecordTypeId}" />
+</apex:pageBlockSection>
+<apex:pageBlockSection title="工作记录详情" columns="2">
+<apex:inputField value="{!app.Intended_City__c}"/>
+<apex:inputField value="{!app.Assign_To__c}" required="true"/>
+<apex:inputField value="{!app.Intended_Office__c}" />
+<apex:inputField value="{!app.Due_Date__c}" required="true"/>
+<apex:outputField value="{!app.Appointment_Type__c}" />
+<apex:inputField value="{!app.Due_Time__c}" required="true" />
+<apex:outputField value="{!app.Status__c}" />
+<apex:inputField value="{!app.Duration__c}" required="true" />
+</apex:pageBlockSection>
+<apex:pageBlockSection title="跟进详情">
+<apex:inputField value="{!app.Description__c}" />
+</apex:pageBlockSection>
+</apex:pageBlock>
+
+<apex:pageBlock title="工作记录编辑" rendered="{!IF(rtype='Lead_Follow_Up',true,false)}">
+<apex:pageBlockButtons >
+    <apex:commandButton value="保存" action="{!save}"/>
+	<apex:commandButton value="取消" action="{!cancel}" immediate="true"/>
+</apex:pageBlockButtons>
+<apex:pageBlockSection title="信息" columns="2">
+<apex:inputField value="{!app.Lead__c}" required="true"/>
+<apex:outputField value="{!app.RecordTypeId}" />
+<apex:inputField value="{!app.Follow_Up_Result__c}" required="true"/>
+<apex:inputField value="{!app.Description__c}" />
+</apex:pageBlockSection>
+</apex:pageBlock>
+
+<apex:pageBlock title="工作记录编辑" rendered="{!IF(rtype='Lead_Reminder',true,false)}">
+<apex:pageBlockButtons >
+    <apex:commandButton value="保存" action="{!save}"/>
+	<apex:commandButton value="取消" action="{!cancel}" immediate="true"/>
+</apex:pageBlockButtons>
+<apex:pageBlockSection title="信息" columns="2">
+<apex:inputField value="{!app.Lead__c}" required="true" />
+<apex:outputField value="{!app.RecordTypeId}" />
+</apex:pageBlockSection>
+<apex:pageBlockSection title="工作记录详情" columns="2">
+<apex:inputField value="{!app.Assign_To__c}" required="true"/>
+<apex:inputField value="{!app.Due_Date__c}" required="true"/>
+<apex:inputField value="{!app.Description__c}" />
+</apex:pageBlockSection>
+</apex:pageBlock>
+
+<apex:pageBlock title="工作记录编辑" rendered="{!IF(rtype='Reminder',true,false)}">
+<apex:pageBlockButtons >
+    <apex:commandButton value="保存" action="{!save}"/>
+	<apex:commandButton value="取消" action="{!cancel}" immediate="true"/>
+</apex:pageBlockButtons>
+<apex:pageBlockSection title="信息" columns="2">
+<apex:inputField value="{!app.Opportunity__c}" required="true" />
+<apex:outputField value="{!app.RecordTypeId}" />
+</apex:pageBlockSection>
+<apex:pageBlockSection title="工作记录详情" columns="2">
+<apex:inputField value="{!app.Assign_To__c}" required="true"/>
+<apex:inputField value="{!app.Due_Date__c}" required="true" />
+<apex:inputField value="{!app.Description__c}" />
+<apex:inputField value="{!app.Due_Time__c}"/>
+</apex:pageBlockSection>
+</apex:pageBlock>
+</apex:outputPanel>
+<apex:outputPanel rendered="{!NOT(isValid)}">
+<apex:outputLabel value="URL传入参数的有误，无法获取记录类型和父对象记录ID，请联系管理员" />
+</apex:outputPanel>
+</apex:form>
+</apex:page>

@@ -1,0 +1,53 @@
+<apex:page standardController="Account" extensions="CreateEducationController" sidebar="false" showHeader="false">
+ <head>
+<script type="text/javascript">
+   function save(){
+    var param ='';
+   			if($('input[id$=schooluuidHidden]').val()==null || $('input[id$=schooluuidHidden]').val()==''){
+   				if($('input[id$=searchSchool]').val()==null || $('input[id$=searchSchool]').val()==''){
+            alert('请选择学校！');
+            return false;
+          }else{
+            param = '{"degree":"'+$('select[id$=chooseDegreeType]').val()+'","faculty":"'+$('select[id$=chooseFacultyType]').val()+'","major":"'+$('select[id$=chooseSystemMajor]').val()+'","school":"","acctId":"{!acctId}","schoolbak":"'+$('input[id$=searchSchool]').val()+'"}';
+          }
+   			}else{
+          param = '{"degree":"'+$('select[id$=chooseDegreeType]').val()+'","faculty":"'+$('select[id$=chooseFacultyType]').val()+'","major":"'+$('select[id$=chooseSystemMajor]').val()+'","school":"'+$('input[id$=schooluuidHidden]').val()+'","acctId":"{!acctId}","schoolbak":""}';
+        }
+        
+        CreateEducationController.create(param,function(result, event){
+                if(event.status) {
+                   if(result=='success'){
+                    finish();
+                   }else{
+                    alert(result);
+                   }
+                } else if (event.type === 'exception') {
+                   console.log(result);
+                } else {
+                   console.log(result);
+                }
+        });
+    	}
+    function finish(){
+    	parent.postMessage("close", "*");
+    }
+    function chooseCountry(countries){
+      var country = '中国';
+      for(var i = 0; i<countries.length; i++){
+        if(country == countries[i].chinese_name){
+          $('select[id$=chooseCountry]').val(countries[i].uuid);
+          break;
+        }
+      }
+    }
+</script>
+</head>
+<apex:form id="formId">
+<apex:pageMessages />
+<apex:pageBlock >
+
+<c:CreateSchoolWidget />
+
+</apex:pageBlock>
+</apex:form>
+</apex:page>

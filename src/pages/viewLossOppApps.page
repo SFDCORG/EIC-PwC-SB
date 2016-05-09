@@ -1,0 +1,61 @@
+<apex:page standardController="Opportunity" extensions="viewlossOppsAppsController" docType="html-5.0">
+      
+    <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/docs/js/jquery-1.2.6.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.widgets.min.js')}" ></script>
+
+	  <apex:form >
+
+	       <apex:sectionHeader title="流失商机跟进记录"/>
+	       <apex:pageBlock id="pb1" >
+	           <apex:pageBlockSection id="pbs1" columns="1" collapsible="false" >
+
+                    <script>
+                         $(function(){
+                                $('table').tablesorter({
+                                    widgets        : ['zebra', 'columns'],
+                                    usNumberFormat : false,
+                                    sortReset      : true,
+                                    sortRestart    : true
+                                });
+                         });
+                    </script>
+
+                   
+                        <apex:repeat id="pbtable" value="{!oaList}"  var="item" >
+	                    
+                             
+	                          <apex:outputPanel >
+	                                <b>商机编号:</b><apex:outputLabel value="{!item.opp.Name}"/> &nbsp;&nbsp;&nbsp;
+	                                <b>商机创建日期:</b><apex:outputField value="{!item.opp.CreatedDate}"/>&nbsp;&nbsp;&nbsp;
+	                                <b>商机最后修改日期:</b><apex:outputField value="{!item.opp.LastModifiedDate}"/>&nbsp;&nbsp;&nbsp;
+	                          </apex:outputPanel>
+	                     
+             
+                              <apex:pageBlockTable value="{!item.apps}" var="app" >
+                                    
+		                               <apex:column headerValue="工作记录名称" width="15%">
+		                                   <apex:outputLink value="/{!app.ID}">{!app.Name}</apex:outputLink>
+		                               </apex:column>
+		                               <apex:column headerValue="记录类型" value="{!app.RecordType.Name}" width="5%" />
+		                               <apex:column headerValue="类型" value="{!app.Appointment_Type__c}" width="5%" />
+		                               <apex:column headerValue="指派给" value="{!app.Assign_To__r.Name}" width="5%" />
+		                               <apex:column headerValue="指定日期/时间	" value="{!app.sys_DueTime__c}" width="10%" />
+		                               <apex:column headerValue="状态" value="{!app.Status__c}" width="5%" />
+		                               <apex:column headerValue="跟进结果" value="{!app.Follow_Up_Result__c}" width="10%" />
+		                               <apex:column headerValue="工作备注" value="{!app.Description__c}" width="30%" />
+		                               <apex:column headerValue="创建日期" value="{!app.CreatedDate}" width="10%" />
+		                               <apex:column headerValue="上次修改日期" value="{!app.LastModifiedDate}" width="10%" />
+		                               <apex:column headerValue="创建人" value="{!app.CreatedBy.Name}" width="10%" />
+
+                               </apex:pageBlockTable>
+                            
+                       </apex:repeat>
+                    
+
+	           </apex:pageBlockSection>
+	       </apex:pageBlock>
+	  </apex:form>
+    
+</apex:page>

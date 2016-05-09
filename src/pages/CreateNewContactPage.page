@@ -1,0 +1,52 @@
+<apex:page controller="CreateNewContactPageController" docType="html-5.0">
+      
+
+       <apex:actionStatus id="status-waiting">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                                    <div class="waitingHolder" style="top: 100px; width: 50%;">
+
+                                    <b>Loading....</b> <br/>   
+                
+                                      <img class="waitingImage" src="{!$Resource.AjaxLoader}" title="正在操作中，请耐心等候......" />
+                                    </div>
+                            </div>
+                        </apex:facet>
+        </apex:actionStatus> 
+      <apex:form id="Contactinfo">
+              
+              <apex:pageblock >
+                    <apex:pageMessages /> 
+                     
+
+                    <apex:outputLink value="/{!duplicatedAccount.id}" rendered="{!isdisplayduliatedAccountLink}" > 
+                       <font color="Red"> 该联系方式已被客户使用！客户链接：{!duplicatedAccount.Name}</font>
+                    </apex:outputLink>
+
+                    <apex:pageBlockSection title="新增联系方式" collapsible="false" columns="1" id="pgbs1">
+                        <apex:outputText value="{!accountName}" label="客户名称"/>
+
+                        <apex:inputfield value="{!cntat.contact.Relationship__c}" label="联系人关系">
+                             <apex:actionSupport event="onchange" reRender="Contactinfo" action="{!contactNameGenerate}"/ >
+                        </apex:inputfield>
+
+                        <apex:inputText value="{!cntat.contact.Name}" label="联系人名称"  disabled="{!cntat.contact.Relationship__c=='客户本人'}"/>
+
+                        <apex:inputfield value="{!cntat.contact.Contact_Type__c}" label="联系方式类型" >
+                            <apex:actionSupport event="onchange" reRender="Contactinfo" status="status-waiting"/>
+                        </apex:inputfield>
+
+                        <apex:inputtext value="{!cntat.homePhoneArea}" label="区号"  rendered="{!cntat.contact.Contact_Type__c=='座机'}"/> 
+                        <apex:inputtext value="{!cntat.uniquecontact}"  label="{!IF(cntat.contact.Contact_Type__c==null,'手机',cntat.contact.Contact_Type__c)}"/>
+
+                        <apex:inputCheckbox value="{!cntat.contact.isPrimary__c}" label="主要联系方式" rendered="{!or(cntat.contact.Contact_Type__c=='座机',cntat.contact.Contact_Type__c=='手机')}"/>
+    
+                    </apex:pageBlockSection>
+              
+                    <apex:commandButton value="保存" action="{!SaveContact}" status="status-waiting" reRender="Contactinfo"/>
+                    <apex:commandButton action="{!cancel}" value="取消" status="status-waiting"/>
+
+              </apex:pageblock>  
+     </apex:form>
+</apex:page>

@@ -1,0 +1,126 @@
+<apex:page controller="DeduplicateController" sidebar="false" tabStyle="Phone_Search__tab" action="{!initAction}">
+    <script type='text/javascript'>
+        function notify(btn) {
+            notifyOppOwners();
+            if (btn.value == "已提醒...") {
+                return false;
+
+            } else {
+                btn.className='btnDisabled';
+                btn.value='已提醒...';
+            }
+
+            return true;
+        }
+
+        function clickEnterButton(e) {
+            if (e.keyCode == 13) {
+                var allElements = document.getElementsByTagName('*');
+                for (var i = 0; i < allElements.length; i ++) {
+                    if (allElements[i].id.indexOf('query') != -1) {
+                        allElements[i].click();
+                    }
+                }
+                return false;
+
+            } else {
+                return true;
+            }
+        }
+
+        window.onkeypress = clickEnterButton;
+    </script>
+
+
+    <apex:form id="formId">
+        <apex:pageBlock >
+            <apex:pageMessages />
+            <apex:outputpanel >
+                <apex:actionstatus id="status">
+                    <apex:facet name="start">
+                        <div class="waitingSearchDiv" id="el_loading" style="background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                            <div class="waitingHolder" style="position: fixed; top: 30%; left: 30%; width: 50%;">
+                                <img class="waitingImage" src="/img/loading32.gif" title="正在搜索中，请耐心等候......" />
+                                <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                                    正在搜索中，请耐心等候......
+                                </span>
+                            </div>
+                        </div>
+                    </apex:facet>
+                </apex:actionstatus>
+            </apex:outputpanel>
+
+            <apex:outputLabel value="手机/电话 " style="font-weight:bold">
+                <apex:inputText value="{!phone}"/>
+            </apex:outputLabel>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:commandButton value="号码查询" action="{!searchDuplication}" status="status" reRender="formId" id="query"/>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:commandButton value="新建销售线索" action="{!createLead}"/>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <apex:outputPanel rendered="{!IF(opps.size > 0, TRUE, FALSE)}">
+                <input type="button" value="提醒商机所有人" onClick="return notify(this);" class="btn"/>
+            </apex:outputPanel>
+            <br/>
+            <br/>
+
+            <apex:actionFunction name="notifyOppOwners" action="{!notifyOppOwners}" reRender="none"/>
+
+            <apex:pageBlockSection title="客户信息" columns="1">
+                <apex:pageBlockTable value="{!accs}" var="acc">
+                    <apex:column headerValue="客户" style="width:10%">
+                        <apex:outputLink value="/{!acc.Id}" target="_blank">{!acc.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="创建时间" value="{!acc.CreatedDate}" style="width:10%"/>
+                    <apex:column headerValue="所有人" value="{!acc.OwnerId}" style="width:10%"/>
+                    <!-- <apex:column >
+                        <input type="button" value="提醒商机所有人" onClick="return notify(this);" style="font-weight:bold"/>
+                    </apex:column> -->
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="商机信息" columns="1" id="oppPBS">
+                <apex:pageBlockTable value="{!opps}" var="opp">
+                    <apex:column headerValue="到访" style="width:3%">
+                        <apex:inputField value="{!opp.FDA_Visted__c}" >
+                            <apex:actionSupport event="onclick" action="{!searchDuplication}" status="status" immediate="false"/>
+                        </apex:inputField>
+                    </apex:column>
+                    <apex:column headerValue="商机" style="width:10%">
+                        <apex:outputLink value="/{!opp.Id}" target="_blank">{!opp.Name}</apex:outputLink>
+                    </apex:column>                   
+                    <apex:column headerValue="意向城市" value="{!opp.Intended_City__c}" style="width:10%"/>
+                    <apex:column headerValue="业务线" value="{!opp.Record_Type_Chinese_Name__c}" style="width:10%"/>
+                    <apex:column headerValue="意向业务" value="{!opp.Project__c}" style="width:10%"/>
+                    <apex:column headerValue="商机状态" value="{!opp.StageName}" style="width:10%"/>
+                    <apex:column headerValue="商机跟进人" value="{!opp.OwnerId}" style="width:10%"/>
+                    <apex:column headerValue="商机创建时间" value="{!opp.CreatedDate}" style="width:10%"/>
+                    <apex:column headerValue="转化人" value="{!opp.CreatedById}" style="width:10%"/>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+
+            <apex:pageBlockSection title="线索信息(意向项目)" columns="1">
+                <apex:pageBlockTable value="{!leadItems}" var="item"> 
+                    <!-- <apex:column >
+                        <apex:commandLink value="修改" action="{!editLead}">
+                            <apex:param name="p1" assignTo="{!myVar}" value="{!item.Lead__c}"/>
+                        </apex:commandLink>
+                    </apex:column>  -->                  
+                    <apex:column headerValue="转化状态" value="{!item.Convert__c}"  style="width:5%;color:red"/>
+                    <apex:column headerValue="线索名称" width="7%">
+                        <apex:outputLink value="/{!item.Lead__c}" target="_blank">{!item.Lead__r.Name}</apex:outputLink>
+                    </apex:column>
+                    <apex:column headerValue="线索所有人" value="{!item.Lead__r.OwnerId}" style="width:10%"/>
+                    <apex:column headerValue="状态" value="{!item.Status__c}" style="width:10%"/>                
+                    <apex:column headerValue="创建时间" value="{!item.Lead__r.CreatedDate}" style="width:10%"/>
+                    <apex:column headerValue="四级推广方式" value="{!item.Lead__r.Campaign__c}" style="width:10%"/>
+                    <apex:column headerValue="咨询方式" value="{!item.Lead__r.Consultation_Mode__c}" style="width:10%"/>                
+                    <apex:column headerValue="意向城市" value="{!item.Lead__r.Intended_City__c}" style="width:10%"/>
+                    <apex:column headerValue="业务线" value="{!item.Business_Line__c}" style="width:10%"/>
+                    <apex:column headerValue="留学国家" value="{!item.Intended_Country__c}" style="width:10%"/>
+                </apex:pageBlockTable>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+    </apex:form>
+</apex:page>

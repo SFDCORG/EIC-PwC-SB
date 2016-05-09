@@ -1,0 +1,439 @@
+<apex:page standardController="Opportunity"  sidebar="TRUE" extensions="OpportunitiesAssignPageController" docType="html-5.0">
+    <style> 
+        body .bPageBlock .pbBody .pink .pbSubheader{
+            background-color:#ff8686;
+            align:left;
+        }
+    </style> 
+
+    <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
+    <script type="text/javascript" language="javascript" src="{!$Resource.jquery110}"></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/dist/js/jquery.tablesorter.widgets.min.js')}" ></script>
+    <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.datePicker, '/laydate/laydate.js')}" ></script>
+
+    <script src="{!URLFOR($Resource.layer, '/layer-v2.0/layer/layer.js')}"/>
+    <apex:stylesheet value="{!$Resource.skin}"/>
+    <apex:includeScript value="{!$Resource.js1}"/>
+    <apex:includeScript value="{!$Resource.js2}"/>
+    <apex:includeScript value="{!$Resource.js3}"/>
+
+   
+    <div id="myPanel" >
+        <div class="bd">             
+            <apex:pageBlock > 
+                 <b>Loading....</b>
+                 <br/>                 
+                 <apex:image value="{!$Resource.AjaxLoader}"/>
+            </apex:pageBlock>      
+       </div>
+    </div>
+
+
+    <script type='text/javascript'>
+        function selectedScheduleTable(ev)  {
+           YAHOO.force.com.showMe(); 
+           selectScheTable(ev);
+           YAHOO.force.com.hideMe();
+           
+         }
+
+        function selectedScheduleTableLine(ev){
+           YAHOO.force.com.showMe();
+           selectScheTableLine(ev);
+           YAHOO.force.com.hideMe();
+        }
+
+
+        YAHOO.namespace("force.com");
+    
+        // Function called when we want to show the dialog
+        YAHOO.force.com.showMe = function() {
+            document.getElementById("myPanel").style.display = "block";
+            YAHOO.force.com.myDialog.show();
+        }
+        // Function called when we want to hide the dialog
+        YAHOO.force.com.hideMe = function() {
+            YAHOO.force.com.myDialog.hide();
+        } 
+        YAHOO.force.com.init = function() {
+            document.body.className = document.body.className + " yui-skin-sam";
+            
+            YAHOO.force.com.myDialog = new YAHOO.widget.Panel(
+                "myPanel",  // The id of our dialog container
+                { 
+                        width           :   300,    // You can play with this until it's right
+                        visible         :   false,  // Should be invisible when rendered
+                        draggable       :   true,   // Make the dialog draggable
+                        close           :   false,  // Don't include a close title button
+                        modal           :   true,   // Make it modal
+                        fixedCenter     :   true,   // Keep centered if window is scrolled
+                        zindex          :   40,     // Make sure it's on top of everything
+                        
+                        // This line adds the appear/vanish fade effect
+                        effect          :   {
+                                              effect:YAHOO.widget.ContainerEffect.FADE,
+                                              duration:0.35
+                                            } 
+                }
+             );
+            // Render the dialog to the document.body level of the DOM
+            YAHOO.force.com.myDialog.render(document.body);
+        }
+        // Add the init method to the window.load event
+        YAHOO.util.Event.addListener(window, "load", YAHOO.force.com.init);
+
+         function oppcompensate(ev,ev2){
+            if(ev=='true')
+            {  
+                var content="是否需要回补商机给排班表推荐的顾问："+ev2;
+                layer.confirm(content,  {
+                btn: ['回补','不回补'],
+                closeBtn: 0
+                },
+                function(){
+                    finish(true);},
+
+               function(){
+                    finish(false);});
+            }  
+         }
+
+        function selectAssignUser(ev){selectuser(ev);}  
+        function viewAppointment(ev) {  queryAppointments(ev);  }
+    </script>
+
+    <apex:form id="form1">
+       
+
+        <apex:actionFunction action="{!selectScheTable}" name="selectScheTable" reRender="TableLineSelectionPB,interceptSection,buttonSection,buttonSectiontitile,pb1message" status="status-waiting" >
+             <apex:param name="firstParam" assignTo="{!selectedscheTableID}" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction action="{!finish}" name="finish" reRender="form1">
+             <apex:param name="isgiveBack" assignTo="{!isGiveBack}" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction action="{!selectScheTableLine}" name="selectScheTableLine" reRender="buttonSection,buttonSectiontitile">
+             <apex:param name="lineID" assignTo="{!selectedscehTableLineID}" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction action="{!selectuser}" name="selectuser" reRender="buttonSection,buttonSectiontitile" status="status-waiting">
+             <apex:param name="userid" assignTo="{!selectedUserID}" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction action="{!getAppointmentsofUser}" name="queryAppointments" reRender="TableLineSelectionPB" oncomplete="openApplayout();" status="status-waiting" >
+             <apex:param name="appuserId" assignTo="{!appviewuserId}" value="" />
+        </apex:actionFunction>
+
+
+        <apex:actionFunction name="confirmDate" reRender="pb1message" action="{!confirmdate}">
+             <apex:param name="parm1" assignTo="{!initialAppDate}" value="" />
+        </apex:actionFunction>
+
+        <apex:actionStatus id="status-waiting">
+                        <apex:facet name="start">
+                            <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                                    <div class="waitingHolder" style="top: 100px; width: 50%;">
+
+                                    <b>Loading....</b> <br/>   
+                
+                                      <img class="waitingImage" src="{!$Resource.AjaxLoader}" title="正在操作中，请耐心等候......" />
+                                    </div>
+                            </div>
+                        </apex:facet>
+        </apex:actionStatus> 
+
+
+
+
+
+        <apex:pageBlock id="pb1">
+
+             <apex:pageMessages id="pb1message"/>
+
+            <apex:pageBlockSection id="buttonSectiontitile" columns="4">
+                <apex:outputPanel >
+                    <apex:commandButton action="{!assignOpp}" value="分配商机" rendered="{!SaveButtonFlag}"  reRender="form1"  oncomplete="oppcompensate('{!OppAdjustJudgeFlag}','{!compensateCC}')" status="status-waiting" immediate="true"/>
+                    <apex:commandButton action="{!cancel}" value="取消" onClick="YAHOO.force.com.showMe();" oncomplete="YAHOO.force.com.hideMe();"/>
+                </apex:outputPanel>
+            </apex:pageBlockSection>
+            
+             <apex:pageBlockSection rendered="{!initialAPP!=null}" title="邀约快捷变更栏">
+                
+                <apex:outputPanel >
+
+                     邀约日期:<input id="hello" class="laydate-icon"  value="{!initialAppDate}" />
+                     <script>
+                        laydate({
+                            elem: '#hello', //目标元素。由于laydate.js封装了一个轻量级的选择器引擎，因此elem还允许你传入class、tag但必须按照这种方式 '#id .class'
+                            festival: true, //显示节日
+                            choose: function(datas){
+                                
+                                confirmDate(datas);
+                            }
+                        });
+                      </script>
+                   
+                     邀约时间:
+                     <apex:selectList value="{!initialAppTime}"  label="邀约时间"  size="1">
+                          <apex:selectOptions value="{!appDateTime}"/>
+                     </apex:selectList>
+                
+                </apex:outputPanel>
+            
+            </apex:pageBlockSection>  
+
+             <apex:pageBlockSection title="选择商机分配目标" collapsible="false" id="chooseAsignMehtodPB" columns="1">
+                    <apex:selectList value="{!assignMethod}"  size="1"  >
+
+                        <apex:selectOption itemvalue="N/A" itemLabel="- - - -请选择 - - - -"/>
+                        <apex:selectOption itemvalue="CC" itemLabel="- - - - 排班表 - - - -"   rendered="{!schedulingTableOptionvisiableflag}" />
+                        
+                        <apex:selectOption itemvalue="Pool" itemLabel="- - - - 低星资源池 - - - -" rendered="{!poolOptionvisiableflag}"/>
+                         <apex:selectOption itemvalue="OppDirectly" itemLabel="- - - - 直接分配 - - - -" rendered="{!direcltyAssignflag}"/>
+
+                        <apex:actionSupport reRender="pb2,pb1message" action="{!assignMethodSelect}" event="onchange" status="status-waiting" />
+
+                    </apex:selectList> 
+             </apex:pageBlockSection>
+
+        </apex:pageBlock>
+
+
+        <apex:pageBlock id="pb2">
+
+            <apex:outputPanel id="CCPanel" rendered="{!CCFlag}" >
+
+                    <script>
+                            $(function(){
+                                $('table').tablesorter({
+                                    widgets        : ['zebra', 'columns'],
+                                    usNumberFormat : false,
+                                    sortReset      : true,
+                                    sortRestart    : true
+                                });
+                            });
+                     </script>
+                    <apex:pageBlockSection title="选择排班表" collapsible="false" id="TableSelectionPB" columns="1">
+                        
+                        <apex:outputPanel >
+                                
+                                <table class="tablesorter">
+                                    <thead>
+                                            <tr>
+                                                <th width="5%"></th>
+                                                <th width="10%">排班表名称</th>
+                                                <th width="5%">主管</th>
+                                                <th width="10%">业务线</th>
+                                                <th width="5%">城市</th>
+                                                <th width="10%">中心/校区</th>
+                                                <th width="10%">业务部门</th>
+                                                <th width="15%">负责业务</th>
+                                                <th width="10%">负责来源</th>
+                                                <th width="10%">每日总数</th>
+                                                <th width="10%">每月总数</th>
+                                            </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        <apex:repeat var="scheTabl" value="{!scheTables }">
+                                            <tr>
+                                                <td>
+                                                    <input type="radio" name="tableRadio" onclick="selectedScheduleTable('{!scheTabl.ID}')" checked="" />
+                
+                                                </td>
+                                                <td >{!scheTabl.Name} </td>
+                                                <td>{!scheTabl.Manager__r.Full_Name__c}</td>
+                                                <td>{!scheTabl.RecordType.DeveloperName}</td>
+                                                <td>{!scheTabl.City__c}</td>
+                                                <td>{!scheTabl.Office__c}</td>
+                                                <td>{!scheTabl.Department__c}</td>
+                                                <td>{!scheTabl.Project__c}</td>
+                                                <td>{!scheTabl.Source__c}</td>
+                                                <td>{!scheTabl.Daily_Opportunities__c}</td>
+                                                <td>{!scheTabl.Monthly_Opportunities__c}</td>
+                                            </tr>
+                                        </apex:repeat>  
+                                    </tbody>
+                                </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+                    
+                    <apex:commandButton value="显示/隐藏 全部用户" action="{!showAllUsers}" status="status-waiting" reRender="buttonSection,TableLineSelectionPB"/>
+                    <hr/>
+
+                    <apex:pageBlockSection collapsible="false" id="TableLineSelectionPB"  columns="1">
+                        {!worktimeExample}
+                        <apex:outputPanel rendered="{!IF(intercept='分配至顾问',true,false)}">
+                            
+                            <script>
+                            $(function(){
+                                $('table').tablesorter({
+                                    widgets        : ['zebra', 'columns'],
+                                    usNumberFormat : false,
+                                    sortReset      : true,
+                                    sortRestart    : true
+                                });
+                            });
+                            </script>
+
+                            <script type='text/javascript'>
+                                function openApplayout()
+                                 {  
+
+                                    layer.open({
+                                        type: 1,    
+                                        skin: 'layui-layer-lan', //加上边框
+                                        area: ['720px'], //宽
+                                        shadeClose: true,
+                                        title:['顾问已有邀约', 'font-size:10px;'],
+                                        content: '<style>.td3{font-size: 10px;BORDER-RIGHT:#f6f6f6 0px solid; border-top:11px #fff  solid; BORDER-LEFT: #f9f9f9 0px solid;BORDER-BOTTOM: #cfcfcf 1px solid;}</style> <table Cellpadding="1" Cellspacing="1" > <thead> <tr><th width="25%">邀约名</th><th>被分配顾问</th> <th width="10%">状态</th><th width="20%">邀约时间</th><th width="10%">持续时间</th><th width="20%">描述</th><th width="10%">创建人</th> </tr></thead> <tbody><apex:repeat var="app" value="{!applists}"><tr> <td class="td3">{!app.Name}</td><td class="td3" >{!app.Assign_To__r.Name}</td><td class="td3">{!app.Status__c}</td><td class="td3"><apex:outputText value="{0,date,MM'/'dd'/'yyyy HH':'mm}">  <apex:param value="{!app.sys_Due_Date_Time__c+1/3}" /> </apex:outputText></td><td class="td3">{!app.Duration__c}</td><td class="td3">{!app.Description__c}</td><td class="td3">{!app.createdBy.Name}</td></tr> </apex:repeat></tbody></table>'       
+                                    });
+                                 } 
+                            </script>
+                            
+                            <table class="tablesorter" id="cctable">
+
+                                <thead>
+                                    <tr>
+                                        <th width="5%"></th>
+                                        <th width="5%">推荐</th>
+                                        <th width="5%">当前在班</th>
+                                        <th>顾问名称</th>
+                                        <th>负责业务</th>
+                                        <th  width="10%">负责来源</th>
+                                        <th>当日商机</th>
+                                        <th>当月商机</th>
+                                        <th width="5%">周一</th>
+                                        <th width="5%">周二</th>
+                                        <th width="5%">周三</th>
+                                        <th width="5%">周四</th>
+                                        <th width="5%">周五</th>
+                                        <th width="5%">周六</th>
+                                        <th width="5%">周日</th>
+                                        <th width="5%">工作开始时间</th>
+                                        <th width="5%">工作结束时间</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <apex:repeat var="scheTabl" value="{!scheTablines }">
+                                    <tr style="display: {!IF(OR(scheTabl.isScheduling=true, showallUsers=true),'yes','none')}">
+                                        <td>
+                                            <input type="radio" name="tablelineRadio" onclick="selectedScheduleTableLine('{!scheTabl.schedulingTableLine.ID}')" />
+                                        </td>
+                                        <td>{!IF(scheTabl.isScheduling=true,'√','')}</td>
+                                        <td style="color:{!IF(scheTabl.isAvailableNow=true,'blue','red')}">{!IF(scheTabl.isAvailableNow=true,'当前在班','不在班')}</td>
+                                        <td>
+
+                                           <a href="#" onclick="viewAppointment('{!scheTabl.schedulingTableLine.User__c}');">
+                                            {!scheTabl.schedulingTableLine.User__r.Full_Name__c} </a>
+                                           
+                                        </td>
+                                        <td>{!scheTabl.schedulingTableLine.Project__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Source__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Daily_Opportunities__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Monthly_Opportunities__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Monday_Time__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Tuesday_Time__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Wednesday_Time__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Thursday_Time__c }</td>
+                                        <td>{!scheTabl.schedulingTableLine.Friday_Time__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Saturday_Time__c}</td>
+                                        <td>{!scheTabl.schedulingTableLine.Sunday_Time__c}</td>
+                                        <td>{!scheTabl.starttime}</td>
+                                        <td>{!scheTabl.endtime}</td>
+                                    </tr>
+                                    </apex:repeat>  
+                                </tbody>
+                            </table>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>
+
+                    <apex:pageBlockSection columns="3" id="interceptSection">
+                        <apex:outputPanel rendered="{!IF(OR(intercept='分配至前台',intercept='分配至主管'),true,false)}">
+                            <apex:pageBlockTable value="{!scheTablines}" var="scheline" width="50%">
+                                <apex:column value="{!scheline.Intercept}"   headerValue="分配截流" />
+                                <apex:column value="{!scheline.interceptByName}" headerValue="分配至"/>
+                            </apex:pageBlockTable>
+                        </apex:outputPanel>
+                    </apex:pageBlockSection>   
+            </apex:outputPanel>
+
+            <apex:outputPanel id="AssignOppDirectly" rendered="{!oppDirectly}" styleClass="orange">
+                   
+                    <apex:commandButton value="显示/隐藏 全部用户" action="{!showAllDirectlyUsers}" status="status-waiting" reRender="buttonSection,AssignOppDirectly"/>
+                   <apex:outputPanel >
+                       
+                        <apex:repeat value="{!offices}" var="office">
+
+                            <apex:pageBlockSection collapsible="true" title="{!office}"   columns="1"> 
+                                    
+                                    <apex:outputPanel style="width:100%">
+
+                                    <script>
+
+                                            $(function(){
+                                                $('table').tablesorter({
+                                                    widgets        : ['zebra', 'columns'],
+                                                    usNumberFormat : false,
+                                                    sortReset      : true,
+                                                    sortRestart    : true
+                                                });
+                                            });
+
+                                          
+                                    </script>
+
+                                    <table class="tablesorter" width="100%">
+
+                                        <thead>
+                                            <tr>
+                                                <th width="5%"></th>
+                                                <th width="10%">用户名</th>
+                                                <th width="15%">邮箱</th>
+                                                <th width="15%">角色</th>
+                                                <th width="15%">权限</th>
+                                                <th width="10%">城市</th>
+                                                <th width="10%">办公室</th>
+                                                <th width="10%">业务线</th>
+                                            </tr>
+                                        </thead>
+                                        
+                                        <tbody>
+                                            <apex:repeat var="user" value="{!userList}">
+                                                <tr style="display:{!if(user.Role_Office_CN__c=office,'true','none')}">
+                                                    <td>
+                                                        <input type="radio" name="userselect" onclick="selectAssignUser('{!user.id}')"  />
+                                                    </td>
+                                                    <td>{!user.name}</td>
+                                                    <td>{!user.Email}</td>
+                                                    <td>{!user.UserRole.Name}</td>
+                                                    <td>{!user.Profile.Name}</td>
+                                                    <td>{!user.ChineseNameofCity__c}</td>
+                                                    <td>{!user.Role_Office_CN__c}</td>
+                                                    <td>{!user.Business_Unit__c}</td>
+                                                </tr>
+                                            </apex:repeat>
+                                        </tbody>
+
+                                    </table>
+                                    </apex:outputPanel>
+                            </apex:pageBlockSection>
+
+                        </apex:repeat>
+                    
+                   </apex:outputPanel>
+                    
+            </apex:outputPanel>
+            
+                <apex:pageBlockSection id="buttonSection" columns="4">
+                    <apex:outputPanel >
+                        <apex:commandButton action="{!assignOpp}" value="分配商机" rendered="{!SaveButtonFlag}"  reRender="form1"  oncomplete="oppcompensate('{!OppAdjustJudgeFlag}','{!compensateCC}')" status="status-waiting" immediate="true"/>
+                        <apex:commandButton action="{!cancel}" value="取消" onClick="YAHOO.force.com.showMe();" oncomplete="YAHOO.force.com.hideMe();"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSection>  
+
+        </apex:pageBlock>
+
+    </apex:form>
+
+</apex:page>

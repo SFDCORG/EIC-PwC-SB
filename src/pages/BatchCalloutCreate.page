@@ -1,0 +1,1074 @@
+<apex:page sidebar="false" controller="BatchCalloutCreateController">
+    <head>
+    <apex:includeScript value="{!$Resource.jquery110}" />
+    <apex:includeScript value="{!URLFOR($Resource.jqueryuifull,'jquery-ui.min.js')}" />
+    <apex:stylesheet value="{!URLFOR($Resource.jqueryuifull,'jquery-ui.min.css')}" />
+    <script type="text/javascript">
+    j$ = jQuery.noConflict();
+    j$(document).ready(function() {
+
+        j$(document).tooltip({
+          content: function () {
+              return j$(this).prop('title');
+          }
+        });
+        j$(document).on('click','.checkAll',function(){
+          if(j$(this).prop("checked")==false){
+            j$('.checkthis').prop("checked",false);
+          }else{
+            j$('.checkthis').prop('checked',true);
+          }
+        });
+        j$(document).on('click','.checkthis',function(){
+          if(j$(this).prop("checked")==false){
+            if(j$('.checkAll').prop('checked')==true){
+              j$('.checkAll').prop('checked',false);
+            }
+          }else{
+            if(j$('.checkthis:checked').length==j$('.checkthis').length){
+              j$('.checkAll').prop('checked',true);
+            }
+          }
+        });
+        j$(document).on('click','.lowlevel',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.sevendays').prop('checked',false);
+            j$('.lost').prop('checked',false);
+          }
+        });
+        j$(document).on('click','.sevendays',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.lowlevel').prop('checked',false);
+            j$('.lost').prop('checked',false);
+          }
+        });
+        j$(document).on('click','.lost',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.lowlevel').prop('checked',false);
+            j$('.sevendays').prop('checked',false);
+          }
+        });
+
+        j$(document).on('click','.removephone1',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.removen1').prop('checked',false);
+          }
+        });
+        j$(document).on('click','.removen1',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.removephone1').prop('checked',false);
+          }
+        });
+        j$(document).on('click','.removephone2',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.removen2').prop('checked',false);
+          }
+        });
+        j$(document).on('click','.removen2',function(){
+          if(j$(this).prop('checked')==true){
+            j$('.removephone2').prop('checked',false);
+          }
+        });
+        j$(document).on('click','.delLeadlink',function(){
+          delLeadfn(j$(this).attr('id'));
+        });
+         j$(document).on('click','.delOpplink',function(){
+          delOppfn(j$(this).attr('id'));
+        });
+
+
+         j$(document).on('dblclick','.sourceList',function(){
+            console.log(j$(this).find("option:selected").length);
+            if(j$(this).find("option:selected").length==0){
+              return;
+            }
+             var idstr = j$(this).prop('id');
+             //var html = j$(this).find("option:selected").prop('outerHTML');
+             var val = j$(this).find("option:selected").val();
+             var valhtml = j$(this).find("option:selected").html();
+             var html = '<option value="'+val+'" title="'+valhtml+'"> '+valhtml+'</option>';
+             j$("#Selected"+idstr).append(html);
+             j$(this).find("option:selected").remove();
+             if(j$("input[id$=Hidden"+idstr+"]").val()=='' ){
+                j$("input[id$=Hidden"+idstr+"]").val(val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(valhtml);
+                }
+             }else{
+                j$("input[id$=Hidden"+idstr+"]").val(j$("input[id$=Hidden"+idstr+"]").val()+','+val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(j$("input[id$=HiddenHtml"+idstr+"]").val()+','+valhtml);
+                  console.log(j$("input[id$=HiddenHtml"+idstr+"]").val());
+                }
+             }
+             console.log(j$("input[id$=Hidden"+idstr+"]").val());
+             if(idstr=='OppStage'){
+              changeDixing();
+             }
+
+         });
+         j$(document).on('dblclick','.targetList',function(){
+            if(j$(this).find("option:selected").length==0){
+              return;
+            }
+             var idstr = j$(this).prop('id');
+             idstr = idstr.replace('Selected','');
+             //var html = j$(this).find("option:selected").prop('outerHTML');
+             var val = j$(this).find("option:selected").val();
+             var name = j$(this).find("option:selected").html();
+             var html = '<option value="'+val+'" title="'+name+'"> '+name+'</option>';
+             j$("#"+idstr).append(html);
+             j$(this).find("option:selected").remove();
+             var hidval = j$("input[id$=Hidden"+idstr+"]").val();
+             var vals = hidval.split(',');
+             hidval = '';
+             var flag = 0;
+             var hidname = '';
+             var names = [];
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+               hidname = j$("input[id$=HiddenHtml"+idstr+"]").val();
+               names = hidname.split(',');
+               hidname = '';
+             }
+             for(var i = 0; i<vals.length; i++){
+              if(vals[i]!=val){
+                if(flag == 0){
+                  hidval = vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                    hidname = names[i];
+                  }
+                  flag = 1;
+                }else{
+                  hidval = hidval+','+vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                    hidname = hidname+','+names[i];
+                  }
+                }
+              }
+             }
+             j$("input[id$=Hidden"+idstr+"]").val(hidval);
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+               j$("input[id$=HiddenHtml"+idstr+"]").val(hidname)
+               console.log(j$("input[id$=HiddenHtml"+idstr+"]").val());
+             }
+             console.log(j$("input[id$=Hidden"+idstr+"]").val());
+             if(idstr=='OppStage'){
+              changeDixing();
+             }
+         });
+
+         j$(document).on('click','.moveRight',function(){
+            var idstr = j$(this).prop('id');
+            idstr = idstr.replace('Right','');
+            var html = '';
+            var val = '';
+            var valhtml = '';
+            if(j$("#"+idstr).find('option:selected').length==0){
+              return;
+            }
+            j$("#"+idstr).find('option:selected').each(function(){
+              if(val == ''){
+                val+=j$(this).val();
+                valhtml += j$(this).html();
+              }else{
+                val = val+','+j$(this).val();
+                valhtml = valhtml+','+j$(this).html();
+              }
+
+            });
+            j$("#"+idstr).find('option:selected').each(function(){
+              html += j$(this).prop("outerHTML");
+              j$(this).remove();
+            });
+            j$("#Selected"+idstr).append(html);
+            if(j$("input[id$=Hidden"+idstr+"]").val()=='' ){
+                j$("input[id$=Hidden"+idstr+"]").val(val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(valhtml);
+                }
+            }else{
+                j$("input[id$=Hidden"+idstr+"]").val(j$("input[id$=Hidden"+idstr+"]").val()+','+val);
+                if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                  j$("input[id$=HiddenHtml"+idstr+"]").val(j$("input[id$=HiddenHtml"+idstr+"]").val()+','+valhtml);
+                }
+            }
+            console.log(j$("input[id$=Hidden"+idstr+"]").val());
+            if(idstr=='OppStage'){
+              changeDixing();
+             }
+         });
+
+         j$(document).on('click','.moveLeft',function(){
+            var idstr = j$(this).prop('id');
+            idstr = idstr.replace('Left','');
+            var html = '';
+            var val = {};
+            var valhtml = {};
+            if(j$("#Selected"+idstr).find('option:selected').length==0){
+              return;
+            }
+            j$("#Selected"+idstr).find('option:selected').each(function(){
+              val[j$(this).val()]=j$(this).val();
+              valhtml[j$(this).html()]=j$(this).html();
+            });
+            j$("#Selected"+idstr).find('option:selected').each(function(){
+              html += j$(this).prop("outerHTML");
+              j$(this).remove();
+            });
+            j$("#"+idstr).append(html);
+            var hidval = j$("input[id$=Hidden"+idstr+"]").val();
+             var vals = hidval.split(',');
+             hidval = '';
+             var hidname='';
+             var names = [];
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                var hidname = j$("input[id$=HiddenHtml"+idstr+"]").val();
+                var names = hidname.split(',');
+             }
+             var flag = 0;
+             for(var i = 0; i<vals.length; i++){
+              if(vals[i] in val){
+                console.log(vals[i]);
+              }else{
+                if(flag == 0){
+                  hidval = vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                    hidname = names[i];
+                  }
+                  flag = 1;
+                }else{
+                  hidval = hidval + ','+vals[i];
+                  if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                   hidname = hidname +','+names[i];
+                  }
+                }
+              }
+             }
+             j$("input[id$=Hidden"+idstr+"]").val(hidval);
+             if(j$("input[id$=HiddenHtml"+idstr+"]").length){
+                j$("input[id$=HiddenHtml"+idstr+"]").val(hidname)
+                console.log(j$("input[id$=HiddenHtml"+idstr+"]").val());
+             }
+             console.log(j$("input[id$=Hidden"+idstr+"]").val());
+             if(idstr=='OppStage'){
+              changeDixing();
+             }
+         });
+
+         j$(document).on('click','#Owner_Search',function(){
+          var term = j$("#Owner_Input").val();
+          if(term!=''){
+            BatchCalloutCreateController.searchUser(term,j$("input[id$=HiddenOwnerSource]").val(), function(result, event){
+                if(event.status) {
+                   if(result.length>0){
+                    var html = ''
+                     for(var i=0; i<result.length; i++){
+                      html += '<option value="'+result[i].Id+'" > '+result[i].Name+'</option>'
+                     }
+                     j$("#OwnerSource").html(html);
+                   }
+                } else if (event.type === 'exception') {
+                   console.log(result);
+                } else {
+                   console.log(result);
+                }
+            });
+          }
+         });
+
+         initloadfn();
+
+    });
+
+    function searchCampaigns(ele){
+      var val1 = j$('Select[id$=slLv1]').val();
+      var val2 = j$('Select[id$=slLv2]').val();
+      var val3 = j$('Select[id$=slLv3]').val();
+      var val4 = j$('#Campaign_Input').val();
+
+      if(val1!='--无--'||val2!='--无--'||val3!='--无--'||val4!=''){
+        val1 = (val1=='--无--'||val1==null)?'':val1;
+        val2 = (val2=='--无--'||val2==null)?'':val2;
+        val3 = (val3=='--无--'||val3==null)?'':val3;
+        var param = '{"lv1":"'+val1+'","lv2":"'+val2+'","lv3":"'+val3+'","term":"'+val4+'"}';
+        BatchCalloutCreateController.searchCampaign(param,j$("input[id$=HiddenCampaignSource]").val(), function(result, event){
+                if(event.status) {
+                   if(result.length>0){
+                    var html = ''
+                     for(var i=0; i<result.length; i++){
+                      html += '<option value="'+result[i].Id+'" title="'+result[i].Name+'"> '+result[i].Name+'</option>'
+                     }
+                     j$("#CampaignSource").html(html);
+                   }
+                } else if (event.type === 'exception') {
+                   console.log(result);
+                } else {
+                   console.log(result);
+                }
+            });
+      }
+    }
+
+    function initialLv2(com){
+            var v = j$(com).val();
+            if(v == '--无--'){
+                j$("[id$='slLv2']").val('--无--');
+                j$("[id$='slLv3']").val('--无--');
+            }else{
+                getLv2ByLv1();
+            }
+        }
+
+        function initialLv3(com){
+            var v = j$(com).val();
+            if(v == '--无--'){
+                j$("[id$='slLv3']").val('--无--');
+            }else{
+                getLv3ByLv1Lv2();
+            }
+        }
+
+    function finishSearchOpp(){
+      if(confirm('如果您想继续添加线索或商机请点取消，如果您想提交外呼批次请点确定')){
+        submitbatch();
+      }else{
+        initloadfn();
+        searchOppfn();
+      }
+    }
+
+    function finishSearchLead(){
+      if(confirm('如果您想继续添加线索或商机请点取消，如果您想提交外呼批次请点确定')){
+        submitbatch();
+      }else{
+        initloadfn();
+        searchLeadfn();
+      }
+    }
+
+    function changeDixing(){
+      if(j$("input[id$=HiddenOppStage]").length){
+        var val = j$("input[id$=HiddenOppStage]").val();
+        if(val.indexOf('低星资源池')!=-1){
+          j$(".dixingDate").prop('disabled',false);
+        }else{
+          j$(".dixingDate").prop('disabled',true);
+          j$(".dixingDate").val('');
+        }
+      }
+    }
+
+    function initloadfn(){
+      if(j$("input[id$=HiddenOppStage]").length){
+        var val = j$("input[id$=HiddenOppStage]").val();
+        if(val.indexOf('低星资源池')!=-1){
+          j$(".dixingDate").prop('disabled',false);
+        }else{
+          j$(".dixingDate").prop('disabled',true);
+        }
+      }else{
+        j$(".dixingDate").prop('disabled',true);
+      }
+
+    }
+
+    </script>
+    </head>
+    <apex:form id="formId">
+        <apex:actionFunction action="{!searchLead}" status="status-waiting" reRender="formId" name="searchLeadfn"/>
+        <apex:actionFunction action="{!searchOpp}" status="status-waiting" reRender="formId" name="searchOppfn"/>
+        <apex:actionFunction action="{!submitbatch}" reRender="formId" status="status-waiting" name="submitbatch"/>
+        <apex:sectionHeader title="{!$Label.Batch_Callout}" subtitle="{!$Label.Batch_Callout_Page_Header_Subtitle}"/>
+        <!--<apex:messages id="msg"/>-->
+        <apex:pageMessages id="msg" />
+        <apex:actionStatus id="status-waiting">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                        <div class="waitingHolder" style="top: 100px; width: 50%;">
+                            <img class="waitingImage" src="/img/loading32.gif" title="{!$Label.Please_Wait}" />
+                            <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                                    {!$Label.Please_Wait}
+                            </span>
+                        </div>
+                    </div>
+                </apex:facet>
+        </apex:actionStatus>
+        <apex:outputPanel rendered="{!isShow}">
+        <apex:pageBlock mode="edit" title="{!$Label.Batch_Callout_Data_Type_Filter}">
+            <apex:pageBlockSection columns="1">
+                <apex:selectRadio value="{!dataType}">
+                    <apex:selectOptions value="{!dataTypeItems}"/>
+                    <apex:actionSupport event="onchange" action="{!changeDataType}" reRender="formId" status="status-waiting" oncomplete="initloadfn();"/>
+                </apex:selectRadio>
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+        <!--Search panel for Lead-->
+        <apex:pageBlock id="searchForObject" >
+            <apex:pageBlockButtons >
+                <apex:commandButton value="{!$Label.Search_For}{!$ObjectType.Lead.Label}" action="{!searchLead}" status="status-waiting" reRender="formId"  rendered="{!IF(dataType=='Lead',true,false)}"/>
+                <apex:commandButton value="{!$Label.Button_Add_To_Batch_Job}" action="{!addLeadToBatch}" status="status-waiting" reRender="formId" oncomplete="finishSearchLead();" rendered="{!IF(dataType=='Lead',true,false)}"/>
+                <apex:commandButton value="{!$Label.Search_For}{!$ObjectType.Opportunity.Label}" action="{!searchOpp}" status="status-waiting" reRender="formId" oncomplete="initloadfn();" rendered="{!IF(dataType=='Opportunity',true,false)}" />
+                <apex:commandButton value="{!$Label.Button_Add_To_Batch_Job}" action="{!addOppToBatch}" status="status-waiting" oncomplete="finishSearchOpp();" rendered="{!IF(dataType=='Opportunity',true,false)}" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection columns="2">
+                <apex:pageBlockSectionItem >
+                <apex:outputLabel value="{!$ObjectType.Campaign.Label}"/>
+                <apex:outputPanel >
+                      <apex:outputPanel id="Owner_Searchbox">
+                      <apex:panelGrid columns="1" id="filtergroup">
+                        <apex:panelGroup >
+                          <apex:outputLabel value="{!$Label.Marketing_Channel_Lv1}: " id="lv1Label"/>
+                          <apex:actionFunction name="getLv2ByLv1" action="{!getLv2ByLv1}" status="statusWaiting" reRender="filtergroup"/>
+                            <apex:selectList value="{!lv1}" size="1" onchange="initialLv2(this);" id="slLv1" style="width:250px;">
+                                <apex:selectOptions value="{!marketingChannelLv1List}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                        <apex:panelGroup >
+                          <apex:outputLabel value="{!$Label.Marketing_Channel_Lv2}: " id="lv2Label"/>
+                          <apex:actionFunction name="getLv3ByLv1Lv2" action="{!getLv3ByLv1Lv2}" status="statusWaiting" reRender="filtergroup"/>
+                            <apex:selectList value="{!lv2}" size="1" onchange="initialLv3(this);" id="slLv2" style="width:250px;">
+                                <apex:selectOptions value="{!marketingChannelLv2List}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                        <apex:panelGroup >
+                        <apex:outputLabel value="{!$Label.Marketing_Channel_Lv3}: " id="lv3Label" />
+                          <apex:selectList value="{!lv3}" size="1" id="slLv3" style="width:250px;">
+                                <apex:selectOptions value="{!marketingChannelLv3List}"/>
+                            </apex:selectList>
+                        </apex:panelGroup>
+                      </apex:panelGrid>
+                      <input type="text" placeholder="{!$Label.Enter_Campaign_Name}" id="Campaign_Input"/>
+                      <input type="button" value="{!$Label.Search}" id="Owner_Search" onclick="searchCampaigns(this);" />
+                      </apex:outputPanel>
+                      <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="CampaignSource" Class="sourceList" multiple="true">
+
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightCampaignSource"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftCampaignSource"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedCampaignSource" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!selectedCampaignItems}">
+                                      <option value="{!var.val}" title="{!var.name}"> {!var.name} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedCampaignSource}" id="HiddenCampaignSource"/>
+                                <apex:inputHidden value="{!selectedHtmlCampaignSource}" id="HiddenHtmlCampaignSource"/>
+                            </apex:outputPanel>
+                    </apex:panelGrid>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <!--多选用户-->
+                <apex:pageBlockSectionItem >
+                    <apex:outputLabel value="{!$Label.Name}" />
+                    <apex:outputPanel >
+                      <apex:outputPanel id="Owner_Searchbox">
+                      <input type="text" placeholder="{!$Label.Entre_Name_Or_Email}" id="Owner_Input"/>
+                      <input type="button" value="{!$Label.Search}" id="Owner_Search"/>
+                      </apex:outputPanel>
+                      <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="OwnerSource" Class="sourceList" multiple="true">
+
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightOwnerSource"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftOwnerSource"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedOwnerSource" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!selectedOwnerItems}">
+                                      <option value="{!var.val}" > {!var.name} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedOwnerSource}" id="HiddenOwnerSource"/>
+                                <apex:inputHidden value="{!selectedHtmlOwnerSource}" id="HiddenHtmlOwnerSource"/>
+                            </apex:outputPanel>
+                    </apex:panelGrid>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                  <apex:outputLabel value="{!$Label.X7_Days_No_Visit}" />
+                  <apex:inputCheckbox value="{!sevendaynocomplete}" styleClass="sevendays"/>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                      <apex:outputLabel value="{!$Label.Created_Date}"/>
+                      <apex:outputPanel >
+                          <apex:inputField value="{!filterLead.Birthday__c}" />
+                          <apex:outputPanel >&nbsp;-&nbsp;</apex:outputPanel>
+                          <apex:inputField value="{!filterLead.Schedule_Abroad_Year__c}"/>
+                      </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$ObjectType.Opportunity.fields.Consultation_Mode__c.Label}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="ConsultMode" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!ConsultMode}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightConsultMode"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftConsultMode"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedConsultMode" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedConsultModeVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedConsultMode}" id="HiddenConsultMode"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$ObjectType.Opportunity.fields.Intended_City__c.Label}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="IntendCity" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!IntendCity}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightIntendCity"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftIntendCity"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedIntendCity" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedIntendCityVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedIntendCity}" id="HiddenIntendCity"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Lead',true,false)}" >
+                     <apex:outputLabel value="{!$Label.Intended}{!$ObjectType.Lead.fields.Business_Line__c.Label}"/>
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="BSLine" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!BSLine}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightBSLine"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftBSLine"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedBSLine" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedBSLineVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedBSLine}" id="HiddenBSLine"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                     <apex:outputLabel value="{!$Label.Intended}{!$ObjectType.Opportunity.fields.Department__c.Label}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="IntendDepart" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!IntendDepart}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightIntendDepart"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftIntendDepart"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedIntendDepart" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedIntendDepartVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedIntendDepart}" id="HiddenIntendDepart"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem >
+                     <apex:outputLabel value="{!$Label.Intended}{!$ObjectType.Opportunity.fields.Project__c.Label}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="Project" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!Project}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightProject"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftProject"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedProject" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedProjectVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedProject}" id="HiddenProject"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                     <apex:outputLabel value="{!$ObjectType.Opportunity.fields.Type.Label}"/>
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="OppType" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!opptypes}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightOppType"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftOppType"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedOppType" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedOppTypeVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedOppType}" id="HiddenOppType"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Lead',true,false)}" >
+                     <apex:outputLabel value="{!$ObjectType.Lead.fields.Followup_Result__c.Label}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="FollowUp" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!FollowUp}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightFollowUp"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftFollowUp"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedFollowUp" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedFollowUpVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedFollowUp}" id="HiddenFollowUp"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                     <apex:outputLabel value="{!$Label.Opportunity}{!$Label.Stage}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="OppStage" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!OppStage}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightOppStage"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftOppStage"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedOppStage" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedOppStageVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedOppStage}" id="HiddenOppStage"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Lead',true,false)}" >
+                     <apex:outputLabel value="{!$Label.Intended}{!$ObjectType.Lead.fields.Status.Label}" />
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="ItemStatus" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!ItemStatus}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightItemStatus"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftItemStatus"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedItemStatus" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!SelectedItemStatusVal}">
+                                      <option value="{!var}" > {!var} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedItemStatus}" id="HiddenItemStatus"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Lead',true,false)}" >
+                    <apex:outputLabel value="{!$Label.Created_Date}"/>
+                    <apex:outputPanel >
+                        <apex:inputField value="{!filterLead.Birthday__c}" />
+                        <apex:outputPanel >&nbsp;-&nbsp;</apex:outputPanel>
+                        <apex:inputField value="{!filterLead.Schedule_Abroad_Year__c}"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                    <apex:outputLabel value="{!$ObjectType.Lead.fields.Converted_Date__c.Label}"/>
+                    <apex:outputPanel >
+                        <apex:inputField value="{!filterLead.Converted_Date__c}" styleclass="dixingDate" />
+                        <apex:outputPanel >&nbsp;-&nbsp;</apex:outputPanel>
+                        <apex:inputField value="{!filterLead.Transferred_Date__c}" styleclass="dixingDate"/>
+                    </apex:outputPanel>
+                </apex:pageBlockSectionItem>
+                <apex:pageBlockSectionItem rendered="{!IF(dataType=='Opportunity',true,false)}" >
+                     <apex:outputLabel value="{!$Label.Faculty}"/>
+                     <apex:panelGrid columns="3">
+                            <apex:outputPanel >
+                            <select size="4" multiselect="true" style="width:150px;" id="Faculty" Class="sourceList" multiple="true">
+                              <apex:repeat var="var" value="{!selectedFacultySource}">
+                                      <option value="{!var.val}" > {!var.name} </option>
+                                  </apex:repeat>
+                            </select>
+                            </apex:outputPanel>
+                            <apex:panelGrid columns="1">
+                                <input type="button" value="►" class="moveRight" id="RightFaculty"/> <p/>
+                                <input type="button" value="◄" class="moveLeft" id="LeftFaculty"/>
+                            </apex:panelGrid>
+                            <apex:outputPanel >
+                                <select size="4" multiselect="true" style="width:150px" id="SelectedFaculty" Class="targetList" multiple="true">
+                                  <apex:repeat var="var" value="{!selectedFaculty}">
+                                      <option value="{!var.val}" > {!var.name} </option>
+                                  </apex:repeat>
+                                </select>
+                                <apex:inputHidden value="{!selectedFaculties}" id="HiddenFaculty"/>
+                                <apex:inputHidden value="{!selectedHtmlFaculties}" id="HiddenHtmlFaculty"/>
+                            </apex:outputPanel>
+                      </apex:panelGrid>
+                </apex:pageBlockSectionItem>
+          </apex:pageBlockSection>
+      </apex:pageBlock>
+
+      <!--Search results for Leads-->
+      <apex:pageBlock id="searchforLead" rendered="{!IF(dataType=='Lead',true,false)}" >
+          <apex:pageBlockSection columns="1" id="leadtable">
+            <apex:outputPanel rendered="{!LeadStatus}">
+            <table class="list" border="0" cellpadding="0" cellspacing="0">
+            <thead>
+            <tr class="headerRow">
+              <th class="headerRow"><input type="checkbox" Class="checkAll"/></th>
+              <th class="headerRow">{!$ObjectType.Lead.Label}{!$ObjectType.Lead.fields.Name.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.Campaign__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.Intended_City__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.Is_TestPrep__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.Is_Counselling__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.Consultation_Mode__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.Followup_Result__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Lead.fields.CreatedDate.Label}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <apex:repeat value="{!leads}" var="l">
+            <tr class="dataRow">
+              <td class="dataCell">
+                 <apex:inputCheckbox value="{!l.isSelected}" styleClass="checkthis"/>
+              </td>
+              <td class="dataCell">
+                {!l.leadObj.Name}
+              </td>
+              <td class="dataCell">
+                <apex:outputField value="{!l.leadObj.Campaign__c}" />
+              </td>
+              <td class="dataCell">
+                {!l.leadObj.Intended_City__c}
+              </td>
+              <td class="dataCell">
+                <apex:outputField value="{!l.leadObj.Is_TestPrep__c}" />
+              </td>
+              <td class="dataCell">
+                <apex:outputField value="{!l.leadObj.Is_Counselling__c}" />
+              </td>
+              <td class="dataCell">
+                <apex:outputField value="{!l.leadObj.Is_Cooperative_Education__c}" />
+              </td>
+              <td class="dataCell">
+                {!l.leadObj.Consultation_Mode__c}
+              </td>
+              <td class="dataCell">
+                {!l.leadObj.Followup_Result__c}
+              </td>
+              <td class="dataCell">
+                <apex:outputField value="{!l.leadobj.CreatedDate}" />
+              </td>
+            </tr>
+            </apex:repeat>
+            </tbody>
+            <tfoot>
+            <tr>
+              <td colspan="13" scope="colgroup">
+              <apex:outputPanel >
+              <apex:outputPanel style="float:right;">
+                <apex:commandButton value="<<" action="{!homePage}" reRender="leadtable" disabled="{!!previousEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="<{!$Label.Previous}" action="{!previous}" reRender="leadtable" disabled="{!!previousEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="{!$Label.Next}>" action="{!next}" reRender="leadtable" disabled="{!!nextEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value=">>" action="{!endPage}" reRender="leadtable" disabled="{!!nextEnable}" rendered="true" status="status-waiting"/>
+              </apex:outputPanel>
+              <apex:outputPanel style="float:left;">
+                <apex:outputLabel value="{!$Label.Per_Page}" />
+                <apex:selectList value="{!pageRecord}" size="1" >
+                  <apex:selectOptions value="{!PageSizePerPage}"/>
+                  <apex:actionSupport action="{!changeLeadPerPage}" reRender="leadtable" event="onchange" status="status-waiting"/>
+                </apex:selectList>
+                <apex:outputLabel value="{!$Label.Records}"/>
+                <apex:outputLabel value="{!$Label.Page} {!CurrentPageNo} {!$Label.Of} {!TotalPageNo} {!$Label.Pages_Total}{!Total})"/>
+              </apex:outputPanel>
+              </apex:outputPanel>
+              </td>
+            </tr>
+            </tfoot>
+            </table>
+            </apex:outputPanel>
+
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        <!--Search results for Opportunity-->
+        <apex:pageBlock id="searchforOpp" rendered="{!IF(dataType=='Opportunity',true,false)}">
+            <apex:pageBlockSection columns="1" id="oppTable">
+            <apex:outputPanel rendered="{!oppStatus}">
+            <table class="list" border="0" cellpadding="0" cellspacing="0">
+            <thead>
+            <tr class="headerRow">
+              <th class="headerRow"><input type="checkbox" Class="checkAll"/></th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.Name.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.Intended_City__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.Department__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.Project__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.Consultation_Mode__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.StageName.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.Level_4_Promotion_Channel__c.Label}</th>
+              <th class="headerRow">{!$ObjectType.Opportunity.fields.CreatedDate.Label}</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+            <td colspan="9" scope="colgroup">
+            <apex:outputPanel >
+              <apex:outputPanel style="float:right;">
+                <apex:commandButton value="<<" action="{!homePage}" reRender="oppTable" disabled="{!!previousEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="<{!$Label.Previous}" action="{!previous}" reRender="oppTable" disabled="{!!previousEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="{!$Label.Next}>" action="{!next}" reRender="oppTable" disabled="{!!nextEnable}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value=">>" action="{!endPage}" reRender="oppTable" disabled="{!!nextEnable}" rendered="true" status="status-waiting"/>
+              </apex:outputPanel>
+              <apex:outputPanel style="float:left;">
+                <apex:outputLabel value="{!$Label.Per_Page}" />
+                <apex:selectList value="{!pageRecord}" size="1" >
+                  <apex:selectOptions value="{!PageSizePerPage}"/>
+                  <apex:actionSupport action="{!changeLeadPerPage}" reRender="oppTable" event="onchange" status="status-waiting"/>
+                </apex:selectList>
+                <apex:outputLabel value="{!$Label.Records}"/>
+                <apex:outputLabel value="{!$Label.Page} {!CurrentPageNo} {!$Label.Of} {!TotalPageNo} {!$Label.Pages_Total}{!Total})"/>
+              </apex:outputPanel>
+              </apex:outputPanel>
+            </td>
+            </tr>
+            </tfoot>
+            <tbody>
+            <apex:repeat value="{!opps}" var="l">
+            <tr class="dataRow">
+              <td class="dataCell">
+              <apex:inputCheckbox value="{!l.isSelected}" styleClass="checkthis"/>
+              </td>
+              <td class="dataCell">{!l.opp.Name}</td>
+              <td class="dataCell">{!l.opp.Intended_City__c}</td>
+              <td class="dataCell">{!l.opp.Department__c}</td>
+              <td class="dataCell">{!l.opp.Project__c}</td>
+              <td class="dataCell">{!l.opp.Consultation_Mode__c}</td>
+              <td class="dataCell">{!l.opp.StageName}</td>
+              <td class="dataCell">
+                <apex:outputField value="{!l.opp.Level_4_Promotion_Channel__c}" />
+              </td>
+              <td class="dataCell">
+              <apex:outputField value="{!l.opp.CreatedDate}" />
+              </td>
+            </tr>
+            </apex:repeat>
+            </tbody>
+            </table>
+            </apex:outputPanel>
+
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+
+        </apex:outputPanel>
+
+        <apex:actionFunction name="submitfn" action="{!submit}" status="status-waiting" reRender="formId"/>
+        <apex:actionFunction name="delLeadfn" action="{!deleteLead}"  status="status-waiting" reRender="lead2sub">
+            <apex:param name="leadid" value="" />
+        </apex:actionFunction>
+        <apex:actionFunction name="delOppfn" action="{!deleteOpp}"  status="status-waiting" reRender="opp2sub">
+            <apex:param name="oppid" value="" />
+        </apex:actionFunction>
+        <apex:outputPanel id="batchInfo">
+        <apex:pageBlock rendered="{!NOT(isShow)}">
+        <apex:pageBlockButtons >
+          <apex:commandButton value="{!$Label.Button_Submit_Batch}" action="{!save}" oncomplete="submitfn();"/>
+          <apex:commandButton value="{!$Label.Cancel}" action="{!cancel}"/>
+        </apex:pageBlockButtons>
+        <apex:pageBlockSection >
+        <apex:inputField value="{!batchItem.BatchItemName__c}"/>
+        <apex:inputField value="{!batchItem.popupsign__c}"/>
+        <apex:inputField value="{!batchItem.Team__c}"/>
+        <apex:inputField value="{!batchItem.group__c}"/>
+        <apex:inputField value="{!batchItem.batchPhoneMassRemove__c}" styleClass="removephone1"/>
+        <apex:inputField value="{!batchItem.batchCNMassRemove__c}" styleClass="removen1"/>
+        <apex:inputField value="{!batchItem.teamPhoneMassRemove__c}" styleClass="removephone2"/>
+        <apex:inputField value="{!batchItem.teamCNMassRemove__c}" styleClass="removen2"/>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" title="已选线索" >
+        <apex:outputPanel id="lead2sub">
+        <table class="list" border="0" cellpadding="0" cellspacing="0">
+        <thead>
+        <tr class="headerRow">
+          <th class="headerRow"></th>
+          <th class="headerRow">{!$ObjectType.Lead.Label}{!$ObjectType.Lead.fields.Name.Label}</th>
+          <th class="headerRow">{!$ObjectType.Lead.fields.Campaign__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Lead.fields.Intended_City__c.Label}</th>
+          <th class="headerRow">{!$Label.Intended}{!$ObjectType.Lead.fields.Consultation_Mode__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Lead.fields.Consultation_Mode__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Lead.fields.Followup_Result__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Lead.fields.CreatedDate.Label}</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr>
+        <td colspan="8" scope="colgroup">
+              <apex:outputPanel >
+              <apex:outputPanel style="float:right;">
+                <apex:commandButton value="<<" action="{!homePage1}" reRender="lead2sub" disabled="{!!previousEnable1}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="<{!$Label.Previous}" action="{!previous1}" reRender="lead2sub" disabled="{!!previousEnable1}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="{!$Label.Next}>" action="{!next1}" reRender="lead2sub" disabled="{!!nextEnable1}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value=">>" action="{!endPage1}" reRender="lead2sub" disabled="{!!nextEnable1}" rendered="true" status="status-waiting"/>
+              </apex:outputPanel>
+              <apex:outputPanel style="float:left;">
+                <apex:outputLabel value="{!$Label.Per_Page}" />
+                <apex:selectList value="{!pageRecord}" size="1" >
+                  <apex:selectOptions value="{!PageSizePerPage}"/>
+                  <apex:actionSupport action="{!changeLeadPerPage1}" reRender="lead2sub" event="onchange" status="status-waiting"/>
+                </apex:selectList>
+                <apex:outputLabel value="{!$Label.Records}"/>
+                <apex:outputLabel value="{!$Label.Page} {!CurrentPageNo1} {!$Label.Of} {!TotalPageNo1} {!$Label.Pages_Total}{!Total}"/>
+              </apex:outputPanel>
+              </apex:outputPanel>
+        </td>
+        </tr>
+        </tfoot>
+        <tbody>
+        <apex:repeat value="{!templeadsshow}" var="l">
+        <tr class="dataRow">
+          <td class="dataCell">
+              <apex:commandLink >
+                <a href="#" id="{!l.Id}" class="delLeadlink">{!$Label.Delete}</a>
+              </apex:commandLink>
+          </td>
+          <td class="dataCell">{!l.Name}</td>
+          <td class="dataCell">
+            <apex:outputText value="{!l.Campaign}" />
+          </td>
+          <td class="dataCell">{!l.Intended_City}</td>
+          <td class="dataCell">{!l.Project}</td>
+          <td class="dataCell">{!l.Consultation_Mode}</td>
+          <td class="dataCell">{!l.Followup_Result}</td>
+          <td class="dataCell">
+            <apex:outputText value="{!l.CreatedDate}" />
+          </td>
+        </tr>
+        </apex:repeat>
+        </tbody>
+        </table>
+        </apex:outputPanel>
+        </apex:pageBlockSection>
+        <apex:pageBlockSection columns="1" title="已选商机" >
+        <apex:outputPanel id="opp2sub">
+        <table class="list" border="0" cellpadding="0" cellspacing="0">
+        <thead>
+        <tr class="headerRow">
+          <th class="headerRow">
+          </th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.Name.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.Label}{!$ObjectType.RecordType.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.Intended_City__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.Department__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.Project__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.Consultation_Mode__c.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.StageName.Label}</th>
+          <th class="headerRow">{!$ObjectType.Opportunity.fields.CreatedDate.Label}</th>
+        </tr>
+        </thead>
+        <tfoot>
+        <tr>
+        <td colspan="9" scope="colgroup">
+        <apex:outputPanel >
+              <apex:outputPanel style="float:right;">
+                <apex:commandButton value="<<" action="{!homePage2}" reRender="opp2sub" disabled="{!!previousEnable2}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="<{!$Label.Previous}" action="{!previous2}" reRender="opp2sub" disabled="{!!previousEnable2}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value="{!$Label.Next}>" action="{!next2}" reRender="opp2sub" disabled="{!!nextEnable2}" rendered="true" status="status-waiting"/>
+                <apex:commandButton value=">>" action="{!endPage2}" reRender="opp2sub" disabled="{!!nextEnable2}" rendered="true" status="status-waiting"/>
+              </apex:outputPanel>
+              <apex:outputPanel style="float:left;">
+                <apex:outputLabel value="{!$Label.Per_Page}" />
+                <apex:selectList value="{!pageRecord1}" size="1" >
+                  <apex:selectOptions value="{!PageSizePerPage}"/>
+                  <apex:actionSupport action="{!changeLeadPerPage2}" reRender="opp2sub" event="onchange" status="status-waiting"/>
+                </apex:selectList>
+                <apex:outputLabel value="{!$Label.Records}"/>
+                <apex:outputLabel value="{!$Label.Page} {!CurrentPageNo2} {!$Label.Of} {!TotalPageNo2} {!$Label.Pages_Total}{!Total2})"/>
+              </apex:outputPanel>
+              </apex:outputPanel>
+        </td>
+        </tr>
+        </tfoot>
+        <tbody>
+        <apex:repeat value="{!tempoppsshow}" var="l">
+        <tr class="dataRow">
+          <td class="dataCell">
+            <a href="#" id="{!l.Id}" class="delOpplink">{!$Label.Delete}</a>
+          </td>
+          <td class="dataCell">{!l.Name}</td>
+          <td class="dataCell">
+            <apex:outputText value="{!l.RecordTypeId}" />
+          </td>
+          <td class="dataCell">{!l.Intended_City}</td>
+          <td class="dataCell">{!l.Department}</td>
+          <td class="dataCell">{!l.Project}</td>
+          <td class="dataCell">{!l.Consultation_Mode}</td>
+          <td class="dataCell">{!l.StageName}</td>
+          <td class="dataCell">
+            <apex:outputText value="{!l.CreatedDate}" />
+          </td>
+        </tr>
+        </apex:repeat>
+        </tbody>
+        </table>
+          </apex:outputPanel>
+        </apex:pageBlockSection>
+        </apex:pageBlock>
+        </apex:outputPanel>
+    </apex:form>
+</apex:page>

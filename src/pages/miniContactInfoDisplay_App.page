@@ -1,0 +1,35 @@
+<apex:page standardController="Appoitment__c" extensions="miniContactInfoDisplayController">
+  
+  <script type="text/javascript">
+    
+     function show()  { showNumber();}
+            
+  </script>
+
+  <apex:form >
+
+        <apex:actionFunction name="showNumber" action="{!showContactNumber}" />
+
+        <apex:pageMessages id="msg"/>
+
+        <apex:outputPanel style=" position:relative; left:30%;">
+		    
+		    <apex:repeat value="{!contactList}" var="contact" >
+
+		       <apex:outputLabel value="{!contact.Type}"/> &nbsp;&nbsp;&nbsp;
+
+		        <a href="#" onclick="show();" >
+			       <apex:outputLabel value="{!contact.displayNumber}" style="color:{!if(contact.isprimary=true,'red','black')};font-weight:{!if(contact.isprimary=true,900,400)}" />
+                </a>
+		        <apex:image url="/img/btn_dial_inline.gif" alt="点击拔号" width="16" height="10"/>
+		        
+		        <br/> 
+
+		    </apex:repeat>
+
+        </apex:outputPanel>
+		    	   
+
+  </apex:form>
+    
+</apex:page>

@@ -1,0 +1,5 @@
+<apex:page standardController="Appoitment__c">
+
+   <apex:detail > </apex:detail>
+    
+</apex:page>

@@ -1,0 +1,57 @@
+<apex:page standardController="Opportunity" extensions="IntendedSchoolListViewController" sidebar="false" showHeader="false">
+<head>
+<apex:includeScript value="{!$Resource.jquery110}" />
+<script>
+$(document).ready(function(){
+	$(document).on('click','.delLink',function(){
+		var id = $(this).prop("id");
+		delItemfn(id);
+	});
+});
+</script>
+</head>
+    <apex:form id="formId">
+    <apex:pageBlock >
+    <apex:actionStatus id="status-waiting">
+                <apex:facet name="start">
+                    <div class="waitingSearchDiv" id="el_loading" style="position:fixed;background-color: #dcdcdc ;
+                               height: 100%;opacity:0.80;filter:alpha(opacity=80);width:100%;">
+                        <div class="waitingHolder" style="top: 100px; width: 50%;">
+                            <img class="waitingImage" src="/img/loading32.gif" title="正在操作中，请耐心等候......" />
+                            <span class="waitingDescription" style="font-size:20px;font-weight:bold;color:RED;">
+                                    操作正在进行中，请耐心等候......
+                            </span>
+                        </div>
+                    </div>
+                </apex:facet>
+        </apex:actionStatus>
+    <apex:pageMessages />
+    <apex:actionFunction name="delItemfn" action="{!deleteItem}" reRender="outputPannel">
+            <apex:param name="itemId" value="" />
+    </apex:actionFunction>
+    <apex:outputPanel id="outputPannel">
+    <apex:pageBlockTable value="{!iSchoolWraps}" var="v" id="tbl">
+    <apex:column >
+    	<!--<apex:commandLink value="删除" onclick="delItemfn('{!v.sid}');"/>-->
+    	<apex:commandLink >
+    		<a href="#" id="{!v.sid}" class="delLink">删除</a>
+    	</apex:commandLink>
+    </apex:column>
+    <apex:column headerValue="学校">
+        <apex:outputLink value="{!v.url}" rendered="{!IF(ISBLANK(v.url),false,true)}" target="_parent"><apex:outputText value="{!v.school}" /></apex:outputLink>
+        <apex:outputLink value="#" rendered="{!IF(ISBLANK(v.url),true,false)}"><apex:outputText value="{!v.school}" /></apex:outputLink>
+    </apex:column>
+    <apex:column headerValue="专业大类">
+        <apex:outputText value="{!v.faculty}" />
+    </apex:column>
+    <apex:column headerValue="专业">
+        <apex:outputText value="{!v.major}" />
+    </apex:column>
+    <apex:column headerValue="学位">
+        <apex:outputText value="{!v.degree}" />
+    </apex:column>
+    </apex:pageBlockTable>
+    </apex:outputPanel>
+    </apex:pageBlock>
+    </apex:form>
+</apex:page>
