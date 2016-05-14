@@ -3,10 +3,11 @@
  * Object: 
  * Purpose: Get the Jiaowu SA's referral
  * Requirement: 
- * Author: vicia.wang (vicia.hh.wang@cn.pwc.com)
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
  * Create Date: 2015-10-13
  * Modified History: 
- * 2015-10-13   vicia.wang Writes comments in this format
+ * 2015-10-13   Vicia Wang Writes comments in this format
+ * 2016-05-08    Allen    Format the code
  * Endpoint: "http://eic.force.com/services/apexrest/CRM/Jiaowu/JiaowuRenewRESTful/*"
 {"renews": [{
     "CRM_Student_ID": "00128000008NHvxAAG",
@@ -21,22 +22,26 @@
     }]
 }
 ***************************************************************************************************/
-@RestResource(urlMapping='/CRM/Jiaowu/JiaowuRenewRESTful/*')
-global without sharing class JiaowuRenewRESTful{
+@RestResource(urlMapping = '/CRM/Jiaowu/JiaowuRenewRESTful/*')
+global without sharing class JiaowuRenewRESTful {
+
     @HttpGet
-    global static String doGet() {
+    global static String doGet () {
         return 'Connected Successfully';
     }
 
     @HttpPost
     global static String doPost(List<Renew> renews) {
+
         String result = createRenew(renews[0]);
+
         // Create the interaction log
-        InteractionLogUtil.CreateLog('JIAOWU - New Renew',JSON.serialize(renews));
+        InteractionLogUtil.CreateLog('JIAOWU - New Renew', JSON.serialize(renews));
         return result;
     }
 
-    global static String createRenew(Renew renew) {
+    global static String createRenew (Renew renew) {
+
         List<Opportunity> oldOpp = new List<Opportunity>();
         List<Campaign> renewCampaign = new List<Campaign>();
         List<Account> acc = new List<Account>();
@@ -51,7 +56,10 @@ global without sharing class JiaowuRenewRESTful{
         }
 
         // Check whether we have the old Opp in CRM
-        oldOpp = [SELECT Id, IsClosed, AccountId, Account.Name, Intended_Office__c, OwnerId FROM Opportunity WHERE Id = :renew.CRM_Opportunity_ID];
+        oldOpp = [SELECT Id, IsClosed, AccountId, Account.Name, Intended_Office__c, OwnerId
+                  FROM Opportunity
+                  WHERE Id = :renew.CRM_Opportunity_ID];
+
         if (oldOpp.size() == 0) {
             Result noOldOpp = new Result(NULL, Label.Jiaowu_Renew_Error1);
             return JSON.serialize(noOldOpp);
@@ -64,24 +72,23 @@ global without sharing class JiaowuRenewRESTful{
         // Check whether we have the campaign in CRM
         renewCampaign = [SELECT Id FROM Campaign WHERE Name = :Label.Jiaowu_Renew_Campaign_Name];
         if (renewCampaign.size() == 0) {
+
             Result noCampaign = new Result(NULL, Label.Jiaowu_Renew_Error3);
             return JSON.serialize(noCampaign);
         }
 
         // Create the lead 
-        Lead lead = new Lead(
-            Lastname = acc[0].Name,
-            MobilePhone = renew.Student_Phone,
-            Campaign__c = renewCampaign[0].Id,
-            Consultation_Mode__c = '面询',
-            Is_TestPrep__c = TRUE,
-            Intended_City__c = renew.Desire_City_Name,
-            TestPrep_Project__c = renew.Desire_Content_IDs,
-            Description = renew.Memo,
-            Company = 'EIC',
-            // SA_Phone__C = renew.SA_Phone,
-            Status = '已转化',
-            Recommend_SA__c = renew.SA_Email);
+        Lead lead = new Lead(Lastname = acc[0].Name,
+                             MobilePhone = renew.Student_Phone,
+                             Campaign__c = renewCampaign[0].Id,
+                             Consultation_Mode__c = '面询',
+                             Is_TestPrep__c = TRUE,
+                             Intended_City__c = renew.Desire_City_Name,
+                             TestPrep_Project__c = renew.Desire_Content_IDs,
+                             Description = renew.Memo,
+                             Company = 'EIC',
+                             Status = '已转化',
+                             Recommend_SA__c = renew.SA_Email);
 
         try {
             insert lead;
@@ -107,8 +114,9 @@ global without sharing class JiaowuRenewRESTful{
         }
     }
 
-    // Convert Lead Item including linked lead items convertion
-    global static String convertLinkedItems(Id leadItemId, Opportunity oldOpp, Renew renew) {
+    // Convert Lead Item including linked lead items convention
+    global static String convertLinkedItems (Id leadItemId, Opportunity oldOpp, Renew renew) {
+
         Lead_Item__c selectedItem = new Lead_Item__c();
         Lead selectedLead = new Lead();
         Set<Id> mobileItemIds = new Set<Id>();
@@ -120,35 +128,42 @@ global without sharing class JiaowuRenewRESTful{
         List<Appoitment__c> followups = new List<Appoitment__c>();
         Map<String, String> phoneMapType = new Map<String, String>();
         
-        selectedItem = [
-            SELECT 
-                Mobile__c, Mobile_Linked_Key__c,
-                Lead__r.Area_Code__c, Lead__c, Lead__r.Name, Lead__r.Gender__c, Lead__r.Consultation_Mode__c, Lead__r.ID_Number__c, Lead__r.Campaign__c,
-                Business_Line__c, Intended_City__c, Project__c, Marketing_Channel_Lv3__c
-            FROM Lead_Item__c WHERE Id = :leadItemId];
+        selectedItem = [SELECT Mobile__c, Mobile_Linked_Key__c, Lead__r.Area_Code__c, Lead__c, Lead__r.Name,
+                               Lead__r.Gender__c, Lead__r.Consultation_Mode__c, Lead__r.ID_Number__c,
+                               Lead__r.Campaign__c, Business_Line__c, Intended_City__c, Project__c, 
+                               Marketing_Channel_Lv3__c
+                        FROM Lead_Item__c
+                        WHERE Id = :leadItemId];
+
         if (String.isNotBlank(selectedItem.Mobile__c)) {
             phoneMapType.put(selectedItem.Mobile__c, '手机');
             linkedKeys.add(selectedItem.Mobile_Linked_Key__c);
         }
 
-        selectedLead = [SELECT Description, (SELECT Id FROM Lead_Items__r) FROM Lead WHERE Id = :selectedItem.Lead__c];
+        selectedLead = [SELECT Description, (SELECT Id
+                                             FROM Lead_Items__r)
+                        FROM Lead
+                        WHERE Id = :selectedItem.Lead__c];
 
-        // Get all duplicated by mobile
-        for (Lead_Item__c li : [
-                SELECT Name, Lead__c,  Status__c, CreatedDate,
-                       Marketing_Channel_Lv3__c,  Business_Line__c, Project__c, Intended_City__c, Intended_Country__c,
-                       Lead__r.Name, Lead__r.OwnerId, Lead__r.Campaign__c, Lead__r.Consultation_Mode__c, Lead__r.CreatedDate, Lead__r.Intended_Office__c,
-                       Mobile_Linked_Key__c
-                FROM Lead_Item__c 
-                WHERE Mobile_Linked_Key__c IN :linkedKeys 
-                AND Is_Converted__c = FALSE ORDER BY Lead__r.CreatedDate, Mobile__c]) {
+        // Gets all duplicated by mobile
+        for (Lead_Item__c li : [SELECT Name, Lead__c,  Status__c, CreatedDate, Marketing_Channel_Lv3__c, 
+                                       Business_Line__c, Project__c, Intended_City__c, Intended_Country__c,
+                                       Lead__r.Name, Lead__r.OwnerId, Lead__r.Campaign__c, Lead__r.Consultation_Mode__c, 
+                                       Lead__r.CreatedDate, Lead__r.Intended_Office__c, Mobile_Linked_Key__c
+                                FROM Lead_Item__c
+                                WHERE Mobile_Linked_Key__c IN :linkedKeys 
+                                AND Is_Converted__c = FALSE
+                                ORDER BY Lead__r.CreatedDate,
+                                         Mobile__c]) {
+
             // If the lead item belongs to same selected lead, we need skip it.
             if (selectedItem.Lead__c == li.Lead__c && li.Id != selectedItem.Id) continue;
             mobileItemIds.add(li.Id);
             leadIds.add(li.Lead__c);
 
-            // add to duplicated lead item
+            // Adds to duplicated lead item
             if (masterleadItems.size() > 0) {
+
                 li.Status__c = '关闭--重复线索转化成功';
                 dupleadItems.add(li);
 
@@ -160,14 +175,16 @@ global without sharing class JiaowuRenewRESTful{
         }
 
         // Get all duplicated by fix phone
-        for (Lead_Item__c li : [
-                SELECT Name, Lead__c,  Status__c, CreatedDate,
-                       Marketing_Channel_Lv3__c,  Business_Line__c, Project__c, Intended_City__c, Intended_Country__c,
-                       Lead__r.Name, Lead__r.OwnerId, Lead__r.Campaign__c, Lead__r.Consultation_Mode__c, Lead__r.CreatedDate, Lead__r.Intended_Office__c,
-                       Fix_Phone_Linked_Key__c
-                FROM Lead_Item__c 
-                WHERE Fix_Phone_Linked_Key__c IN :linkedKeys 
-                AND Is_Converted__c = FALSE ORDER BY Lead__r.CreatedDate, Fix_Phone__c]) {
+        for (Lead_Item__c li : [SELECT Name, Lead__c,  Status__c, CreatedDate, Marketing_Channel_Lv3__c, Business_Line__c, 
+                                       Project__c, Intended_City__c, Intended_Country__c, Lead__r.Name, Lead__r.OwnerId, 
+                                       Lead__r.Campaign__c, Lead__r.Consultation_Mode__c, Lead__r.CreatedDate, 
+                                       Lead__r.Intended_Office__c, Fix_Phone_Linked_Key__c
+                                FROM Lead_Item__c 
+                                WHERE Fix_Phone_Linked_Key__c IN :linkedKeys 
+                                AND Is_Converted__c = FALSE
+                                ORDER BY Lead__r.CreatedDate,
+                                         Fix_Phone__c]) {
+
             // If the lead item belongs to same selected lead, we need skip it.
             if (selectedItem.Lead__c == li.Lead__c && li.Id != selectedItem.Id) continue;
             leadIds.add(li.Lead__c);
@@ -211,7 +228,8 @@ global without sharing class JiaowuRenewRESTful{
             Level_4_Promotion_Channel__c = masterleadItems[0].Lead__r.Campaign__c,
             Description = renew.Memo,
             Recommend_SA__c = renew.SA_Email);
-        // Distribute the new opportunity to the orignial consultant
+
+        // Distribute the new opportunity to the original consultant
         String intendedOfficeMgrId = Utils.getOfficeManager(opp.Intended_City__c, opp.Intended_Office__c, 'TestPrep', '');
         Boolean belongsTo = Utils.belongsToOffice(opp.Intended_City__c, opp.Intended_Office__c, 'TestPrep', oldOpp.OwnerId);
 
@@ -250,21 +268,21 @@ global without sharing class JiaowuRenewRESTful{
     }
 
     global class Renew {
-        global String CRM_Student_ID;              // CRM系统学员ID /CRM 测试客户: 00128000008NHvxAAG
-        global String CRM_Opportunity_ID;          // CRM系统商机ID /CRM 测试商机: 00628000004e4qtAAA
-        global String Student_Phone;               // 学员电话号码
-        global String SA_Phone;                    // 学习顾问的电话
-        global String SA_Email;                    // 学习顾问的邮箱
-        global String Desire_Content_IDs;          // 意向内容ID集合 /GRE;SAT
-        global String Desire_City_Name;            // 意向城市名称 / 上海
-        global String Desire_Area_Name;            // 意向校区名称 / 人广校区
-        global String Memo;                        // 备注 /续费失败时,显示例如,客户续费意愿已存在.
+        global String CRM_Student_ID; // CRM系统学员ID /CRM 测试客户: 00128000008NHvxAAG
+        global String CRM_Opportunity_ID; // CRM系统商机ID /CRM 测试商机: 00628000004e4qtAAA
+        global String Student_Phone; // 学员电话号码
+        global String SA_Phone; // 学习顾问的电话
+        global String SA_Email; // 学习顾问的邮箱
+        global String Desire_Content_IDs; // 意向内容ID集合 /GRE;SAT
+        global String Desire_City_Name; // 意向城市名称 / 上海
+        global String Desire_Area_Name; // 意向校区名称 / 人广校区
+        global String Memo; // 备注 /续费失败时,显示例如,客户续费意愿已存在.
 
     }
 
     global class Result {
-        String CRM_Opportunity_ID;                 // CRM系统商机ID
-        String Result;                             // 用来保存成功或失败信息  /推荐失败返回例如: 推荐失败,客户已存在.
+        String CRM_Opportunity_ID; // CRM系统商机ID
+        String Result; // 用来保存成功或失败信息  /推荐失败返回例如: 推荐失败,客户已存在.
 
         global Result(String CRM_Opportunity_ID, String Result) {
             this.CRM_Opportunity_ID = CRM_Opportunity_ID;

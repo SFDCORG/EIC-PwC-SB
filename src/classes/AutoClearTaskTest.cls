@@ -1,16 +1,16 @@
 /**************************************************************************************************
  * Name: AutoClearTaskTest
  * Object: task
- * Purpose: Test schedule clear no use tasks 
+ * Purpose: a test class for AutoClearTask
  * Author: Ray Cen (ray.cen@cn.pwc.com)
  * Create Date: 2015-12-14
  * Modify History:
  * 2016-04-18    Ray Cen    Writes comments AND optimizes the code
  **************************************************************************************************/
-
 @isTest
 private class AutoClearTaskTest {
-    static testMethod void testMethod1() {
+    
+    static testMethod void testAutoClearTask() {
         
         String CRON_EXP = '0 0 0 15 3 ? 2022';
 

@@ -1,21 +1,24 @@
 /**************************************************************************************************
- * Name: lookupUserforOpportunityControllerTest
- * Object: / 
+ * Name: LookupUserforOpportunityControllerTest
+ * Object: ***
  * Purpose: Test the Lookup component on the Opportunity mass Assign page, 
             Using specify search content to search user in the system
- * Author: /
- * Create Date: 2016-04-26
- **************************************************************************************************/
-
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
+ * Create Date: 2016-05-10
+ * Modified History:
+ * 2016-05-10    Allen    Format the code
+***************************************************************************************************/
 @isTest
-private class lookupUserforOpportunityControllerTest {
-    static testMethod void testMethod1() {
+private class LookupUserforOpportunityControllerTest {
+
+    static testMethod void testMethod1 () {
         User usr = [SELECT id 
                     FROM User 
                     WHERE Id = :UserInfo.getUserId()];
 
         // Prepares the TEST Data
         System.runAs(usr) {
+
             UserRole role = TestObjectFactory.createUserRole();
             role.DeveloperName = 'Counselling_GZ_XY_AN_A_Consultant';
             insert role;
@@ -49,14 +52,14 @@ private class lookupUserforOpportunityControllerTest {
             uuser4.UserRoleId = Constants.ROLE_TMK_HQ_STAFF_ID;
             insert uuser4;
 
-            List<String> searchResultsIds = new List<String>();
+            List<String> searchResultsIds = new List<String> ();
             searchResultsIds.add(uuser.Id);
             searchResultsIds.add(uuser2.Id);
             searchResultsIds.add(uuser3.Id);
             Test.setFixedSearchResults(searchResultsIds);
         }
 
-        //Adding SOSL Queries to Unit Tests,
+        // Adding SOSL Queries to Unit Tests,
         User runUser = [SELECT Approval_Department__c, Business_Unit__c, City_of_Role__c, ProfileId,
                                Department_of_Role__c, Name, IsActive
                         FROM User 
@@ -69,47 +72,51 @@ private class lookupUserforOpportunityControllerTest {
 
         User localCSUser = [SELECT Approval_Department__c, Business_Unit__c, City_of_Role__c, ProfileId,
                                    Department_of_Role__c, Name, IsActive
-                            FROM User 
+                            FROM User
                             WHERE Username = 'oppSearch2@test.com.eic'];
 
-        CS_Assign_City_Territory__c terry= TestObjectFactory.createCSAssignCityTerritory();
+        CS_Assign_City_Territory__c terry = TestObjectFactory.createCSAssignCityTerritory();
         insert terry;
 
         test.StartTest();
 
         // Logins as a CC Manager, there have 3 Perfect start user in the system, 
-        // But only two of them's business line and city is same as each other.
+        // But only two of theirs business line and city is same as each other.
         // Uses Perfect* to search user, and return result shall be only two user.
         System.runAs(runUser) {
             PageReference myVfPage = Page.lookupUserforOpportunity;
             Test.setCurrentPageReference(myVfPage);
-            lookupUserforOpportunityController lookup = new lookupUserforOpportunityController();
+            lookupUserforOpportunityController lookup = new lookupUserforOpportunityController ();
             lookup.searchText = 'Perfect*';
             lookup.searchUser();
             System.assertEquals(2, lookup.userlist.size());
         }
 
-        // Logins as a tmk user, there have 3 Perfect start user in the system, but only one of them's deparment is CS
-        // Uses Perfect* to search user, and return result shall be only one CS deparetment user.
+        // Logins as a TMK user, there have 3 Perfect start user in the system, but only one of theirs department is CS
+        // Uses Perfect* to search user, and return result shall be only one CS department user.
         System.runAs(TMKUser) {
+
             PageReference myVfPage = Page.lookupUserforOpportunity;
             Test.setCurrentPageReference(myVfPage);
-            lookupUserforOpportunityController lookup = new lookupUserforOpportunityController();
+            lookupUserforOpportunityController lookup = new lookupUserforOpportunityController ();
             lookup.searchText = 'Perfect*';
             lookup.searchUser();
             System.assertEquals(1, lookup.userlist.size());
         }
+
         // Login as a Local service center user, and user's city is GZ, which is different with other user in the list
-        // Enable one terriroy expand custom setting, means expand GZ CS can also search SH and JN city's user
-        // Search named pefect user, User can search 2 shanghai named perfect user
+        // Enable one territory expand custom setting, means expand GZ CS can also search SH and JN city's user
+        // Search named perfect user, User can search 2 shanghai named perfect user
         System.runAs(localCSUser) {
+
             PageReference myVfPage = Page.lookupUserforOpportunity;
             Test.setCurrentPageReference(myVfPage);
-            lookupUserforOpportunityController lookup = new lookupUserforOpportunityController();
+            lookupUserforOpportunityController lookup = new lookupUserforOpportunityController ();
             lookup.searchText = 'Perfect*';
             lookup.searchUser();
             System.assertEquals(2, lookup.userlist.size());
         }
+
         test.StopTest();
     }
 }

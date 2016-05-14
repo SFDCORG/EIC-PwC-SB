@@ -1,6 +1,12 @@
 /************************************************
-Sage Payment Service
-@Test url: https://{instance_url}.salesforce.com/services/apexrest/UpdPayment
+ * Name: PaymentService
+ * Object: ***
+ * Purpose: ***
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
+ * Create Date: 2016-05-10
+ * Modified History:
+ * 2016-05-10    Allen    Format the code
+ @Test url: https://{instance_url}.salesforce.com/services/apexrest/UpdPayment
  {
     "pay":[
     {"custid":"00128000005yVZf",
@@ -21,15 +27,17 @@ Sage Payment Service
     "sta":"finished"}
     ]
  }
-
 ************************************************/
-//Create and Update Payment
-@RestResource(urlMapping='/UpdPayment')
+// Creates and Update Payment
+@RestResource(urlMapping = '/UpdPayment')
 global class PaymentService {
+
     @HttpPost
-    global static String doPost(List<ServiceWrapper.SagePayment> pay) {
+    global static String doPost (List<ServiceWrapper.SagePayment> pay) {
+
         try {
-            // Create the interaction log
+
+            // Creates the interaction log
             InteractionLogUtil.CreateLog('SAGE Contract - New/Update Payment', JSON.serialize(pay));
             List<Sage_Payment__c> sc = ServiceWrapper.MapSagePayment(pay);
             upsert sc Payment_Id__c;
@@ -40,7 +48,7 @@ global class PaymentService {
             message += 'Message: ' + e.getMessage();
             return JSON.serialize(message);
         }
-        
+
         return JSON.serialize('付款信息同步成功!');
     }
 }

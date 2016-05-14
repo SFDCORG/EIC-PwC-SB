@@ -7,11 +7,14 @@
  * Modified History: 
  * 2016-05-07   Vicia Wang Writes comments in this format
  * 2016-05-07   Vicia optimize the class
+ * 2016-05-10    Allen    Format the code
 ***************************************************************************************************/
 @isTest
 private class NewLeadTest {
+
     @isTest
     private static void testNewLeadReferralNoReferralCampaign() {
+
         User thisUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
 
         Test.startTest();
@@ -24,37 +27,37 @@ private class NewLeadTest {
 
         List<Apexpages.Message> msgs = ApexPages.getMessages();
         boolean b = false;
-        for(Apexpages.Message msg:msgs) {
+        for (Apexpages.Message msg:msgs) {
             if (msg.getDetail().contains(System.Label.Error_No_Customer_Referral_Campaign)) b = true;
         }
-        system.assert(b);
+        System.assert(b);
         Test.stopTest();
     }
 
     @isTest
-    private static void testNewCoopLeadMissingProjectsWrongCity() {
+    private static void testNewCoopLeadMissingProjectsWrongCity () {
         User thisUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
 
         Campaign_Channel__c channel;
         Campaign campaign;
         User tmkUser;
 
-        System.runAs(thisUser)
-        {
-          tmkUser = TestObjectFactory.createTmkUser('tmkUser');
-          insert tmkUser;
+        System.runAs(thisUser) {
 
-          channel = TestObjectFactory.createCampaignChannel();
-          insert channel;
+            tmkUser = TestObjectFactory.createTmkUser('tmkUser');
+            insert tmkUser;
 
-          campaign = TestObjectFactory.createCoopCampaign(channel);
-          insert campaign;
+            channel = TestObjectFactory.createCampaignChannel();
+            insert channel;
+
+            campaign = TestObjectFactory.createCoopCampaign(channel);
+            insert campaign;
         }
 
         Test.startTest();
 
-        System.runAs(tmkUser)
-        {
+        System.runAs(tmkUser) {
+
             Test.setCurrentPage(Page.NewLeadV2);
             Lead lead = new Lead();
             ApexPages.StandardController sc = new ApexPages.StandardController(lead);
@@ -75,14 +78,14 @@ private class NewLeadTest {
             boolean b = false;
             boolean c = false;
             boolean d = false;
-            for(Apexpages.Message msg:msgs) {
+            for (Apexpages.Message msg:msgs) {
+
                 if (msg.getDetail().contains(System.Label.Error_No_Projects_For_Counselling)) a = true;
                 if (msg.getDetail().contains(System.Label.Error_No_Projects_For_Testprep)) b = true;
                 if (msg.getDetail().contains(System.Label.Error_No_Projects_For_Coop)) c = true;
                 if (msg.getDetail().contains(System.Label.Error_Not_Coop_City)) d = true;
             }
-            system.assert(a && b && c && d);
-
+            System.assert(a && b && c && d);
 
             lead.Cooperative_Education_Project__c = '学术英语;国际预科';
             lead.Counselling_Project__c = '美国;加拿大';
@@ -96,14 +99,13 @@ private class NewLeadTest {
 
 
     @isTest
-    private static void testNewCoopLeadSuccess() {
+    private static void testNewCoopLeadSuccess () {
         User thisUser = [SELECT Id FROM User WHERE Id = :UserInfo.getUserId()];
         Campaign_Channel__c channel;
         Campaign campaign;
         User tmkUser;
 
-        System.runAs(thisUser)
-        {
+        System.runAs(thisUser) {
           tmkUser = TestObjectFactory.createTmkUser('tmkUser');
           insert tmkUser;
 
@@ -116,8 +118,7 @@ private class NewLeadTest {
 
         Test.startTest();
 
-        System.runAs(tmkUser)
-        {
+        System.runAs(tmkUser) {
             Test.setCurrentPage(Page.NewLeadV2);
             Lead lead = new Lead();
             ApexPages.StandardController sc = new ApexPages.StandardController(lead);
@@ -145,30 +146,51 @@ private class NewLeadTest {
             System.Assert(pRef.getUrl().contains(lead.Id));
 
             // Verify that 4 lead items were created
-            List<Lead_Item__c> leadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c FROM Lead_Item__c WHERE Lead__c = :lead.Id];
+            List<Lead_Item__c> leadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c
+                                            FROM Lead_Item__c
+                                            WHERE Lead__c = :lead.Id];
+
             System.AssertEquals(leadItems.size(), 4);
-            system.debug(leadItems);
+            System.debug(leadItems);
 
             // Verify that a Canada Counselling lead item was created
-            List<Lead_Item__c> canadaLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c, Intended_Country__c FROM Lead_Item__c WHERE Lead__c = :lead.Id AND Business_Line__c = '留学' AND Intended_Country__c = '加拿大'];
+            List<Lead_Item__c> canadaLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c, Intended_Country__c
+                                                  FROM Lead_Item__c
+                                                  WHERE Lead__c = :lead.Id 
+                                                  AND Business_Line__c = '留学' 
+                                                  AND Intended_Country__c = '加拿大'];
+
             System.AssertEquals(canadaLeadItems.size(), 1);
             System.AssertEquals(canadaLeadItems[0].Intended_City__c, '广州');
             System.AssertEquals(canadaLeadItems[0].Project__c, '加拿大');
 
             // Verify that a USA Counselling lead item was created
-            List<Lead_Item__c> usaLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c, Intended_Country__c FROM Lead_Item__c WHERE Lead__c = :lead.Id AND Business_Line__c = '留学' AND Intended_Country__c = '美国'];
+            List<Lead_Item__c> usaLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c, Intended_Country__c 
+                                               FROM Lead_Item__c
+                                               WHERE Lead__c = :lead.Id 
+                                               AND Business_Line__c = '留学' 
+                                               AND Intended_Country__c = '美国'];
+
             System.AssertEquals(usaLeadItems.size(), 1);
             System.AssertEquals(usaLeadItems[0].Intended_City__c, '广州');
             System.AssertEquals(usaLeadItems[0].Project__c, '美国');
 
             // Verify that 1 testprep lead item was created and verify that it is as expected
-            List<Lead_Item__c> testprepLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c FROM Lead_Item__c WHERE Lead__c = :lead.Id AND Business_Line__c = '考培'];
+            List<Lead_Item__c> testprepLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c
+                                                    FROM Lead_Item__c
+                                                    WHERE Lead__c = :lead.Id 
+                                                    AND Business_Line__c = '考培'];
+
             System.AssertEquals(testprepLeadItems.size(), 1);
             System.AssertEquals(testprepLeadItems[0].Intended_City__c, '广州');
             System.AssertEquals(testprepLeadItems[0].Project__c, 'SAT,GRE');
 
             // Verify that 1 cooperative lead item was created and verify that it is as expected
-            List<Lead_Item__c> coopLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c FROM Lead_Item__c WHERE Lead__c = :lead.Id AND Business_Line__c = '合作办学'];
+            List<Lead_Item__c> coopLeadItems = [SELECT Name, Business_Line__c, Project__c, Intended_City__c
+                                                FROM Lead_Item__c
+                                                WHERE Lead__c = :lead.Id
+                                                AND Business_Line__c = '合作办学'];
+
             System.AssertEquals(coopLeadItems.size(), 1);
             System.AssertEquals(coopLeadItems[0].Intended_City__c, '广州');
             System.AssertEquals(coopLeadItems[0].Project__c, '学术英语;国际预科');
@@ -177,7 +199,8 @@ private class NewLeadTest {
     }
 
     @isTest
-    private static void testNewLead() {
+    private static void testNewLead () {
+
         Campaign campaign1 = new Campaign();
         campaign1.Name = '2015年10月上海百度竞价A';
         campaign1.StartDate = System.today();
@@ -232,7 +255,8 @@ private class NewLeadTest {
     }
 
     @isTest
-    private static void testEditLead() {
+    private static void testEditLead () {
+
         Campaign campaign1 = new Campaign();
         campaign1.Name = '2015年10月上海百度竞价A';
         campaign1.StartDate = System.today();
@@ -284,6 +308,7 @@ private class NewLeadTest {
 
     @isTest
     private static void testLookupCampaign() {
+
         User customerServiceMgr = TestObjectFactory.createCustomerManager();
 
         List<Campaign> campaignList = new List<Campaign>();
@@ -311,6 +336,7 @@ private class NewLeadTest {
         cc1.Marketing_Channel_Lv2__c = '线下合作';
         cc1.Marketing_Channel_Lv3__c = '市场合作';
         ccList.add(cc1);
+
         Campaign_Channel__c cc2 = new Campaign_Channel__c();
         cc2.City__c = '集团';
         cc2.Business_line__c = '全部';
@@ -318,6 +344,7 @@ private class NewLeadTest {
         cc2.Marketing_Channel_Lv2__c = '集团';
         cc2.Marketing_Channel_Lv3__c = '官方微信';
         ccList.add(cc2);
+
         Campaign_Channel__c cc3 = new Campaign_Channel__c();
         cc3.City__c = '集团';
         cc3.Business_line__c = '全部';
@@ -325,6 +352,7 @@ private class NewLeadTest {
         cc3.Marketing_Channel_Lv2__c = '集团';
         cc3.Marketing_Channel_Lv3__c = '官方微博';
         ccList.add(cc3);
+
         Campaign_Channel__c cc4 = new Campaign_Channel__c();
         cc4.City__c = '上海';
         cc4.Business_line__c = '留学';
@@ -336,6 +364,7 @@ private class NewLeadTest {
 
         Test.startTest();
         System.runAs(customerServiceMgr) {
+
             LookupCampaignCtrl lookupCampaign = new LookupCampaignCtrl();
             lookupCampaign.searchTextCity = '上海';
             lookupCampaign.searchCampaign();
@@ -355,7 +384,8 @@ private class NewLeadTest {
     }
 
     @isTest
-    private static void testLookupRecommendAccount() {
+    private static void testLookupRecommendAccount () {
+
         Account acc = TestObjectFactory.createAccount('13598904758', '02130305656');
         Opportunity testprepOpp = TestObjectFactory.createTestprepOpportunity(acc);
         testprepOpp.StageName = Constants.OPPORTUNITY_STAGE_CLOSED_WON;
@@ -377,6 +407,7 @@ private class NewLeadTest {
 
     @isTest
     private static void testGroupServiceReferral() {
+
         User tmkUser = TestObjectFactory.createUser();
         Campaign BankofChina = TestObjectFactory.createCampaign(
             'BOC', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BSH');
@@ -409,9 +440,10 @@ private class NewLeadTest {
         NewLeadV2Ext controller = new NewLeadV2Ext(pageController);
         controller.lead.Is_TestPrep__c = TRUE;
         controller.lead.TestPrep_Project__c = 'SAT';
-        controller.recommendAccountId = acc.Id;        
+        controller.recommendAccountId = acc.Id;
 
         try {
+
             controller.save();
         
         } catch (Exception e) {

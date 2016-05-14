@@ -5,16 +5,19 @@
  * Author: Matthew Sun ()
  * Create Date:
  * Modified History: 
- * 2016-05-07 Vicia Wang   Writes comments in this format
+ * 2016-05-07    Vicia Wang    Writes comments in this format
+ * 2016-05-08    Allen    Format the code
 ***************************************************************************************************/
-@RestResource(urlMapping='/Live800ForIntServ/*')
+@RestResource(urlMapping = '/Live800ForIntServ/*')
 global class Live800ForIntServ {
+
     @HttpGet
-    global static String doGet() {
+    global static String doGet () {
+
         Map<String, String> mapParam = RestContext.request.params;
 
-        Live800DataWrapper.IntServCon msgCard = new Live800DataWrapper.IntServCon();
-        InteractionLogUtil.CreateLog('Live800ForIntServ',JSON.serialize(mapParam));
+        Live800DataWrapper.IntServCon msgCard = new Live800DataWrapper.IntServCon ();
+        InteractionLogUtil.CreateLog('Live800ForIntServ', JSON.serialize(mapParam));
         
         msgCard.Name = mapParam.get('NAME');                        //文本
         msgCard.gender = mapParam.get('GENDER');                    //后台维护
@@ -39,9 +42,11 @@ global class Live800ForIntServ {
 
         String ret = '';
         try {
+
             ret = Live800DataWrapper.InsertIntServLead(msgCard);
         
         } catch (Exception e) {
+
             System.debug(LoggingLevel.INFO, '*** e.getMessage(): ' + e.getMessage());
             System.debug(LoggingLevel.INFO, '*** e.getLineNumber(): ' + e.getLineNumber());
             RET resp = new RET();

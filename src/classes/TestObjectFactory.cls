@@ -1,25 +1,26 @@
 /**************************************************************************************************
  * Name: TestObjectFactory
- * Object: /
- * Purpose:  Define the fake test object data in here for other test class using
- * Author: /
- * Create Date: 2015-12-14
- * Modify History:
- * 2016-04-18    Ray Cen    Writes comments and optimizes the code
- **************************************************************************************************/
-
+ * Object: ***
+ * Purpose: Define the fake test object data in here for other test class using
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
+ * Create Date: 2016-05-10
+ * Modified History:
+ * 2016-05-10    Allen    Format the code
+***************************************************************************************************/
 public class TestObjectFactory {
 
     public static User createTmkUser(string extId) {
+
         SmartFactory.FillAllFields = true;
         User user = (User)SmartFactory.createSObject('User');
         user.ProfileId = Constants.PROFILE_TMK_CUSTOMER_SERVICE_ID;
         user.User_External_Id__c = extId;
         user.UserRoleId = Constants.ROLE_TMK_HQ_STAFF_ID;
         return user;
-    } 
+    }
 
     public static User createTmkManager(string extId) {
+
         SmartFactory.FillAllFields = true;
         User user = (User)SmartFactory.createSObject('User');
         user.ProfileId = Constants.PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID;
@@ -29,6 +30,7 @@ public class TestObjectFactory {
     }
 
     public static User createSalesUser() {
+
         SmartFactory.FillAllFields = true;
         User user = (User)SmartFactory.createSObject('User');
         user.ProfileId = Constants.PROFILE_SALES_MANAGER_ID;
@@ -38,12 +40,14 @@ public class TestObjectFactory {
     }
 
     public static Account createAccount() {
-        Account acc = (Account)SmartFactory.createSObject('Account');
+
+        Account acc = (Account) SmartFactory.createSObject('Account');
         acc.Postcode__c = '200052';
         return acc;
     }
 
     public static Opportunity createOpportunity(Id accountId, User owner) {
+
         SmartFactory.FillAllFields = true;
         Opportunity opp = (Opportunity)SmartFactory.createSObject('Opportunity');
         opp.AccountId = accountId;
@@ -59,6 +63,7 @@ public class TestObjectFactory {
     }
 
     public static Opportunity createCoopOpportunity(Id accountId, User owner) {
+
         SmartFactory.FillAllFields = true;
         Opportunity opp = (Opportunity)SmartFactory.createSObject('Opportunity');
         opp.AccountId = accountId;
@@ -71,12 +76,12 @@ public class TestObjectFactory {
         opp.Marketing_Channel_Lv3__c = '广州外国语大学';
         opp.Consultation_Mode__c = '集团TMK外呼';
         opp.Name = 'OppOpp';
-        opp.CloseDate = system.today() +5;
+        opp.CloseDate = system.Today() + 5;
         return opp;
     }
 
     public static Campaign_Channel__c createCampaignChannel() {
-        Campaign_Channel__c channel = (Campaign_Channel__c)SmartFactory.createSObject('Campaign_Channel__c');
+        Campaign_Channel__c channel = (Campaign_Channel__c) SmartFactory.createSObject('Campaign_Channel__c');
         channel.City__c = '广州';
         channel.Business_line__c = '全部';
         channel.Active__c = true;
@@ -87,7 +92,7 @@ public class TestObjectFactory {
     }
 
     public static Campaign_Channel__c createGzCoopCampaignChannel() {
-        Campaign_Channel__c channel = (Campaign_Channel__c)SmartFactory.createSObject('Campaign_Channel__c');
+        Campaign_Channel__c channel = (Campaign_Channel__c) SmartFactory.createSObject('Campaign_Channel__c');
         channel.City__c = '广州';
         channel.Business_line__c = '合作办学';
         channel.Active__c = true;
@@ -97,9 +102,9 @@ public class TestObjectFactory {
         return channel;
     }
 
-    public static Campaign createAllCampaign(Campaign_Channel__c channel){
+    public static Campaign createAllCampaign(Campaign_Channel__c channel) {
         SmartFactory.FillAllFields = false;
-        Campaign campaign = (Campaign)SmartFactory.createSObject('Campaign');
+        Campaign campaign = (Campaign) SmartFactory.createSObject('Campaign');
         campaign.Name = 'GzAll';
         campaign.RecordTypeId = Constants.CAMP_RT_LEVEL_4_PROMO_CHANNEL;
         campaign.Marketing_Channel_Lv1__c = channel.Marketing_Channel_Lv1__c;
@@ -111,7 +116,8 @@ public class TestObjectFactory {
         return campaign;
     }
 
-    public static Campaign createCoopCampaign(Campaign_Channel__c channel){
+    public static Campaign createCoopCampaign (Campaign_Channel__c channel) {
+
         SmartFactory.FillAllFields = false;
         Campaign campaign = (Campaign)SmartFactory.createSObject('Campaign');
         campaign.Name = 'GzCoop';
@@ -126,7 +132,8 @@ public class TestObjectFactory {
     }
 
     public static Organization__c createCoopOrg() {
-        Organization__c org = (Organization__c)SmartFactory.createSObject('Organization__c');
+
+        Organization__c org = (Organization__c) SmartFactory.createSObject('Organization__c');
         org.RecordTypeId = Constants.ORG_RT_COOPERATIVE_ID;
         org.Name = 'GZ_COOP_ORG';
         org.DeveloperName__c = 'Cooperative_GZ_Null_Null_Null';
@@ -165,11 +172,12 @@ public class TestObjectFactory {
         testPrepOrg.name = 'testPrepOrg';
         testPrepOrg.City__c = '上海';
         testPrepOrg.Front_Desk__c = UserInfo.getUserId();
-        testPrepOrg.RecordTypeID = [Select Id 
+        testPrepOrg.RecordTypeID = [SELECT Id 
                                     FROM RecordType 
                                     WHERE SObjectType = 'Organization__c'
-                                    AND DeveloperName = 'TestPrep' limit 1].Id;
-        testPrepOrg.OwnerId = userInfo.getUserId();
+                                    AND DeveloperName = 'TestPrep'
+                                    LIMIT 1].Id;
+        testPrepOrg.OwnerId = UserInfo.getUserId();
         testPrepOrg.Department__c = 'LG';
         testPrepOrg.Office__c = '人民广场';
 
@@ -188,11 +196,12 @@ public class TestObjectFactory {
         sctable.Department__c = org.Department__c;
         sctable.isActive__c = true;
         sctable.City__c = '上海';
-        sctable.Manager__c = userinfo.getUserId();
-        sctable.RecordTypeID = [Select Id 
+        sctable.Manager__c = Userinfo.getUserId();
+        sctable.RecordTypeID = [SELECT Id
                                 FROM RecordType 
                                 WHERE SObjectType = 'Scheduling_Table__c'
-                                AND DeveloperName = 'TestPrep' limit 1].Id;
+                                AND DeveloperName = 'TestPrep' 
+                                LIMIT 1].Id;
         return sctable;
     }
 
@@ -204,7 +213,7 @@ public class TestObjectFactory {
         sctline.Monday_Time__c = 'D';
         sctline.Start_Working_Time__c = '08:00';
         sctline.End_Working_Time__c = '23:00';
-        sctline.User__c = userinfo.getUserId();
+        sctline.User__c = Userinfo.getUserId();
         sctline.Daily_Opportunities__c = 1;
         sctline.Monthly_Opportunities__c = 2;
         sctline.Scheduling_Table__c = sctable.Id;
@@ -218,7 +227,7 @@ public class TestObjectFactory {
         schOrder.Indicator__c = true;
         schOrder.Order__c = 1;
         schOrder.Scheduling_Table__c = sctable.Id;
-        schOrder.User__c = userinfo.getUserId();
+        schOrder.User__c = Userinfo.getUserId();
 
         return schOrder;
     }
@@ -247,11 +256,10 @@ public class TestObjectFactory {
 
     // Creates sample contact only
     public static void createContact(Account acc, String fixPhone) {
-        Contact_EIC__c contact = new Contact_EIC__c(
-            Name = 'Test Account',
-            Account__c = acc.Id,
-            Contact_Type__c = Constants.FIX_PHONE_CN,
-            UniqueContact__c = fixPhone);
+        Contact_EIC__c contact = new Contact_EIC__c(Name = 'Test Account',
+                                                    Account__c = acc.Id,
+                                                    Contact_Type__c = Constants.FIX_PHONE_CN,
+                                                    UniqueContact__c = fixPhone);
         insert contact;
     }
 
@@ -266,7 +274,7 @@ public class TestObjectFactory {
     public static Appoitment__c createApp(Opportunity opp, Id userID) {
         Appoitment__c app = new Appoitment__c();
         app.Appointment_Type__c = '第5天任务';  
-        app.Due_Date__c = System.today();
+        app.Due_Date__c = System.Today();
         app.Opportunity__c = opp.Id;
         app.RecordTypeId = RecordTypeRelated.Assignment_App;
         app.Assign_To__c = userID;
@@ -308,26 +316,21 @@ public class TestObjectFactory {
     }
 
     public static shouldProcessRun__c createShouldRun (Id userId) {
-        shouldProcessRun__c avoidTrigger = new shouldProcessRun__c(
-            Name = userId,
-            IsDisable__c = TRUE);
+        shouldProcessRun__c avoidTrigger = new shouldProcessRun__c( Name = userId, IsDisable__c = TRUE);
         return avoidTrigger;
     }
 
     // Creates sample account
     public static Account createAccount(String mobile) {
         Id recordTypeId = Utils.getRecordTypeId('Account', 'EIC Account');
-        Account acc = new Account(
-            Name = 'Test Account',
-            RecordTypeId = recordTypeId);
+        Account acc = new Account(Name = 'Test Account', RecordTypeId = recordTypeId);
         insert acc;
 
-        Contact_EIC__c contact = new Contact_EIC__c(
-            Name = 'Test Account',
-            Account__c = acc.Id,
-            isPrimary__c = TRUE,
-            Contact_Type__c = Constants.MOBILE_CN,
-            UniqueContact__c = mobile);
+        Contact_EIC__c contact = new Contact_EIC__c(Name = 'Test Account',
+                                                    Account__c = acc.Id,
+                                                    isPrimary__c = TRUE,
+                                                    Contact_Type__c = Constants.MOBILE_CN,
+                                                    UniqueContact__c = mobile);
         insert contact;
 
         return acc;
@@ -338,29 +341,37 @@ public class TestObjectFactory {
         Id recordTypeId = Utils.getRecordTypeId('Account', 'EIC Account');
         List<Contact_EIC__c> contactList = new List<Contact_EIC__c>();
 
-        Account acc = new Account(
-            Name = 'Test Account',
-            RecordTypeId = recordTypeId);
+        Account acc = new Account(Name = 'Test Account', RecordTypeId = recordTypeId);
         insert acc;
 
-        Contact_EIC__c mobilecon = new Contact_EIC__c(
-            Name = 'Test Account Mobile',
-            Account__c = acc.Id,
-            isPrimary__c = TRUE,
-            Contact_Type__c = Constants.MOBILE_CN,
-            UniqueContact__c = mobile);
+        Contact_EIC__c mobilecon = new Contact_EIC__c(Name = 'Test Account Mobile',
+                                                      Account__c = acc.Id,
+                                                      isPrimary__c = TRUE,
+                                                      Contact_Type__c = Constants.MOBILE_CN,
+                                                      UniqueContact__c = mobile);
         contactList.add(mobilecon);
 
-        Contact_EIC__c fixPhonecon = new Contact_EIC__c(
-            Name = 'Test Account Fix Phone',
-            Account__c = acc.Id,
-            Contact_Type__c = Constants.FIX_PHONE_CN,
-            UniqueContact__c = fixPhone);
+        Contact_EIC__c fixPhonecon = new Contact_EIC__c(Name = 'Test Account Fix Phone',
+                                                        Account__c = acc.Id,
+                                                        Contact_Type__c = Constants.FIX_PHONE_CN,
+                                                        UniqueContact__c = fixPhone);
         contactList.add(fixPhonecon);
-        
+
         insert contactList;
 
         return acc;
+    }
+
+    // Create education 
+    public static Education__c createEducation (String UUIDSchool, Account acc) {
+        Education__c education = new Education__c (UUID_School__c = UUIDSchool,
+                                                   UUID_Major__c = '44418cc7-ef7b-4cf0-b3ec-baadffdf338f',
+                                                   UUID_Degree__c = 'dc5345e0-7020-4c39-995a-21fa76fcf7fc',
+                                                   UUID_Faculty__c = '824be818-09a0-4609-bfd8-eea757ba61cb',
+                                                   Account__c = acc.Id);
+
+        insert education;
+        return education;
     }
 
     public static List<Opportunity> createOpportunities(Account acc) {
@@ -370,67 +381,62 @@ public class TestObjectFactory {
         Id cooperativeRTId = Utils.getRecordTypeId('Opportunity', 'Cooperative');
         List<Opportunity> opps = new List<Opportunity>();
 
-        Opportunity counsellingOpp = new Opportunity(
-            Name = 'counsellingOpp',
-            RecordTypeId = cRTId,
-            AccountId = acc.Id,
-            CloseDate = System.today() + 30,
-            Intended_City__c = Constants.CITY_BJ_CN,
-            Intended_Office__c = 'N/A',
-            Department__c = 'US',
-            Project__c = Constants.US_CN,
-            Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
-            StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
+        Opportunity counsellingOpp = new Opportunity(Name = 'counsellingOpp',
+                                                     RecordTypeId = cRTId,
+                                                     AccountId = acc.Id,
+                                                     CloseDate = System.Today() + 30,
+                                                     Intended_City__c = Constants.CITY_BJ_CN,
+                                                     Intended_Office__c = 'N/A',
+                                                     Department__c = 'US',
+                                                     Project__c = Constants.US_CN,
+                                                     Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                                     StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
         opps.add(counsellingOpp);
-        Opportunity counsellingOpp2 = new Opportunity(
-            Name = 'counsellingOpp2',
-            RecordTypeId = cRTId,
-            AccountId = acc.Id,
-            CloseDate = System.today() + 30,
-            Intended_City__c = Constants.CITY_SH_CN,
-            Intended_Office__c = 'N/A',
-            Department__c = 'England&Ireland',
-            Project__c = Constants.UK_CN,
-            Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
-            StageName = Constants.OPPORTUNITY_STAGE_CLOSED_LOST_CN);
+        Opportunity counsellingOpp2 = new Opportunity(Name = 'counsellingOpp2',
+                                                      RecordTypeId = cRTId,
+                                                      AccountId = acc.Id,
+                                                      CloseDate = System.Today() + 30,
+                                                      Intended_City__c = Constants.CITY_SH_CN,
+                                                      Intended_Office__c = 'N/A',
+                                                      Department__c = 'England&Ireland',
+                                                      Project__c = Constants.UK_CN,
+                                                      Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                                      StageName = Constants.OPPORTUNITY_STAGE_CLOSED_LOST_CN);
         opps.add(counsellingOpp2);
 
-        Opportunity testprepOpp = new Opportunity(
-            Name = 'testprepOpp',
-            RecordTypeId = tRTId,
-            AccountId = acc.Id,
-            CloseDate = System.today() + 30,
-            Intended_City__c = Constants.CITY_BJ_CN,
-            Intended_Office__c = 'N/A',
-            Department__c = Constants.DEPARTMENT_TESTPREP_CN,
-            Project__c = 'SAT',
-            Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
-            StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
+        Opportunity testprepOpp = new Opportunity(Name = 'testprepOpp',
+                                                  RecordTypeId = tRTId,
+                                                  AccountId = acc.Id,
+                                                  CloseDate = System.Today() + 30,
+                                                  Intended_City__c = Constants.CITY_BJ_CN,
+                                                  Intended_Office__c = 'N/A',
+                                                  Department__c = Constants.DEPARTMENT_TESTPREP_CN,
+                                                  Project__c = 'SAT',
+                                                  Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                                  StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
         opps.add(testprepOpp);
 
-        Opportunity scholarTreeOpp = new Opportunity(
-            Name = 'scholarTreeOpp',
-            RecordTypeId = scholarTreeRTId,
-            AccountId = acc.Id,
-            CloseDate = System.today() + 30,
-            Intended_City__c = Constants.CITY_BJ_CN,
-            Intended_Office__c = 'N/A',
-            Department__c = Constants.SCHOLAR_TREE_CN,
-            Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
-            StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
+        Opportunity scholarTreeOpp = new Opportunity(Name = 'scholarTreeOpp',
+                                                     RecordTypeId = scholarTreeRTId,
+                                                     AccountId = acc.Id,
+                                                     CloseDate = System.Today() + 30,
+                                                     Intended_City__c = Constants.CITY_BJ_CN,
+                                                     Intended_Office__c = 'N/A',
+                                                     Department__c = Constants.SCHOLAR_TREE_CN,
+                                                     Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                                     StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
         opps.add(scholarTreeOpp);
 
-        Opportunity cooperativeOpp = new Opportunity(
-            Name = 'cooperativeOpp',
-            RecordTypeId = cooperativeRTId,
-            AccountId = acc.Id,
-            CloseDate = System.today() + 30,
-            Intended_City__c = Constants.CITY_BJ_CN,
-            Intended_Office__c = 'N/A',
-            Department__c = Constants.COOPERATIVE_CN,
-            Project__c = Constants.COOPERATIVE_PROJECT_CN,
-            Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
-            StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
+        Opportunity cooperativeOpp = new Opportunity(Name = 'cooperativeOpp',
+                                                     RecordTypeId = cooperativeRTId,
+                                                     AccountId = acc.Id,
+                                                     CloseDate = System.Today() + 30,
+                                                     Intended_City__c = Constants.CITY_BJ_CN,
+                                                     Intended_Office__c = 'N/A',
+                                                     Department__c = Constants.COOPERATIVE_CN,
+                                                     Project__c = Constants.COOPERATIVE_PROJECT_CN,
+                                                     Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                                     StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
         opps.add(cooperativeOpp);
 
         insert opps;
@@ -438,25 +444,26 @@ public class TestObjectFactory {
     }
 
     public static User createUser() {
+
         // Gets admin profile
         Profile adminProfile = [SELECT Id 
                                 FROM Profile 
                                 WHERE Name = 'System Administrator'
                                 OR Name = : Constants.SYSTEM_ADMIN_PROFILE_CN
                                 LIMIT 1];
-        User user = new User(
-            Email = 'test@eic.com.test',
-            Lastname = 'Test',
-            ProfileId = adminProfile.Id,
-            Username = String.valueOf(System.now().getTime()) + String.valueOf(System.Math.random()) + '@eic.com.test',
-            Alias = String.valueOf(System.now().getTime()).subString(0, 8),
-            EmailenCodingKey = 'ISO-8859-1',
-            LanguageLocaleKey = 'en_US',
-            LocalesIdKey = 'en_GB',
-            TimezonesIdKey = 'America/Los_Angeles',
-            CompanyName = 'EIC',
-            Sage_UserName__c = 'SAGE Username',
-            Paike_UserName__c = 'Jiaowu Username');
+        User user = new User(Email = 'test@eic.com.test',
+                             Lastname = 'Test',
+                             ProfileId = adminProfile.Id,
+                             Username = String.valueOf(System.Now().getTime()) + 
+                                String.valueOf(System.Math.random()) + '@eic.com.test',
+                             Alias = String.valueOf(System.Now().getTime()).subString(0, 8),
+                             EmailenCodingKey = 'ISO-8859-1',
+                             LanguageLocaleKey = 'en_US',
+                             LocalesIdKey = 'en_GB',
+                             TimezonesIdKey = 'America/Los_Angeles',
+                             CompanyName = 'EIC',
+                             Sage_UserName__c = 'SAGE Username',
+                             Paike_UserName__c = 'Jiaowu Username');
 
         insert user;
 
@@ -465,53 +472,55 @@ public class TestObjectFactory {
 
     // Creates branch customer service manager
     public static User createCustomerManager() {
-        User user = new User(
-            Email = 'test@eic.com.test',
-            Lastname = 'Test',
-            ProfileId = Constants.PROFILE_LOCAL_CS_MANAGER_ID,
-            Username = String.valueOf(System.now().getTime()) + String.valueOf(System.Math.random()) + '@eic.com.test',
-            Alias = String.valueOf(System.now().getTime()).subString(0, 8),
-            EmailenCodingKey = 'ISO-8859-1',
-            LanguageLocaleKey = 'en_US',
-            LocalesIdKey = 'en_GB',
-            TimezonesIdKey = 'America/Los_Angeles',
-            CompanyName = 'EIC',
-            Sage_UserName__c = 'SAGE Username',
-            Paike_UserName__c = 'Jiaowu Username');
+        User user = new User(Email = 'test@eic.com.test',
+                             Lastname = 'Test',
+                             ProfileId = Constants.PROFILE_LOCAL_CS_MANAGER_ID,
+                             Username = String.valueOf(System.Now().getTime()) + 
+                                String.valueOf(System.Math.random()) + '@eic.com.test',
+                             Alias = String.valueOf(System.Now().getTime()).subString(0, 8),
+                             EmailenCodingKey = 'ISO-8859-1',
+                             LanguageLocaleKey = 'en_US',
+                             LocalesIdKey = 'en_GB',
+                             TimezonesIdKey = 'America/Los_Angeles',
+                             CompanyName = 'EIC',
+                             Sage_UserName__c = 'SAGE Username',
+                             Paike_UserName__c = 'Jiaowu Username');
 
         insert user;
 
-        return user;        
+        return user;
     }
 
-    public static Campaign createCampaign(String campaignName, String businessLine, String channel1, String channel2, String channel3) {
+    public static Campaign createCampaign(String campaignName, 
+                                          String businessLine, 
+                                          String channel1, 
+                                          String channel2, 
+                                          String channel3) {
         Id recordTypeId = Utils.getRecordTypeId('Campaign', 'Level 4 Promotion Channel (Approved)');
-        Campaign camp = new Campaign(
-            Name = campaignName,
-            RecordTypeId = recordTypeId,
-            City__c = Constants.CITY_BJ_CN,
-            Business_Line__c = businessLine,
-            Marketing_Channel_Lv1__c = channel1,
-            Marketing_Channel_Lv2__c = channel2,
-            Marketing_Channel_Lv3__c = channel3,
-            Status = Constants.APPROVED_CN,
-            IsActive = TRUE);
+        Campaign camp = new Campaign(Name = campaignName,
+                                     RecordTypeId = recordTypeId,
+                                     City__c = Constants.CITY_BJ_CN,
+                                     Business_Line__c = businessLine,
+                                     Marketing_Channel_Lv1__c = channel1,
+                                     Marketing_Channel_Lv2__c = channel2,
+                                     Marketing_Channel_Lv3__c = channel3,
+                                     Status = Constants.APPROVED_CN,
+                                     IsActive = TRUE);
         insert camp;
         return camp;
     }
 
     public static User insertTMKUser() {
-        User user = new User(
-            Email = 'test@eic.com.test',
-            Lastname = 'Test',
-            ProfileId = Constants.PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID,
-            Username = String.valueOf(System.Math.random()) + '@eic.com.test',
-            Alias = String.valueOf(System.Math.random()).subString(0, 8),
-            EmailenCodingKey = 'ISO-8859-1',
-            LanguageLocaleKey = 'en_US',
-            LocalesIdKey = 'en_GB',
-            TimezonesIdKey = 'America/Los_Angeles',
-            CompanyName = 'EIC');
+        User user = new User(Email = 'test@eic.com.test',
+                             Lastname = 'Test',
+                             ProfileId = Constants.PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID,
+                             Username = String.valueOf(System.Math.random()) + '@eic.com.test',
+                             Alias = String.valueOf(System.Math.random()).subString(0, 8),
+                             EmailenCodingKey = 'ISO-8859-1',
+                             LanguageLocaleKey = 'en_US',
+                             LocalesIdKey = 'en_GB',
+                             TimezonesIdKey = 'America/Los_Angeles',
+                             CompanyName = 'EIC');
 
         insert user;
 
@@ -524,7 +533,7 @@ public class TestObjectFactory {
         org.City__c = city;
         org.Front_Desk__c = UserInfo.getUserId();
         org.RecordTypeId = Utils.getRecordTypeId('Organization__c', businessLineEN);
-        org.OwnerId = userInfo.getUserId();
+        org.OwnerId = UserInfo.getUserId();
         org.Department__c = businessLineCN;
         org.Office__c = 'People Square';
     
@@ -543,7 +552,7 @@ public class TestObjectFactory {
         schedulingTable.isActive__c = TRUE;
         schedulingTable.City__c = org.City__c;
         schedulingTable.Office__c = org.Office__c;
-        schedulingTable.Manager__c = userinfo.getUserId();
+        schedulingTable.Manager__c = Userinfo.getUserId();
         schedulingTable.RecordTypeId = Utils.getRecordTypeId('Scheduling_Table__c', businessLineEN);
         return schedulingTable;
     }
@@ -555,7 +564,7 @@ public class TestObjectFactory {
         schedulingTableLine.Monday_Time__c = 'D';
         schedulingTableLine.Start_Working_Time__c = '08:00';
         schedulingTableLine.End_Working_Time__c = '23:00';
-        schedulingTableLine.User__c = userinfo.getUserId();
+        schedulingTableLine.User__c = Userinfo.getUserId();
         schedulingTableLine.Daily_Opportunities__c = 1;
         schedulingTableLine.Monthly_Opportunities__c = 2;
         schedulingTableLine.Scheduling_Table__c = schedulingTable.Id;
@@ -565,47 +574,45 @@ public class TestObjectFactory {
 
     public static Lead createLead(Campaign campaign, String intendedCity, Boolean hasProject) {
         if (hasProject) {
-            Lead lead = new Lead(
-                Lastname = 'Test',
-                Firstname = 'A',
-                MobilePhone = '19099990000',
-                Area_Code__c = '021',
-                Phone = '99999999',
-                Campaign__c = campaign.Id,
-                Consultation_Mode__c = 'TMK Callout',
-                Intended_City__c = intendedCity,
-                Is_Counselling__c = TRUE,
-                Is_Testprep__c = TRUE,
-                Counselling_Project__c = Constants.US_CN + ';' + Constants.UK_CN,
-                Testprep_Project__c = 'SAT;GRE',
-                GPA__c = 80,
-                College__c = 'Test University',
-                Education_Level__c = 'Bachelor',
-                Company = 'EIC TEST');
+            Lead lead = new Lead(Lastname = 'Test',
+                                 Firstname = 'A',
+                                 MobilePhone = '19099990000',
+                                 Area_Code__c = '021',
+                                 Phone = '99999999',
+                                 Campaign__c = campaign.Id,
+                                 Consultation_Mode__c = 'TMK Callout',
+                                 Intended_City__c = intendedCity,
+                                 Is_Counselling__c = TRUE,
+                                 Is_Testprep__c = TRUE,
+                                 Counselling_Project__c = Constants.US_CN + ';' + Constants.UK_CN,
+                                 Testprep_Project__c = 'SAT;GRE',
+                                 GPA__c = 80,
+                                 College__c = 'Test University',
+                                 Education_Level__c = 'Bachelor',
+                                 Company = 'EIC TEST');
             return lead;
 
         } else {
-            Lead lead = new Lead(
-                Lastname = 'Test',
-                Firstname = 'B',
-                // MobilePhone = '19099990001',
-                Area_Code__c = '022',
-                Phone = '99999990',
-                Campaign__c = campaign.Id,
-                Consultation_Mode__c = 'TMK Callout',
-                Intended_City__c = intendedCity,
-                Is_Counselling__c = TRUE,
-                Is_Scholar_Tree__c = TRUE,
-                Counselling_Project__c = '',
-                GPA__c = 80,
-                College__c = 'Test University',
-                Education_Level__c = 'Bachelor',
-                Company = 'EIC TEST');
+            Lead lead = new Lead(Lastname = 'Test',
+                                 Firstname = 'B',
+                                 Area_Code__c = '022',
+                                 Phone = '99999990',
+                                 Campaign__c = campaign.Id,
+                                 Consultation_Mode__c = 'TMK Callout',
+                                 Intended_City__c = intendedCity,
+                                 Is_Counselling__c = TRUE,
+                                 Is_Scholar_Tree__c = TRUE,
+                                 Counselling_Project__c = '',
+                                 GPA__c = 80,
+                                 College__c = 'Test University',
+                                 Education_Level__c = 'Bachelor',
+                                 Company = 'EIC TEST');
+
             if (intendedCity == Constants.CITY_GZ_CN) {
                 lead.Is_Cooperative_Education__c = TRUE;
             }
 
-            if (intendedCity == Constants.CITY_SH_CN) {                
+            if (intendedCity == Constants.CITY_SH_CN) {
                 lead.Is_NP__c = TRUE;
             }
 
@@ -615,47 +622,45 @@ public class TestObjectFactory {
 
     public static Lead createLead(Campaign campaign, String intendedCity, Boolean hasProject, String mobile, String fixPhone) {
         if (hasProject) {
-            Lead lead = new Lead(
-                Lastname = 'Test',
-                Firstname = 'A',
-                MobilePhone = mobile,
-                Area_Code__c = '021',
-                Phone = fixPhone,
-                Campaign__c = campaign.Id,
-                Consultation_Mode__c = 'TMK Callout',
-                Intended_City__c = intendedCity,
-                Is_Counselling__c = TRUE,
-                Is_Testprep__c = TRUE,
-                Counselling_Project__c = Constants.US_CN + ';' + Constants.UK_CN,
-                Testprep_Project__c = 'SAT;GRE',
-                GPA__c = 80,
-                College__c = 'Test University',
-                Education_Level__c = 'Bachelor',
-                Company = 'EIC TEST');
+            Lead lead = new Lead(Lastname = 'Test',
+                                 Firstname = 'A',
+                                 MobilePhone = mobile,
+                                 Area_Code__c = '021',
+                                 Phone = fixPhone,
+                                 Campaign__c = campaign.Id,
+                                 Consultation_Mode__c = 'TMK Callout',
+                                 Intended_City__c = intendedCity,
+                                 Is_Counselling__c = TRUE,
+                                 Is_Testprep__c = TRUE,
+                                 Counselling_Project__c = Constants.US_CN + ';' + Constants.UK_CN,
+                                 Testprep_Project__c = 'SAT;GRE',
+                                 GPA__c = 80,
+                                 College__c = 'Test University',
+                                 Education_Level__c = 'Bachelor',
+                                 Company = 'EIC TEST');
             return lead;
 
         } else {
-            Lead lead = new Lead(
-                Lastname = 'Test',
-                Firstname = 'B',
-                // MobilePhone = '19099990001',
-                Area_Code__c = '021',
-                Phone = fixPhone,
-                Campaign__c = campaign.Id,
-                Consultation_Mode__c = 'TMK Callout',
-                Intended_City__c = intendedCity,
-                Is_Counselling__c = TRUE,
-                Is_Scholar_Tree__c = TRUE,
-                Counselling_Project__c = '',
-                GPA__c = 80,
-                College__c = 'Test University',
-                Education_Level__c = 'Bachelor',
-                Company = 'EIC TEST');
+            Lead lead = new Lead(Lastname = 'Test',
+                                 Firstname = 'B',
+                                 Area_Code__c = '021',
+                                 Phone = fixPhone,
+                                 Campaign__c = campaign.Id,
+                                 Consultation_Mode__c = 'TMK Callout',
+                                 Intended_City__c = intendedCity,
+                                 Is_Counselling__c = TRUE,
+                                 Is_Scholar_Tree__c = TRUE,
+                                 Counselling_Project__c = '',
+                                 GPA__c = 80,
+                                 College__c = 'Test University',
+                                 Education_Level__c = 'Bachelor',
+                                 Company = 'EIC TEST');
+
             if (intendedCity == Constants.CITY_GZ_CN) {
                 lead.Is_Cooperative_Education__c = TRUE;
             }
 
-            if (intendedCity == Constants.CITY_SH_CN) {                
+            if (intendedCity == Constants.CITY_SH_CN) {
                 lead.Is_NP__c = TRUE;
             }
 
@@ -664,19 +669,18 @@ public class TestObjectFactory {
     }
 
     public static Lead createUploadedLead(Campaign campaign, String intendedCity) {
-        Lead lead = new Lead(
-            Lastname = 'Test',
-            Firstname = 'A',
-            MobilePhone = '19099990000',
-            Area_Code__c = '021',
-            Phone = '99999999',
-            Campaign__c = campaign.Id,
-            Consultation_Mode__c = 'TMK Callout',
-            Intended_City__c = intendedCity,
-            Is_Counselling__c = TRUE,
-            GPA__c = 80,
-            College__c = 'Test University',
-            Company = 'EIC TEST');
+        Lead lead = new Lead(Lastname = 'Test',
+                             Firstname = 'A',
+                             MobilePhone = '19099990000',
+                             Area_Code__c = '021',
+                             Phone = '99999999',
+                             Campaign__c = campaign.Id,
+                             Consultation_Mode__c = 'TMK Callout',
+                             Intended_City__c = intendedCity,
+                             Is_Counselling__c = TRUE,
+                             GPA__c = 80,
+                             College__c = 'Test University',
+                             Company = 'EIC TEST');
 
         lead.Project__c = Constants.UK_CN + ';' + 
                           'SAT' + ';' + 
@@ -692,6 +696,7 @@ public class TestObjectFactory {
 
     // Creates lead itemList
     public static void createLeadItemList(Lead lead) {
+
         List<Lead_Item__c> leadItemList = new List<Lead_Item__c>();
         Id campaignId = [SELECT Campaign__c
                          FROM Lead
@@ -709,6 +714,7 @@ public class TestObjectFactory {
 
             // If it does not have counselling projects
             } else {
+
                 // If it has counselling projects
                 for (String country :cProjects) {
                     leadItemList.add(createOneLeadItem (
@@ -719,54 +725,72 @@ public class TestObjectFactory {
 
         if (lead.Is_TestPrep__c) {
             leadItemList.add(createOneLeadItem (
-                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.TESTPREP_CN, campaignId, lead.TestPrep_Project__c, ''));
+                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.TESTPREP_CN, 
+                campaignId, lead.TestPrep_Project__c, ''));
         }
 
         if (lead.Is_NP__c) {
             leadItemList.add(createOneLeadItem (
-                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 'NP', campaignId, lead.TestPrep_Project__c, ''));
+                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 'NP', 
+                campaignId, lead.TestPrep_Project__c, ''));
         }
 
         if (lead.Is_Scholar_Tree__c) {
             leadItemList.add(createOneLeadItem (
-                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.SCHOLAR_TREE_CN, campaignId, Constants.SCHOLAR_TREE_PROJECT_CN, ''));
+                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.SCHOLAR_TREE_CN, 
+                campaignId, Constants.SCHOLAR_TREE_PROJECT_CN, ''));
         }
 
         if (lead.Is_Cooperative_Education__c) {
             leadItemList.add(createOneLeadItem (
-                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.COOPERATIVE_CN, campaignId, lead.Cooperative_Education_Project__c, ''));
+                lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.COOPERATIVE_CN, 
+                campaignId, lead.Cooperative_Education_Project__c, ''));
         }
 
         insert leadItemList;
     }
 
-    public static Opportunity createTestprepOpportunity(Account acc) {
-        Opportunity opp = new Opportunity(
-            Name = 'Testprep Opp',
-            RecordTypeId = Utils.getRecordTypeId('Opportunity', 'Testprep'),
-            AccountId = acc.Id,
-            CloseDate = System.today() + 30,
-            Intended_City__c = Constants.CITY_BJ_CN,
-            Intended_Office__c = 'N/A',
-            Department__c = Constants.DEPARTMENT_TESTPREP_CN,
-            Project__c = 'SAT',
-            Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
-            StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
+    public static Opportunity createTestprepOpportunity (Account acc) {
+
+        Opportunity opp = new Opportunity(Name = 'Testprep Opp',
+                                          RecordTypeId = Utils.getRecordTypeId('Opportunity', 'Testprep'),
+                                          AccountId = acc.Id,
+                                          CloseDate = System.Today() + 30,
+                                          Intended_City__c = Constants.CITY_BJ_CN,
+                                          Intended_Office__c = 'N/A',
+                                          Department__c = Constants.DEPARTMENT_TESTPREP_CN,
+                                          Project__c = 'SAT',
+                                          Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                          StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
+        insert opp;
+        return opp;
+    }
+
+    public static Opportunity createCounsellingOpportunity(Account acc) {
+        Opportunity opp = new Opportunity(Name = 'Testprep Opp',
+                                          RecordTypeId = Utils.getRecordTypeId('Opportunity', 'Counselling'),
+                                          AccountId = acc.Id,
+                                          CloseDate = System.Today() + 30,
+                                          Intended_City__c = Constants.CITY_BJ_CN,
+                                          Intended_Office__c = 'N/A',
+                                          Project__c = Constants.US_CN,
+                                          Consultation_Mode__c = Constants.F2F_CONSULTING_CN,
+                                          StageName = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN);
         insert opp;
         return opp;
     }
 
     // Creates one lead item
     private static Lead_Item__c createOneLeadItem (Lead lead, String status, String businessLine, String campaignId, String project, String country) {
-        Lead_Item__c li = new Lead_Item__c(
-            Lead__c = lead.Id,
-            Status__c = status,
-            Business_Line__c = businessLine,
-            Project__c = project);
+        Lead_Item__c li = new Lead_Item__c(Lead__c = lead.Id,
+                                           Status__c = status,
+                                           Business_Line__c = businessLine,
+                                           Project__c = project);
         if (country != '') {
             li.Intended_Country__c = country;
             businessLine += ';' + country;
         }
+
         if (String.isNotBlank(lead.MobilePhone)) {
             li.Mobile__c = lead.MobilePhone;
             li.Mobile_Unique_Key__c = lead.MobilePhone + ';' + campaignId + ';' + lead.Intended_City__c + ';' + businessLine;
@@ -789,9 +813,8 @@ public class TestObjectFactory {
 
     // Creates batch callout record
     public static CallLog_History__c createLeadCallLogHistory(Id batchCalloutId, Lead lead) {
-        CallLog_History__c callLog = new CallLog_History__c(
-            BatchCallOut__c = batchCalloutId,
-            Lead__c = lead.Id);
+        CallLog_History__c callLog = new CallLog_History__c(BatchCallOut__c = batchCalloutId,
+                                                            Lead__c = lead.Id);
         insert callLog;
         return callLog;
     }
@@ -799,7 +822,7 @@ public class TestObjectFactory {
     // Creates lead follow up
     public static Appoitment__c createLeadFollowup(Lead lead) {
         Appoitment__c app = new Appoitment__c();
-        app.Due_Date__c = System.today();
+        app.Due_Date__c = System.Today();
         app.Lead__c = lead.Id;
         app.RecordTypeId = Utils.getRecordTypeId('Appoitment__c', 'Lead Follow Up');
         app.Assign_To__c = UserInfo.getUserId();
@@ -810,9 +833,8 @@ public class TestObjectFactory {
 
     // Creates BatchJobRecord__c record
     public static BatchJobRecord__c createBatchJob() {
-        BatchJobRecord__c batchJob = new BatchJobRecord__c(
-            Name = 'Test Batch Job',
-            Status__c = 'Completed');
+        BatchJobRecord__c batchJob = new BatchJobRecord__c(Name = 'Test Batch Job',
+                                                           Status__c = 'Completed');
         insert batchJob;
 
         return batchJob;
@@ -820,42 +842,79 @@ public class TestObjectFactory {
 
     // Creates the an attachment record
     public static Attachment createAttachment(Id recordId) {
-        Attachment attachment = new Attachment(
-            Name = 'Test Attachment',
-            Body = Blob.valueOf('Test Attachment Body'),
-            ParentId = recordId);
+        Attachment attachment = new Attachment(Name = 'Test Attachment',
+                                               Body = Blob.valueOf('Test Attachment Body'),
+                                               ParentId = recordId);
         insert attachment;
 
-        return attachment;    
+        return attachment;
     }
 
     public static void initializeProjectSetup() {
         List<Project__c> projectList = new List<Project__c>();
-        Project__c counsellingProjs = new Project__c(
-            Name = Constants.COUNSELLING_CN, 
-            Project__c = Constants.UK_CN);
+        Project__c counsellingProjs = new Project__c(Name = Constants.COUNSELLING_CN, Project__c = Constants.UK_CN);
         projectList.add(counsellingProjs);
 
-        Project__c testprepProjs = new Project__c(
-            Name = Constants.TESTPREP_CN, 
-            Project__c = 'SAT');
+        Project__c testprepProjs = new Project__c(Name = Constants.TESTPREP_CN, Project__c = 'SAT');
         projectList.add(testprepProjs);
 
-        Project__c NPProjs = new Project__c(
-            Name = 'NP', 
-            Project__c = 'SAT');
+        Project__c NPProjs = new Project__c(Name = 'NP', Project__c = 'SAT');
         projectList.add(NPProjs);
 
-        Project__c scholarTreeProjs = new Project__c(
-            Name = Constants.SCHOLAR_TREE_CN, 
-            Project__c = Constants.SCHOLAR_TREE_PROJECT_CN);
+        Project__c scholarTreeProjs = new Project__c(Name = Constants.SCHOLAR_TREE_CN, Project__c = Constants.SCHOLAR_TREE_PROJECT_CN);
         projectList.add(scholarTreeProjs);
 
-        Project__c cooperativeProjs = new Project__c(
-            Name = Constants.COOPERATIVE_CN, 
-            Project__c = Constants.COOPERATIVE_PROJECT_CN);
+        Project__c cooperativeProjs = new Project__c(Name = Constants.COOPERATIVE_CN, 
+                                                     Project__c = Constants.COOPERATIVE_PROJECT_CN);
         projectList.add(cooperativeProjs);
 
         insert projectList;
+    }
+
+
+    // Creates appointment records
+    public static Appoitment__c createAppointment(Opportunity opp, User user, String type, Integer deltaDay) {
+        
+        Appoitment__c app = new Appoitment__c(Due_Date__c = System.today() + 1,
+                                              CreatedDate = System.today() - deltaDay,
+                                              Due_Time__c = '09:00',
+                                              RecordTypeID = Utils.getRecordTypeId('Appoitment__c', type),
+                                              Assign_To__c = user.Id,
+                                              Status__c= '跟进中',
+                                              Opportunity__c = opp.Id,
+                                              Description__c = 'hey hey',
+                                              Duration__c = '1',
+                                              CreatedBy = user,
+                                              OwnerId = user.Id,
+                                              Appointment_Type__c = '首次到访邀约',
+                                              TMKAppStatus__c = '未到访');
+        insert app;
+
+        return app;
+    }
+
+    // Create record sharing
+    public static void insertAccountShare(User user, Account acc) {
+        
+        AccountShare share = new AccountShare(UserOrGroupId = user.Id,
+                                              AccountAccessLevel = 'edit',
+                                              OpportunityAccessLevel = 'read',
+                                              RowCause = 'Manual',
+                                              AccountId = acc.Id);
+        try {
+            insert share;
+        
+        } catch (Exception e) {
+            System.debug(LoggingLevel.INFO, '*** e.getMessage(): ' + e.getMessage());
+            System.debug(LoggingLevel.INFO, '*** e.getLineNumber(): ' + e.getLineNumber());
+        }
+    }
+
+    // Update records to avoid MIXED_DML_OPERATION in test class
+    public static List<SObject> updateRecord(List<SObject> SObjectList) {
+
+        Database.update(SObjectList);
+
+        return SObjectList;
     }
 }

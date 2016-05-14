@@ -1,12 +1,13 @@
 /**************************************************************************************************
  * Name: AppointmentOwnerChangeControllerTest
- * Object: /
- * Purpose: Test Mass transfer Fifth day assignment Function
- * Author: /
+ * Object: Appointment__c
+ * Purpose: a test class for AppointmentOwnerChangeController
+ * Author: Ray Cen
  * Create Date: 2015-12-14
  * Modify History:
  * 2016-04-18    Ray Cen    Writes comments and optimizes the code
- * 2016-05-06    Allen    Format the code
+ * 2016-05-06    Allen      Formats the code
+ * 2016-05-06    Vicia      Adds comments
  **************************************************************************************************/
 @isTest
 private class AppointmentOwnerChangeControllerTest {
@@ -38,6 +39,7 @@ private class AppointmentOwnerChangeControllerTest {
                          FROM User
                          WHERE username = 'appowenr@test.com.eic.pwc'];
 
+        // Initializes the data
        	Account acc = TestObjectFactory.createAccount();
         acc.Name = 'AccQuickSearch';
         insert acc;
@@ -110,10 +112,10 @@ private class AppointmentOwnerChangeControllerTest {
             ApexPages.StandardSetController con3 = new ApexPages.StandardSetController (apps);
             con3.setSelected(apps);
 
+            // Checks whether the user can change others' record
             AppointmentOwnerChangeController appOwnerChange3 = new AppointmentOwnerChangeController (con3);
             appOwnerChange3.newOwnerID = acceptor.Id;
-            appOwnerChange3.AssignOwnerChange();
-            System.debug('LoggingLevel.INFO, *** : ' + ApexPages.getMessages());
+            appOwnerChange3.AssignOwnerChange();            
             System.assertEquals(true, CommonHelperClass.compareVfErr(ApexPages.getMessages(), Constants.CHANGE_WITH_NO_ACCESS_APP));
         }
         Test.StopTest();

@@ -1,78 +1,83 @@
 /**************************************************************************************************
  * Name: MassConvertLeadExtensionTest
  * Object: Lead, Lead_Item__c, Appointment__c, Account, Opportunity
- * Purpose: a test class for mass convert lead visualforce page function
- * Author: vicia.wang (vicia.hh.wang@cn.pwc.com)
+ * Purpose: a test class for mass convert lead Visualforce page function
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
  * Create Date: 2016-04-27
  * Modified History: 
- * 2016-04-27   vicia.wang Writes comments in this format
+ * 2016-04-27    Vicia Wang    Writes comments in this format
+ * 2016-05-10    Allen    Format the code
 ***************************************************************************************************/
 @isTest
 private class MassConvertLeadExtensionTest {
-    static testMethod void testMassConvertLead() {
+
+    static testMethod void testMassConvertLead () {
+
         User user = createUser();
         shouldProcessRun__c avoidTrigger = new shouldProcessRun__c(
-        	Name = user.Id,
-        	IsDisable__c = TRUE);
-        
+            Name = user.Id,
+            IsDisable__c = TRUE);
+
         insert avoidTrigger;
 
         Utils.runLeadTrigger = FALSE;
 
-    	System.runAs(user) {
-    		List<Lead> leadList = new List<Lead>();
-			Campaign BankofSH = TestObjectFactory.createCampaign(
-				'BSH', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BSH');
-			Campaign BankofBJ = TestObjectFactory.createCampaign(
-				'BBJ', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BBJ');
+        System.runAs(user) {
 
-			Lead SHLead1 = TestObjectFactory.createLead(
-				BankofSH, Constants.CITY_SH_CN, TRUE, '19099990000', '22220000');
-			SHLead1.QQ__c = 1020304050;
-			SHLead1.Wechat__c = '1020304051';
-			SHLead1.Email = '1020304052@email.com';
-			leadList.add(SHLead1);
+            List<Lead> leadList = new List<Lead>();
+            Campaign BankofSH = TestObjectFactory.createCampaign(
+                'BSH', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BSH');
+            Campaign BankofBJ = TestObjectFactory.createCampaign(
+                'BBJ', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BBJ');
 
-			Lead SHLead2 = TestObjectFactory.createLead(
-				BankofSH, Constants.CITY_SH_CN, TRUE, '19099990001', '22220001');
-			leadList.add(SHLead2);
+            Lead SHLead1 = TestObjectFactory.createLead(
+                BankofSH, Constants.CITY_SH_CN, TRUE, '19099990000', '22220000');
+            SHLead1.QQ__c = 1020304050;
+            SHLead1.Wechat__c = '1020304051';
+            SHLead1.Email = '1020304052@email.com';
+            leadList.add(SHLead1);
 
-			Lead SHLead3 = TestObjectFactory.createLead(
-				BankofBJ, Constants.CITY_SH_CN, TRUE, '19099990000', '22220000');
-			leadList.add(SHLead3);
+            Lead SHLead2 = TestObjectFactory.createLead(
+                BankofSH, Constants.CITY_SH_CN, TRUE, '19099990001', '22220001');
+            leadList.add(SHLead2);
 
-			Lead BJlead = TestObjectFactory.createLead(
-				BankofBJ, Constants.CITY_BJ_CN, TRUE, '19099990001', '11110000');
-			leadList.add(BJlead);
+            Lead SHLead3 = TestObjectFactory.createLead(
+                BankofBJ, Constants.CITY_SH_CN, TRUE, '19099990000', '22220000');
+            leadList.add(SHLead3);
 
-			insert leadList;
+            Lead BJlead = TestObjectFactory.createLead(
+                BankofBJ, Constants.CITY_BJ_CN, TRUE, '19099990001', '11110000');
+            leadList.add(BJlead);
 
-			for (Lead lead :leadList) {
-				TestObjectFactory.createLeadItemList(lead);
-			}
+            insert leadList;
 
-			PageReference massConvertLeadPage = Page.ConsultantReferral;
-			Test.setCurrentPage(massConvertLeadPage);
+            for (Lead lead :leadList) {
+                TestObjectFactory.createLeadItemList(lead);
+            }
 
-			ApexPages.StandardSetController massConvertNonSelect = new ApexPages.StandardSetController(leadList);
-			MassConvertLeadExtension massConvertNonSelectSetCon = new MassConvertLeadExtension(massConvertNonSelect);
-			System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
-								ApexPages.getMessages(), Constants.MASS_CONVERT_NO_ITEM_ERROR));
+            PageReference massConvertLeadPage = Page.ConsultantReferral;
+            Test.setCurrentPage(massConvertLeadPage);
 
-			ApexPages.StandardSetController massConvertStandardSetCon = new ApexPages.StandardSetController(leadList);
-			massConvertStandardSetCon.setSelected(leadList);
-			MassConvertLeadExtension massConvertSetCon = new MassConvertLeadExtension(massConvertStandardSetCon);
+            ApexPages.StandardSetController massConvertNonSelect = new ApexPages.StandardSetController(leadList);
+            MassConvertLeadExtension massConvertNonSelectSetCon = new MassConvertLeadExtension(massConvertNonSelect);
+            System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
+                                ApexPages.getMessages(), Constants.MASS_CONVERT_NO_ITEM_ERROR));
 
-			massConvertSetCon.convertLeadItems();
-			massConvertSetCon.getTotalItemNo();
-			massConvertSetCon.getConvertedItemNo();
-			massConvertSetCon.getIsConverted();
-			massConvertSetCon.gotoAssginOpportunity();			
-    	}
+            ApexPages.StandardSetController massConvertStandardSetCon = new ApexPages.StandardSetController(leadList);
+            massConvertStandardSetCon.setSelected(leadList);
+            MassConvertLeadExtension massConvertSetCon = new MassConvertLeadExtension(massConvertStandardSetCon);
+
+            massConvertSetCon.convertLeadItems();
+            massConvertSetCon.getTotalItemNo();
+            massConvertSetCon.getConvertedItemNo();
+            massConvertSetCon.getIsConverted();
+            massConvertSetCon.gotoAssginOpportunity();
+        }
     }
 
     // In order to avoid "UNABLE_TO_LOCK_ROW"
     public static User createUser() {
+
         // Gets admin profile
         Profile adminProfile = [SELECT Id 
                                 FROM Profile 

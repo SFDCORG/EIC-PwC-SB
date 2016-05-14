@@ -1,12 +1,13 @@
 /**************************************************************************************************
  * Name: AccountQuickSearchTest
- * Object: /
- * Purpose: Test AccountQuickSearch Function
- * Author: /
+ * Object: Account, Opportunity
+ * Purpose: a test class for AccountQuickSearch
+ * Author: Ray Cen
  * Create Date: 2015-12-14
  * Modify History:
  * 2016-04-18    Ray Cen    Writes comments and optimizes the code
- * 2016-05-06    Allen         Format the code
+ * 2016-05-06    Allen      Formats the code
+ * 2016-05-11    Vicia Wang Adds comments
  **************************************************************************************************/
 @isTest
 private class AccountQuickSearchTest {
@@ -18,6 +19,7 @@ private class AccountQuickSearchTest {
                     FROM User
                     WHERE Id = :UserInfo.getUserId()];
 
+        // DML updates should in context in test class
         System.runAs(usr) {
             User uuser = TestObjectFactory.createSalesUser();
             uuser.PreciseSearch__c = true;
@@ -29,6 +31,7 @@ private class AccountQuickSearchTest {
                         FROM User 
                         WHERE Username = 'accSearch@test.com'];
 
+        // Initializes the data
         Account acc = TestObjectFactory.createAccount();
         acc.name = 'Peter Cen';
         insert acc;

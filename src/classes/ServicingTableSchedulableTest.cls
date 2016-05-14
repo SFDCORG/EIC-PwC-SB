@@ -1,13 +1,21 @@
+/**************************************************************************************************
+ * Name: ServicingTableSchedulableTest
+ * Object: Servicing_Table__c
+ * Purpose: Test class for ServicingTableSchedulable
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
+ * Create Date: 2016-05-10
+ * Modified History: 
+ * 2016-05-10   Vicia Wang   Writes comments in this format and format the class
+***************************************************************************************************/
 @isTest
 private class ServicingTableSchedulableTest {
-
-	@isTest static void method(){
+	@isTest static void method() {
 		User u = [Select Id From User Where Id = :Userinfo.getUserId()];
     	system.runAs(u){
     		CreateUserUtil.CreateUserForAppointment();
     	}
 		Servicing_Table__c st = new Servicing_Table__c();
-		st.User__c = [Select Id From User Where Email ='grouptmk400a@eiceducation.com.cn.testcode'].Id;
+		st.User__c = [Select Id From User Where Email = 'grouptmk400a@eiceducation.com.cn.testcode'].Id;
     	st.Order_No__c = '1';
     	st.Business_Line__c = '留学,考培';
     	st.Intended_City__c = '全部';
@@ -44,7 +52,7 @@ private class ServicingTableSchedulableTest {
     	insert st;
 
     	Servicing_Table__c st1 = new Servicing_Table__c();
-		st1.User__c = [Select Id From User Where Email ='grouptmk400a@eiceducation.com.cn.testcode'].Id;
+		st1.User__c = [Select Id From User Where Email = 'grouptmk400a@eiceducation.com.cn.testcode'].Id;
     	st1.Order_No__c = '1';
     	st1.Business_Line__c = '留学,考培';
     	st1.Intended_City__c = '全部';
@@ -83,12 +91,12 @@ private class ServicingTableSchedulableTest {
     	Test.startTest();
 
       	// Schedule the test job
-      	String jobId = System.schedule('ServicingTableSchedulable',
-                        '0 0 0 15 3 ? 2022', 
-                        new ServicingTableSchedulable());
+      	String jobId = System.schedule(
+            'ServicingTableSchedulable',
+            '0 0 0 15 3 ? 2022', 
+            new ServicingTableSchedulable()
+        );
 
       	Test.stopTest();
-
 	}
-    
 }

@@ -1,0 +1,11 @@
+<apex:page standardController="Opportunity" extensions="OpportunityApplyLostExtension" action="{!applyLostPage}">
+	<apex:form >
+		<apex:pageBlock >
+			<apex:pageMessages />
+
+			<apex:pageBlockButtons >
+				<apex:commandButton value="{!$Label.Cancel}" action="{!cancel}"/>
+			</apex:pageBlockButtons>			
+		</apex:pageBlock>
+	</apex:form>
+</apex:page>

@@ -1,16 +1,17 @@
 /**************************************************************************************************
- * Name: miniPhoneoppTest
+ * Name: MiniPhoneoppTest
  * Object: Contact
- * Purpose: Test Contact Info on the opportuntiy page Function
+ * Purpose: Test Contact Info on the opportunity page Function
  * Author: Ray Cen (ray.cen@cn.pwc.com)
  * Create Date: 2016-5-4
  * Modify History:
+ * 2016-05-10    Allen    Format the code
  **************************************************************************************************/
-
 @isTest
-private class miniPhoneoppTest {
-    static testmethod void testminiPhoneView() {
-        
+private class MiniPhoneoppTest {
+
+    static testmethod void testminiPhoneView () {
+
         //Prepare Testing Data
         User usr = [SELECT id 
                     FROM User 
@@ -26,6 +27,7 @@ private class miniPhoneoppTest {
         User runUser = [SELECT Id, PreciseSearch__c, Name
                         FROM User 
                         WHERE Username = 'miniphon@test.com'];
+
         Account acc = TestObjectFactory.createAccount();
         acc.name = 'Peter Cen';
         insert acc;
@@ -46,7 +48,7 @@ private class miniPhoneoppTest {
           
             PageReference myVfPage = Page.MiniPhone_opp;
             Test.setCurrentPageReference(myVfPage);
-            ApexPages.currentPage().getParameters().put('id',opp.Id);
+            ApexPages.currentPage().getParameters().put('id', opp.Id);
             ApexPages.StandardController con = new ApexPages.StandardController(opp);
             miniPhone_opp_cls mini = new miniPhone_opp_cls(con);
             mini.showContactNumber();

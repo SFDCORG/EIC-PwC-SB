@@ -1,4 +1,4 @@
-<apex:page standardController="Opportunity" extensions="viewlossOppsAppsController" docType="html-5.0">
+<apex:page standardController="Opportunity" extensions="ViewlossOppsAppsController" docType="html-5.0">
       
     <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
     <script type="text/javascript" language="javascript" src="{!URLFOR($Resource.tablesorter, '/docs/js/jquery-1.2.6.min.js')}" ></script>

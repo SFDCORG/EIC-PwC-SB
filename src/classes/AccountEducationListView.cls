@@ -122,7 +122,7 @@ public with sharing class AccountEducationListView {
 
             for (object obj : schoolList) {
                 Map<String, Object> schoolMap = (Map<String, Object>) obj;
-                if (is.UUID_School__c== String.valueOf(schoolMap.get('uuid'))) {
+                if (is.UUID_School__c == String.valueOf(schoolMap.get('uuid'))) {
                     w.school = String.valueOf(schoolMap.get('english_name')) + ' ' +
                                String.valueOf(schoolMap.get('chinese_name'));
                     w.url = String.valueOf(schoolMap.get('url'));

@@ -87,7 +87,8 @@ private class SplitLeadUtilsTest {
 	    	Utils.runLeadTrigger = TRUE;
 
 	    	try {
-				Lead BJCounsellingLead = TestObjectFactory.createLead(BankofChina, Constants.CITY_BJ_CN, TRUE);
+				Lead BJCounsellingLead = TestObjectFactory.createLead(BankofChina, 
+					Constants.CITY_BJ_CN, TRUE);
 				insert BJCounsellingLead;
 				Utils.runLeadTrigger = TRUE;
 
@@ -96,7 +97,8 @@ private class SplitLeadUtilsTest {
 			}
 
 			try {
-				Lead BJTestprepllingLead = TestObjectFactory.createLead(BankofChina, Constants.CITY_BJ_CN, FALSE);
+				Lead BJTestprepllingLead = TestObjectFactory.createLead(BankofChina, 
+					Constants.CITY_BJ_CN, FALSE);
 				insert BJTestprepllingLead;
 				Utils.runLeadTrigger = TRUE;
 
@@ -110,7 +112,8 @@ private class SplitLeadUtilsTest {
     	Utils.runLeadTrigger = FALSE;
       	Account acc = TestObjectFactory.createAccount('19099990000');
       	List<Opportunity> opps = TestObjectFactory.createOpportunities(acc);
-      	Campaign PekingUniversity = TestObjectFactory.createCampaign('BJCPekingUniversity', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'Peking University');
+      	Campaign PekingUniversity = TestObjectFactory.createCampaign('BJCPekingUniversity', 
+      		Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'Peking University');
      	Lead sampleLead = TestObjectFactory.createLead(PekingUniversity, Constants.CITY_GZ_CN, FALSE);
      	insert sampleLead;     
       	Utils.runLeadTrigger = TRUE;

@@ -2,22 +2,23 @@
  * Name: JiaowuReferralRESTfulTest
  * Object: Lead, Lead_Item__c, Account, Contact_EIC__c, Opportunity
  * Purpose: a test class for Jiaowu referral interface
- * Author: vicia.wang (vicia.hh.wang@cn.pwc.com)
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
  * Create Date: 2016-04-29
  * Modified History: 
- * 2016-04-29   vicia.wang Writes comments in this format
+ * 2016-04-29    Vicia Wang    Writes comments in this format
+ * 2016-05-08    Allen    Format the code
 ***************************************************************************************************/
 @isTest
 private class JiaowuReferralRESTfulTest {
+
     static testMethod void testJiaowuReferralRESTful() {
-        User user = createUser();        
+        User user = createUser();
         Utils.runLeadTrigger = FALSE;
 
         Test.startTest();
         System.runAs(user) {
-            shouldProcessRun__c avoidTrigger = new shouldProcessRun__c(
-                Name = user.Id,
-                IsDisable__c = TRUE);
+            shouldProcessRun__c avoidTrigger = new shouldProcessRun__c(Name = user.Id,
+                                                                       IsDisable__c = TRUE);
             insert avoidTrigger;
 
             Account acc = TestObjectFactory.createAccount('19011110002');
@@ -29,8 +30,8 @@ private class JiaowuReferralRESTfulTest {
             TestObjectFactory.createLeadItemList(BSHlead);
             Utils.runLeadTrigger = TRUE;
 
-            List<JiaowuReferralRESTful.Referral> referrals = new List<JiaowuReferralRESTful.Referral>();
-            JiaowuReferralRESTful.Referral referral = new JiaowuReferralRESTful.Referral();
+            List<JiaowuReferralRESTful.Referral> referrals = new List<JiaowuReferralRESTful.Referral> ();
+            JiaowuReferralRESTful.Referral referral = new JiaowuReferralRESTful.Referral ();
             referral.Student_Name = 'Student A';
             referral.Student_Phone = '19011110001';
             referral.Desire_Content_IDs = 'GRE;SAT';
@@ -44,8 +45,8 @@ private class JiaowuReferralRESTfulTest {
             referrals.add(referral);
 
             // Does request
-            RestRequest req = new RestRequest(); 
-            RestResponse res = new RestResponse();
+            RestRequest req = new RestRequest (); 
+            RestResponse res = new RestResponse ();
             req.requestURI = '/services/apexrest/CRM/Jiaowu/JiaowuReferralRESTful/*';  
             req.httpMethod = 'POST';
             RestContext.request = req;
@@ -53,13 +54,15 @@ private class JiaowuReferralRESTfulTest {
 
             String result = '';
             result = JiaowuReferralRESTful.doPost(referrals);
+
             // Sets the existed account
             referral.CRM_Student_ID = acc.Id;
             result = JiaowuReferralRESTful.doPost(referrals);
 
             Campaign oldCustomerReferralCampaign = TestObjectFactory.createCampaign(
                     Constants.OLD_CUSTOMER_REFERRAL_CN, Constants.COUNSELLING_CN, Constants.REFERRAL_CN, Constants.OLD_CUSTOMER_REFERRAL_CN, Constants.OLD_CUSTOMER_REFERRAL_CN);
-            // Creates the org, scheduling table, scheduing table line
+
+            // Creates the org, scheduling table, scheduling table line
             Organization__c org = TestObjectFactory.createOrg(Constants.CITY_SH_CN, 'Testprep', Constants.TESTPREP_CN);
             insert org;
             Scheduling_Table__c testprepTable = TestObjectFactory.createSchedulingTable(org, 'Testprep');
@@ -70,8 +73,8 @@ private class JiaowuReferralRESTfulTest {
             result = JiaowuReferralRESTful.doPost(referrals);
             Utils.runLeadTrigger = TRUE;
 
-            List<JiaowuReferralRESTful.Referral> BJReferrals = new List<JiaowuReferralRESTful.Referral>();
-            JiaowuReferralRESTful.Referral BJReferral = new JiaowuReferralRESTful.Referral();
+            List<JiaowuReferralRESTful.Referral> BJReferrals = new List<JiaowuReferralRESTful.Referral> ();
+            JiaowuReferralRESTful.Referral BJReferral = new JiaowuReferralRESTful.Referral ();
             BJReferral.Student_Name = 'Student A';
             BJReferral.CRM_Student_ID = acc.Id;
             BJReferral.Student_Phone = '19011110002';
@@ -85,11 +88,13 @@ private class JiaowuReferralRESTfulTest {
             BJReferral.Memo = 'Test';
             BJReferrals.add(BJReferral);
 
-            // Creates the org, scheduling table, scheduing table line
+            // Creates the org, scheduling table, scheduling table line
             Organization__c BJorg = TestObjectFactory.createOrg(Constants.CITY_BJ_CN, 'Testprep', Constants.TESTPREP_CN);
             insert BJorg;
+
             Scheduling_Table__c BJTestprepTable = TestObjectFactory.createSchedulingTable(BJorg, 'Testprep');
             insert BJTestprepTable;
+
             Scheduling_Table_Line__c BJTestprepTableLine = TestObjectFactory.createSchedulingTableLine(BJTestprepTable);
             insert BJTestprepTableLine;
 
@@ -100,22 +105,22 @@ private class JiaowuReferralRESTfulTest {
 
     // In order to avoid "UNABLE_TO_LOCK_ROW"
     public static User createUser() {
+
         // Gets admin profile
-        Profile adminProfile = [SELECT Id 
-                                FROM Profile 
-                                WHERE Name = 'System Administrator' 
+        Profile adminProfile = [SELECT Id
+                                FROM Profile
+                                WHERE Name = 'System Administrator'
                                 LIMIT 1];
-        User user = new User(
-            Email = 'test@eic.com.test',
-            Lastname = 'Test',
-            ProfileId = adminProfile.Id,
-            Username = String.valueOf(System.Math.random()) + '@eic.com.test',
-            Alias = String.valueOf(System.Math.random()).subString(0, 8),
-            EmailenCodingKey = 'ISO-8859-1',
-            LanguageLocaleKey = 'en_US',
-            LocalesIdKey = 'en_GB',
-            TimezonesIdKey = 'America/Los_Angeles',
-            CompanyName = 'EIC');
+        User user = new User(Email = 'test@eic.com.test',
+                             Lastname = 'Test',
+                             ProfileId = adminProfile.Id,
+                             Username = String.valueOf(System.Math.random()) + '@eic.com.test',
+                             Alias = String.valueOf(System.Math.random()).subString(0, 8),
+                             EmailenCodingKey = 'ISO-8859-1',
+                             LanguageLocaleKey = 'en_US',
+                             LocalesIdKey = 'en_GB',
+                             TimezonesIdKey = 'America/Los_Angeles',
+                             CompanyName = 'EIC');
 
         insert user;
 

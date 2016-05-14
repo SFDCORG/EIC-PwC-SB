@@ -3,11 +3,13 @@
  * Object: Lead, Lead_Item__c, Opportunity
  * Purpose: Create leads according to lead / opportunity business line
  * Author: Joe Zhou (yuyu.zhou@cn.pwc.com)
- * Create Date: --
+ * Create Date: 2016-05-07
  * Modified History: 
- * 2016-05-07   Vicia Wang Writes comments in this format and formats the class
+ * 2016-05-07    Vicia Wang    Writes comments in this format and formats the class
+ * 2016-05-10    Allen    Format the code
 ***************************************************************************************************/
 public without sharing class ResourceExchangeController {
+
     public String selectedCounsellingOppProject { get; set; }
     public String selectedTestprepOppProject { get; set; }
     public String selectedCooperativeOppProject { get; set; }
@@ -17,7 +19,7 @@ public without sharing class ResourceExchangeController {
     public String selectedOppStage { get; set; }
     public String selectedConsultMode { get; set; }
     public Lead filterLead { get; set; }
-    public Map<String,ID> rmap  { get; set; }
+    public Map<String, ID> rmap  { get; set; }
     public List<AccountWrap> testprepAcctWraps { get; set; }
     public List<AccountWrap> counsellingAcctWraps { get; set; }
     public List<AccountWrap> cooperativeAcctWraps { get; set; }
@@ -25,20 +27,20 @@ public without sharing class ResourceExchangeController {
     public Set<Id> accountIds { get; set; }
     public List<AccountWrap> show { get; set; }
     public List<errorWrap> errors { get; set; }
-    public List<SelectOption> marketingChannelLv1List  { get;  set ;}
-    public List<SelectOption> marketingChannelLv2List  { get;  set ;}
-    public List<SelectOption> marketingChannelLv3List  { get;  set ;}
-    public Map<String, Set<String>> lv1Lv2Map  { get;  set ;}
-    public Map<String, Set<String>> lv1Lv2Lv3Map  { get;  set ;}
-    public String lv1 { get;  set ;}
-    public String lv2 { get;  set ;}
-    public String lv3 { get;  set ;}
+    public List<SelectOption> marketingChannelLv1List { get; set; }
+    public List<SelectOption> marketingChannelLv2List { get; set; }
+    public List<SelectOption> marketingChannelLv3List { get; set; }
+    public Map<String, Set<String>> lv1Lv2Map  { get; set; }
+    public Map<String, Set<String>> lv1Lv2Lv3Map  { get; set; }
+    public String lv1 { get; set; }
+    public String lv2 { get; set; }
+    public String lv3 { get; set; }
     public String selectedCampaignSource { get; set; }
     public String selectedHtmlCampaignSource { get; set; }
     public Boolean hasCounsellingOpps { get; set; }
     public Boolean hasTestprepOpps { get; set; }
     public Boolean hasCooperativeOpps { get; set; }
-    public String selectedInOrEx { get;  set ;}
+    public String selectedInOrEx { get; set; }
 
     Integer offSet = 0;
     Integer total = 0;
@@ -54,7 +56,16 @@ public without sharing class ResourceExchangeController {
 
 
     // 3-digital area code
-    public Set<String> areas = new Set<String>(new List<String> {'010','021','022','023','024','025','027','028','029','020'});
+    public Set<String> areas = new Set<String> (new List<String> {'010',
+                                                                  '021',
+                                                                  '022',
+                                                                  '023',
+                                                                  '024',
+                                                                  '025',
+                                                                  '027',
+                                                                  '028',
+                                                                  '029',
+                                                                  '020'});
 
     public ResourceExchangeController() {
         issuccess = FALSE;
@@ -72,9 +83,9 @@ public without sharing class ResourceExchangeController {
                                WHERE SobjectType = 'Opportunity' 
                                AND IsActive = TRUE];
 
-        rmap = new Map<String,Id>();
+        rmap = new Map<String, Id>();
         for (RecordType r : rs) {
-            rmap.put(r.DeveloperName,r.Id);
+            rmap.put(r.DeveloperName, r.Id);
         }
 
         testprepAcctWraps = new List<AccountWrap>();
@@ -84,11 +95,11 @@ public without sharing class ResourceExchangeController {
         show = new List<AccountWrap>();
         pageRecord = '25';
 
-        lv1='';
-        lv2='';
-        lv3='';
-        selectedCampaignSource='';
-        selectedHtmlCampaignSource='';
+        lv1 = '';
+        lv2 = '';
+        lv3 = '';
+        selectedCampaignSource = '';
+        selectedHtmlCampaignSource = '';
 
         getCampaignChannels();
         hasCounsellingOpps = FALSE;
@@ -96,7 +107,7 @@ public without sharing class ResourceExchangeController {
         hasCooperativeOpps = FALSE;
     }
 
-    //咨询方式多选项
+    // 咨询方式多选项
     public List<String> getConsultMode() {
         List<String> ss = selectedConsultMode.split(',');
         Schema.DescribeFieldResult F = Lead.Consultation_Mode__c.getDescribe();
@@ -119,6 +130,7 @@ public without sharing class ResourceExchangeController {
 
 
     public List<String> getCounsellingOppProjectList() {
+
         List<String> ss = selectedCounsellingOppProject.split(',');
 
         List<String> vals = new List<String>();
@@ -154,7 +166,7 @@ public without sharing class ResourceExchangeController {
         for (String i : vals) {
             Integer flag = 0;
             for (String s : ss) {
-                if (s==i) {
+                if (s == i) {
                     flag = 1;
                     break;
                 }
@@ -178,7 +190,7 @@ public without sharing class ResourceExchangeController {
         for (String i : vals) {
             Integer flag = 0;
             for (String s : ss) {
-                if (s==i) {
+                if (s == i) {
                     flag = 1;
                     break;
                 }
@@ -192,12 +204,12 @@ public without sharing class ResourceExchangeController {
 
     public List<String> getBusinessLineList() {
         List<String> ss = selectedNewBusinessLine.split(',');
-        List<String> vals = new List<String>{ System.Label.Counselling, System.Label.Testprep, System.Label.Cooperative };
+        List<String> vals = new List<String> { System.Label.Counselling, System.Label.Testprep, System.Label.Cooperative };
         List<String> options = new List<String>();
         for (String i : vals) {
             Integer flag = 0;
             for (String s : ss) {
-                if (s==i) {
+                if (s == i) {
                     flag = 1;
                     break;
                 }
@@ -216,9 +228,10 @@ public without sharing class ResourceExchangeController {
         return options;
     }
 
-    //市场活动多选项
-    public List<SelectItem>getselectedCampaignItems() {
-        if (selectedCampaignSource=='') {
+    // 市场活动多选项
+    public List<SelectItem> getselectedCampaignItems() {
+
+        if (selectedCampaignSource == '') {
 
             return new List<SelectItem>();
         }
@@ -239,39 +252,40 @@ public without sharing class ResourceExchangeController {
 
     // User has selected consultation values
     public List<String> getSelectedConsultModeVal() {
-        if (selectedConsultMode=='') {
+
+        if (selectedConsultMode == '') {
             return new List<String>();
         }
 
         return selectedConsultMode.split(',');
     }
 
-    public List<String>getSelectedCooperativeOppProjectVal() {
-        if (selectedCooperativeOppProject=='') {
+    public List<String> getSelectedCooperativeOppProjectVal() {
+        if (selectedCooperativeOppProject == '') {
             return new List<String>();
         }
 
         return selectedCooperativeOppProject.split(',');
     }
 
-    public List<String>getSelectedCounsellingOppProjectVal() {
-        if (selectedCounsellingOppProject=='') {
+    public List<String> getSelectedCounsellingOppProjectVal() {
+        if (selectedCounsellingOppProject == '') {
             return new List<String>();
         }
 
         return selectedCounsellingOppProject.split(',');
     }
 
-    public List<String>getSelectedTestprepOppProjectVal() {
-        if (selectedTestprepOppProject=='') {
+    public List<String> getSelectedTestprepOppProjectVal() {
+        if (selectedTestprepOppProject == '') {
             return new List<String>();
         }
 
         return selectedTestprepOppProject.split(',');
     }
 
-    public List<String>getSelectedNewBusinessLineVal() {
-        if (selectedNewBusinessLine=='') {
+    public List<String> getSelectedNewBusinessLineVal() {
+        if (selectedNewBusinessLine == '') {
             return new List<String>();
         }
 
@@ -315,7 +329,7 @@ public without sharing class ResourceExchangeController {
         for (Schema.PicklistEntry i : p) {
             Integer flag = 0;
             for (String s : ss) {
-                if (s==i.getValue()) {
+                if (s == i.getValue()) {
                     flag = 1;
                     break;
                 }
@@ -355,7 +369,7 @@ public without sharing class ResourceExchangeController {
         return options;
     }
 
-    public List<String>getSelectedOppStageVal() {
+    public List<String> getSelectedOppStageVal() {
         if (selectedOppStage == '') {
             return new List<String>();
         }
@@ -370,41 +384,47 @@ public without sharing class ResourceExchangeController {
 
         // Validations
         if (!(hasCooperativeOpps || hasCounsellingOpps || hasTestprepOpps)) {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.Error_Choose_One_BL_Opp));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
+                System.Label.Error_Choose_One_BL_Opp));
             return;
         }
 
         if (selectedNewBusinessLine == '') {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.Error_Choose_One_BL_To_Create_Leads));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
+                System.Label.Error_Choose_One_BL_To_Create_Leads));
             return;
         }
 
         if (selectedNewBusinessLine.contains(System.Label.Testprep) && hasTestprepOpps) {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.Error_No_TP_Leads_for_TP_Acc));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
+                System.Label.Error_No_TP_Leads_for_TP_Acc));
             return;
         }
 
         if (selectedNewBusinessLine.contains(System.Label.Cooperative) && hasCooperativeOpps) {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.Error_No_Coop_Leads_for_Coop_Acc));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
+                System.Label.Error_No_Coop_Leads_for_Coop_Acc));
             return;
         }
 
         // Aggregates all opportunities/accounts
-        List<OpportunityInfo> opportunityInfoList =  new List<OpportunityInfo>();
+        List<OpportunityInfo> opportunityInfoList = new List<OpportunityInfo>();
         OpportunityInfo oppInfo = new OpportunityInfo();
         if (hasTestprepOpps) {
-            oppInfo.recordTypeId =  Constants.OPP_RT_TESTPREP_ID;
+            oppInfo.recordTypeId = Constants.OPP_RT_TESTPREP_ID;
             oppInfo.projects = selectedTestprepOppProject;
             opportunityInfoList.add(oppInfo);
         }
+
         if (hasCooperativeOpps) {
-            oppInfo.recordTypeId =  Constants.OPP_RT_COOPERATIVE_ID;
+            oppInfo.recordTypeId = Constants.OPP_RT_COOPERATIVE_ID;
             oppInfo.projects = selectedCooperativeOppProject;
             opportunityInfoList.add(oppInfo);
         }
+
         if (hasCounsellingOpps) {
             for (String intendedCountry : selectedCounsellingOppProject.split(',')) {
-                oppInfo.recordTypeId =  Constants.OPP_RT_COUNSELLING_ID;
+                oppInfo.recordTypeId = Constants.OPP_RT_COUNSELLING_ID;
                 oppInfo.projects = intendedCountry;
                 opportunityInfoList.add(oppInfo);
             }
@@ -415,7 +435,10 @@ public without sharing class ResourceExchangeController {
         for (OpportunityInfo searchInfo : opportunityInfoList) {
             String oppRecordTypeId  = searchInfo.recordTypeId;
             String selectedProjects = searchInfo.projects;
-            String queryString = 'SELECT Id,AccountId,RecordTypeId,Intended_City__c,Consultation_Mode__c FROM Opportunity WHERE RecordTypeId = :oppRecordTypeId';
+            String queryString = 'SELECT Id, AccountId, RecordTypeId, Intended_City__c, Consultation_Mode__c ' + 
+                                 'FROM Opportunity ' + 
+                                 'WHERE RecordTypeId = :oppRecordTypeId';
+
             if (selectedProjects != '') {
                 String projects = selectedProjects.replaceAll(',', ';');
                 projects = projects.replaceAll('; ', ';');
@@ -423,19 +446,19 @@ public without sharing class ResourceExchangeController {
             }
 
             Set<String> citys = new Set<String>();
-            if (selectedIntendCity!='') {
-                citys = new Set<String>(selectedIntendCity.split(','));
-                queryString += ' AND Intended_City__c In :citys';
+            if (selectedIntendCity != '') {
+                citys = new Set<String> (selectedIntendCity.split(','));
+                queryString += ' AND Intended_City__c IN :citys';
             }
 
             Set<String> stages = new Set<String>();
             if (selectedOppStage != '') {
                 stages = new Set<String>(selectedOppStage.split(','));
-                queryString +=' AND StageName In :stages';
+                queryString +=' AND StageName IN :stages';
             }
 
             Set<string> campaignIds = new Set<String>();
-            if (selectedCampaignSource!='') {
+            if (selectedCampaignSource != '') {
                 for (String s : selectedCampaignSource.split(',')) {
                     campaignIds.add(s);
                 }
@@ -448,35 +471,48 @@ public without sharing class ResourceExchangeController {
 
             Set<String> consultationModeSet = new Set<String>();
             if (selectedConsultMode != '') {
-                consultationModeSet = new Set<String>(selectedConsultMode.split(','));
-                queryString+=' AND Consultation_Mode__c In :consultationModeSet';
+                consultationModeSet = new Set<String> (selectedConsultMode.split(','));
+                queryString += ' AND Consultation_Mode__c IN :consultationModeSet';
             }
 
             if (filterLead.Birthday__c != null && filterLead.Schedule_Abroad_Year__c != null) {
-                if (filterLead.Birthday__c>filterLead.Schedule_Abroad_Year__c) {
+                if (filterLead.Birthday__c > filterLead.Schedule_Abroad_Year__c) {
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.Error_Start_Date_Before_End_Date));
                     return;
                 }
-                starttime = datetime.newInstance(filterLead.Birthday__c.year(), filterLead.Birthday__c.month(),filterLead.Birthday__c.day(),0,0,0);
-                endtime = datetime.newInstance(filterLead.Schedule_Abroad_Year__c.year(), filterLead.Schedule_Abroad_Year__c.month(),filterLead.Schedule_Abroad_Year__c.day(),24,0,0);
-                system.debug(starttime);
-                system.debug(endtime);
-                queryString += ' AND CreatedDate < :endtime AND CreatedDate> :starttime';
-            }else if (filterLead.Birthday__c != null && filterLead.Schedule_Abroad_Year__c == null) {
-                starttime = datetime.newInstance(filterLead.Birthday__c.year(), filterLead.Birthday__c.month(),filterLead.Birthday__c.day());
+
+                starttime = Datetime.newInstance(filterLead.Birthday__c.year(), 
+                                                 filterLead.Birthday__c.month(),
+                                                 filterLead.Birthday__c.day(), 
+                                                 0, 0, 0);
+
+                endtime = Datetime.newInstance(filterLead.Schedule_Abroad_Year__c.year(), 
+                                               filterLead.Schedule_Abroad_Year__c.month(),
+                                               filterLead.Schedule_Abroad_Year__c.day(), 
+                                               24, 0, 0);
+
+                queryString += ' AND CreatedDate < :endtime AND CreatedDate > :starttime';
+            } else if (filterLead.Birthday__c != null && filterLead.Schedule_Abroad_Year__c == null) {
+                starttime = Datetime.newInstance(filterLead.Birthday__c.year(),
+                                                 filterLead.Birthday__c.month(),
+                                                 filterLead.Birthday__c.day());
                 queryString +=' AND CreatedDate > :starttime';
 
-            }else if (filterLead.Birthday__c == null || filterLead.Schedule_Abroad_Year__c!=null) {
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, System.Label.Error_Entre_valid_date_range));
+            } else if (filterLead.Birthday__c == null || filterLead.Schedule_Abroad_Year__c != null) {
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, 
+                    System.Label.Error_Entre_valid_date_range));
                 return;
             }
 
-            system.debug(queryString);
+            System.debug('LoggingLevel.INFO, *** queryString: ' + queryString);
+
             List<Opportunity> sourceopps = new List<Opportunity>();
+
             try{
+
                 sourceopps = Database.query(queryString);
-            }catch(Exception e) {
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR,e.getMessage()));
+            } catch(Exception e) {
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, e.getMessage()));
                 return;
             }
 
@@ -495,17 +531,33 @@ public without sharing class ResourceExchangeController {
         }
 
         Set<Id> excludedOppRecordTypeIds = new set<Id>();
-        if (selectedNewBusinessLine.contains(System.Label.Cooperative)) { excludedOppRecordTypeIds.add(Constants.OPP_RT_COOPERATIVE_ID); }
-        if (selectedNewBusinessLine.contains(System.Label.Testprep)) { excludedOppRecordTypeIds.add(Constants.OPP_RT_TESTPREP_ID); }
-        if (selectedNewBusinessLine.contains(System.Label.Counselling)) { excludedOppRecordTypeIds.add(Constants.OPP_RT_COUNSELLING_ID); }
+        if (selectedNewBusinessLine.contains(System.Label.Cooperative)) { 
+            excludedOppRecordTypeIds.add(Constants.OPP_RT_COOPERATIVE_ID);
+        }
 
-        for (Account a : [SELECT Name, TestPrepOppCount__c, CounsellingOppCount__c, Cooperative_Education_Opportunity_Count__c,
-                                 Newest_Counseling_Opportunity_CreateDate__c, Newest_Testprep_Opportunity_CreateDate__c,
-                                 Newest_Coop_Ed_Opportunity_CreatedDate__c, (SELECT RecordTypeId FROM Opportunities),
-                                 (SELECT Contact_Type__c,UniqueContact__c FROM Contacts__r WHERE isPrimary__c=true AND Contact_Type__c In ('手机','座机','办公电话'))
+        if (selectedNewBusinessLine.contains(System.Label.Testprep)) {
+            excludedOppRecordTypeIds.add(Constants.OPP_RT_TESTPREP_ID);
+        }
+
+        if (selectedNewBusinessLine.contains(System.Label.Counselling)) {
+            excludedOppRecordTypeIds.add(Constants.OPP_RT_COUNSELLING_ID);
+        }
+
+        for (Account a : [SELECT Name, TestPrepOppCount__c, CounsellingOppCount__c, 
+                                Cooperative_Education_Opportunity_Count__c,
+                                Newest_Counseling_Opportunity_CreateDate__c, 
+                                Newest_Testprep_Opportunity_CreateDate__c,
+                                Newest_Coop_Ed_Opportunity_CreatedDate__c, 
+                                (SELECT RecordTypeId
+                                 FROM Opportunities),
+                                (SELECT Contact_Type__c, UniqueContact__c
+                                 FROM Contacts__r
+                                 WHERE isPrimary__c = true 
+                                 AND Contact_Type__c IN ('手机', '座机', '办公电话'))
                           FROM Account
-                          WHERE Id In :accountIds]) {
-            if ( a.Contacts__r.size() > 0) {
+                          WHERE Id IN :accountIds]) {
+
+            if (a.Contacts__r.size() > 0) {
                 Boolean includeAccount = true;
                 for (Opportunity opp : a.Opportunities) {
                     if (excludedOppRecordTypeIds.contains(opp.RecordTypeId)) {
@@ -514,11 +566,14 @@ public without sharing class ResourceExchangeController {
                 }
                 AccountWrap w = new AccountWrap();
                 w.acct = a;
-                if (includeAccount) { acctWraps.add(w); }
+                if (includeAccount) {
+                    acctWraps.add(w);
+                }
             }
         }
         if (acctWraps.size() == 0) {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO, System.Label.Your_search_criteria_did_not_match_any_accounts));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.INFO,
+                                 System.Label.Your_search_criteria_did_not_match_any_accounts));
         }
         changePageNo();
     }
@@ -547,12 +602,23 @@ public without sharing class ResourceExchangeController {
         String errorMsg = '编号,姓名,电话,错误码,创建状态'+'\r\n';
         Integer errorIndex = 0;
         List<Lead> leadToInsert = new List<Lead>();
-        List<Campaign> camList = [SELECT Id FROM Campaign WHERE Name = :Constants.CAMP_RESOURCE_EXCHANGE_GROUP_NAME AND IsActive = true];
+        List<Campaign> camList = [SELECT Id
+                                  FROM Campaign 
+                                  WHERE Name = :Constants.CAMP_RESOURCE_EXCHANGE_GROUP_NAME 
+                                  AND IsActive = true
+        ];
+
         if (camList.size() == 0) {
-            ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, System.Label.Error_MIssing_Exchange_Resource_Campaign));
+            ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, 
+                System.Label.Error_MIssing_Exchange_Resource_Campaign));
             return null;
         }
-        Group g =  [SELECT Id FROM Group WHERE developerName = 'TMK_Incharge' AND Type = 'Queue'];
+
+        Group g = [SELECT Id
+                   FROM Group
+                   WHERE developerName = 'TMK_Incharge'
+                   AND Type = 'Queue'];
+
         Campaign cam = camList[0];
         List<AccountWrap> wraps = new List<AccountWrap>();
         for (AccountWrap w : acctWraps) {
@@ -566,9 +632,17 @@ public without sharing class ResourceExchangeController {
                 l.Company = 'EIC';
                 l.OwnerId = g.Id;
 
-                if (selectedNewBusinessLine.contains(System.Label.Cooperative)) {l.Is_Cooperative_Education__c = true; }
-                if (selectedNewBusinessLine.contains(System.Label.Testprep)) { l.Is_TestPrep__c = true; }
-                if (selectedNewBusinessLine.contains(System.Label.Counselling)) { l.Is_Counselling__c = true; }
+                if (selectedNewBusinessLine.contains(System.Label.Cooperative)) {
+                    l.Is_Cooperative_Education__c = true;
+                }
+
+                if (selectedNewBusinessLine.contains(System.Label.Testprep)) {
+                    l.Is_TestPrep__c = true;
+                }
+
+                if (selectedNewBusinessLine.contains(System.Label.Counselling)) {
+                    l.Is_Counselling__c = true;
+                }
 
                 Contact_EIC__c con = null;
                 for (Contact_EIC__c c : w.acct.Contacts__r) {
@@ -578,19 +652,23 @@ public without sharing class ResourceExchangeController {
                     }
                     con = c;
                 }
-                if (con.Contact_Type__c== '手机') {
+                if (con.Contact_Type__c == '手机') {
                     l.MobilePhone = convertPhoneNum(con.UniqueContact__c);
-                }else if (con.Contact_Type__c== '座机' || con.Contact_Type__c== '办公电话') {
+                } else if (con.Contact_Type__c == '座机' || con.Contact_Type__c == '办公电话') {
+
                     if (con.UniqueContact__c.startsWith('0')) {
-                        if (areas.contains(con.UniqueContact__c.substring(0,3))) {
-                            l.Area_Code__c = con.UniqueContact__c.substring(0,3);
-                            l.Phone = convertPhoneNum(con.UniqueContact__c.substring(3,con.UniqueContact__c.length()));
+                        if (areas.contains(con.UniqueContact__c.substring(0, 3))) {
+
+                            l.Area_Code__c = con.UniqueContact__c.substring(0, 3);
+                            l.Phone = convertPhoneNum(con.UniqueContact__c.substring(3, con.UniqueContact__c.length()));
                         } else {
+
                             // Gets the 4 digital area code
-                            l.Area_Code__c = con.UniqueContact__c.substring(0,4);
-                            l.Phone = convertPhoneNum(con.UniqueContact__c.substring(3,con.UniqueContact__c.length()));
+                            l.Area_Code__c = con.UniqueContact__c.substring(0, 4);
+                            l.Phone = convertPhoneNum(con.UniqueContact__c.substring(3, con.UniqueContact__c.length()));
                         }
                     } else {
+
                         // Skips the validation rule
                         l.Phone = convertPhoneNum(con.UniqueContact__c);
                     }
@@ -601,30 +679,32 @@ public without sharing class ResourceExchangeController {
                         wraps.add(w);
                     } else {
                         errorIndex++;
-                        errorMsg += errorIndex+','+l.LastName+','+(l.MobilePhone==null?l.Area_Code__c+l.Phone:l.MobilePhone)+','+''+','+'请验证客户手机号码的格式'+'\r\n';
+                        errorMsg += errorIndex + ',' + l.LastName + ',' + (l.MobilePhone == null ? l.Area_Code__c + l.Phone : l.MobilePhone) + ',' + '' + ',' + '请验证客户手机号码的格式' + '\r\n';
                     }
-                }else if (l.Phone != null) {
+                } else if (l.Phone != null) {
                     if (ValidatePhone(l.Phone)) {
                         leadToInsert.add(l);
                         wraps.add(w);
                     } else {
                         errorIndex++;
-                        errorMsg += errorIndex+','+l.LastName+','+(l.MobilePhone==null?l.Area_Code__c+l.Phone:l.MobilePhone)+','+''+','+'请验证客户电话号码的格式'+'\r\n';
+                        errorMsg += errorIndex + ',' + l.LastName + ',' + (l.MobilePhone == null ? l.Area_Code__c + l.Phone : l.MobilePhone) + ',' + '' + ',' + '请验证客户电话号码的格式' + '\r\n';
                     }
                 } else {
                     errorIndex++;
-                    errorMsg += errorIndex+','+l.LastName+','+(l.MobilePhone==null?l.Area_Code__c+l.Phone:l.MobilePhone)+','+''+','+'客户没有电话号码'+'\r\n';
+                    errorMsg += errorIndex + ',' + l.LastName + ',' + (l.MobilePhone == null ? l.Area_Code__c + l.Phone : l.MobilePhone) + ',' + '' + ',' + '客户没有电话号码' + '\r\n';
 
                 }
             }
         }
-        if (leadToInsert.size()>0) {
+        if (leadToInsert.size() > 0) {
 
             try{
-                system.debug(UserInfo.getUserEmail());
-                Id bid = Database.executeBatch(new CreateExchangeResourceBatchable((List<Sobject>)leadToInsert,UserInfo.getUserEmail(),errorMsg,errorIndex), 50);
+
+                Id bid = Database.executeBatch(new CreateExchangeResourceBatchable(
+                    (List<Sobject>)leadToInsert, UserInfo.getUserEmail(), errorMsg,errorIndex), 
+                50);
                 BatchJobRecord__c job = new BatchJobRecord__c();
-                job.Name = '资源互换_'+leadToInsert.size()+'_'+System.now();
+                job.Name = '资源互换_' + leadToInsert.size() + '_' + System.Now();
                 job.BatchJobId__c = bid;
                 job.BatchType__c = 'CreateExchangeResourceBatchable';
                 job.Status__c = '处理中';
@@ -632,8 +712,8 @@ public without sharing class ResourceExchangeController {
                 issuccess = true;
                 return null;
 
-            }catch(Exception e) {
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR,e.getMessage()));
+            } catch(Exception e) {
+                ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, e.getMessage()));
                 return null;
             }
         }
@@ -685,8 +765,8 @@ public without sharing class ResourceExchangeController {
     }
 
     public Class OpportunityInfo{
-        public String recordTypeId { get;  set ;}
-        public String projects { get;  set ;}
+        public String recordTypeId { get; set; }
+        public String projects { get; set; }
     }
 
     public void changePageNo() {
@@ -742,8 +822,8 @@ public without sharing class ResourceExchangeController {
 
     public Integer getCurrentPageNo() {
         if (currentPageNo > getTotalPageNo()) {
-            return getTotalPageNo();
 
+            return getTotalPageNo();
         } else {
             return currentPageNo;
         }
@@ -757,8 +837,8 @@ public without sharing class ResourceExchangeController {
         }
     }
 
-
     public Boolean getNextEnable() {
+
         if (getCurrentPageNo() == getTotalPageNo()) {
             return FALSE;
 
@@ -768,6 +848,7 @@ public without sharing class ResourceExchangeController {
     }
 
     public Boolean getPreviousEnable() {
+
         if (getCurrentPageNo() == 1 || getTotalPageNo() == 0) {
             return FALSE;
 
@@ -800,15 +881,17 @@ public without sharing class ResourceExchangeController {
         lv1Lv2Lv3Map = new Map<String, Set<String>>();
 
         // Gets LV1, LV2, Business Line, City, LV3 mappings
-        for (Campaign_Channel__c cc : [
-                SELECT  Marketing_Channel_Lv1__c,
-                        Marketing_Channel_Lv2__c,
-                        Marketing_Channel_Lv3__c,
-                        Business_line__c,
-                        City__c
-                FROM    Campaign_Channel__c
-                WHERE   Active__c = true
-                ORDER BY Marketing_Channel_Lv1__c, Marketing_Channel_Lv2__c, Marketing_Channel_Lv3__c]) {
+        for (Campaign_Channel__c cc : [SELECT Marketing_Channel_Lv1__c,
+                                              Marketing_Channel_Lv2__c,
+                                              Marketing_Channel_Lv3__c,
+                                              Business_line__c,
+                                              City__c
+                                       FROM Campaign_Channel__c
+                                       WHERE Active__c = true
+                                       ORDER BY Marketing_Channel_Lv1__c,
+                                                Marketing_Channel_Lv2__c,
+                                                Marketing_Channel_Lv3__c]) {
+
             if (String.isNotBlank(cc.Marketing_Channel_Lv1__c)) {
                 lv1Set.add(cc.Marketing_Channel_Lv1__c);
 
@@ -837,12 +920,11 @@ public without sharing class ResourceExchangeController {
     public void getLv2ByLv1() {
         marketingChannelLv2List.clear();
         marketingChannelLv2List.add(new SelectOption('--无--', '--无--'));
-        system.debug(lv1);
-        system.debug(lv1Lv2Map);
+
         for (String lv2 : lv1Lv2Map.get(lv1)) {
             marketingChannelLv2List.add(new SelectOption(lv2, lv2));
         }
-        system.debug(marketingChannelLv2List);
+        System.debug('LoggingLevel.INFO, *** marketingChannelLv2List: ' + marketingChannelLv2List);
     }
 
     public void getLv3ByLv1Lv2() {
@@ -856,20 +938,24 @@ public without sharing class ResourceExchangeController {
         }
     }
 
-    //页面查询Owner
+    // Query owner
     @RemoteAction
-    public static List<User>  searchUser(String param,String param1) {
-        string queryterm = '%'+param+'%';
-        String queryString = 'SELECT Id,Name FROM User WHERE (Profile.Name=\'集团市场部呼叫中心专员\' Or Profile.Name=\'集团市场部呼叫中心主管\') AND (Name like :queryterm Or UserName like :queryterm)';
+    public static List<User> searchUser(String param, String param1) {
+
+        string queryterm = '%' + param + '%';
+        String queryString = 'SELECT Id,Name FROM User ' +
+            'WHERE (Profile.Name=\'集团市场部呼叫中心专员\' ' + 
+            'OR Profile.Name=\'集团市场部呼叫中心主管\') ' + 
+            'AND (Name LIKE :queryterm OR UserName LIKE :queryterm)';
         Set<String> ids = new Set<String>();
-        if (param1!='') {
+        if (param1 != '') {
             List<String> arr = param1.split(',');
             for (String s : arr) {
                 ids.add(s);
             }
         }
-        if (ids.size()>0) {
-            queryString += ' AND Id not in : ids';
+        if (ids.size() > 0) {
+            queryString += ' AND Id not IN : ids';
         }
         queryString += ' limit 100';
         List<User> userList = Database.query(queryString);
@@ -878,15 +964,16 @@ public without sharing class ResourceExchangeController {
 
     // Searches the campaigns
     @RemoteAction
-    public static List<Campaign> searchCampaign(String param,String param1) {
-        Map<String,object> pm = (Map<String,Object>)JSON.deserializeUntyped(param);
+    public static List<Campaign> searchCampaign(String param, String param1) {
+
+        Map<String, object> pm = (Map<String, Object>) JSON.deserializeUntyped(param);
         String l1 = String.valueOf(pm.get('lv1'));
         String l2 = String.valueOf(pm.get('lv2'));
         String l3 = String.valueOf(pm.get('lv3'));
         String term = String.valueOf(pm.get('term'));
         Set<String> ids = new Set<String>();
         system.debug(param1);
-        if (param1!='') {
+        if (param1 != '') {
             List<String> arr = param1.split(',');
             for (String s : arr) {
                 ids.add(s);
@@ -894,20 +981,20 @@ public without sharing class ResourceExchangeController {
         }
         String sqlString = 'SELECT Id, Name FROM Campaign WHERE Status = \'审批通过\' AND IsActive = true';
         if (String.isNotBlank(l1)) {
-            sqlString += ' AND Marketing_Channel_Lv1__c=\''+l1+'\'';
+            sqlString += ' AND Marketing_Channel_Lv1__c=\'' + l1 + '\'';
         }
         if (String.isNotBlank(l2)) {
-            sqlString += ' AND Marketing_Channel_Lv2__c=\''+l2+'\'';
+            sqlString += ' AND Marketing_Channel_Lv2__c=\'' + l2 + '\'';
         }
         if (String.isNotBlank(l3)) {
-            sqlString += ' AND Marketing_Channel_Lv3__c=\''+l3+'\'';
+            sqlString += ' AND Marketing_Channel_Lv3__c=\'' + l3 + '\'';
         }
         if (String.isNotBlank(term)) {
-            term = '%'+term+'%';
+            term = '%' + term + '%';
             sqlString += ' AND Name LIKE :term';
         }
-        if (ids.size()>0) {
-            sqlString += ' AND Id not in : ids';
+        if (ids.size() > 0) {
+            sqlString += ' AND Id not IN : ids';
         }
         sqlString += ' limit 100';
         List<Campaign> clist = Database.query(sqlString);
@@ -915,12 +1002,13 @@ public without sharing class ResourceExchangeController {
     }
 
     public List<SelectOption> getPageSizePerPage() {
+
         List<SelectOption> options = new List<SelectOption>();
         options.add(new SelectOption('25', '25'));
         options.add(new SelectOption('50', '50'));
-        options.add(new SelectOption('100','100'));
-        options.add(new SelectOption('200','200'));
-        options.add(new SelectOption('500','500'));
+        options.add(new SelectOption('100', '100'));
+        options.add(new SelectOption('200', '200'));
+        options.add(new SelectOption('500', '500'));
         return options;
     }
 }

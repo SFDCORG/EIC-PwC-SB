@@ -17,7 +17,7 @@ private class SchedulingTableOrderGenerationTest {
                          WHERE Id = :UserInfo.getUserId()];
 
         System.runAs(thisUser) {
-            User uuser  =  TestObjectFactory.createSalesUser();
+            User uuser = TestObjectFactory.createSalesUser();
             uuser.Username = 'sche@test.com.eic.pwc';
             uuser.User_External_Id__c = '201605211738';
             uuser.lastName = 'peter';
@@ -35,7 +35,7 @@ private class SchedulingTableOrderGenerationTest {
         insert sctable;
         Scheduling_Table_Line__c sctline = TestObjectFactory.createScheTableLine(sctable);
         sctline.User__c = lineUser.Id;
-        sctline.Compensation_Opportunity_Num__c=1;
+        sctline.Compensation_Opportunity_Num__c = 1;
         insert sctline;
         Scheduling_Table_Line__c sctline2 = TestObjectFactory.createScheTableLine(sctable);
         sctline2.User__c = UserInfo.getUserId();
@@ -50,7 +50,7 @@ private class SchedulingTableOrderGenerationTest {
         // Test Normal Order Generation Process
         PageReference myVfPageUpdate = Page.Beta1_SchedulingTableCreation;
         Test.setCurrentPageReference(myVfPageUpdate);
-        ApexPages.currentPage().getParameters().put('ID',sctable.Id);
+        ApexPages.currentPage().getParameters().put('ID', sctable.Id);
         SchedulingTableOrderGenerationController scheOrder = new SchedulingTableOrderGenerationController();
         System.assertEquals(2, scheOrder.existingTableOrders.size());
         System.assertEquals(2, scheOrder.schedulingTableLines.size());

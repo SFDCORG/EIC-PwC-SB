@@ -5,12 +5,16 @@
  * Author: Ray Cen (ray.cen@cn.pwc.com)
  * Create Date: 2016-05-08
  * Modify History:
- * 2016-04-18        Create this class
+ * 2016-04-18    Ray Cen    Create this class
+ * 2016-05-10    Allen    Format the code
  **************************************************************************************************/
 public with sharing class PostLeadChatterUtil {
-    public static void postChatter(Lead oldLead, Lead newLead) {
+
+    public static void postChatter (Lead oldLead, Lead newLead) {
+
         List<FeedItem> leadChatterItemList = new List<FeedItem>();
-        if(oldLead.Counselling_Project__c != newLead.Counselling_Project__c){
+        if (oldLead.Counselling_Project__c != newLead.Counselling_Project__c) {
+
             String oldCounsellingProject = oldLead.Counselling_Project__c == null ? 
                 '' : oldLead.Counselling_Project__c;
             String newCounsellingProject = newLead.Counselling_Project__c == null ? 
@@ -26,9 +30,10 @@ public with sharing class PostLeadChatterUtil {
         }
 
         if (oldLead.TestPrep_Project__c != newLead.TestPrep_Project__c) {
-            String oldTestPrepProject = oldLead.TestPrep_Project__c == null ? 
+
+            String oldTestPrepProject = oldLead.TestPrep_Project__c == null ?
                 '' : oldLead.TestPrep_Project__c;
-            String newTestPrepProject = newLead.TestPrep_Project__c == null ? 
+            String newTestPrepProject = newLead.TestPrep_Project__c == null ?
                 '' : newLead.TestPrep_Project__c;
             FeedItem leadFeedItem = new FeedItem(
                 ParentId = newLead.Id,
@@ -37,8 +42,9 @@ public with sharing class PostLeadChatterUtil {
                      + '从 "' + oldTestPrepProject + '" '
                      + '更改至 "' + newTestPrepProject + '"',
                 Type = 'TextPost');
-            leadChatterItemList.add(leadFeedItem); 
+            leadChatterItemList.add(leadFeedItem);
         }
+
         insert leadChatterItemList;
     }
 }

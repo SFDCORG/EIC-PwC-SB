@@ -1,18 +1,19 @@
 /**************************************************************************************************
- * Name: miniContactInfoDisplayControllerTest
+ * Name: MiniContactInfoDisplayControllerTest
  * Object: Contact
  * Purpose: Test Contact Info on the appointment page Function
  * Author: Ray Cen (ray.cen@cn.pwc.com)
  * Create Date: 2016-5-7
  * Modify History:
+ * 2016-05-10    Allen    Format the code
  **************************************************************************************************/
-
 @isTest
-private class miniContactInfoDisplayControllerTest {
-    static testMethod void testminiContactInfoDisplay() {
-        
+private class MiniContactInfoDisplayControllerTest {
+
+    static testMethod void testminiContactInfoDisplay () {
+
         //Prepare Testing Data
-        User usr = [SELECT id 
+        User usr = [SELECT id
                     FROM User 
                     WHERE Id = :UserInfo.getUserId()];
 
@@ -51,7 +52,7 @@ private class miniContactInfoDisplayControllerTest {
         System.runAs(runUser) {
             PageReference myVfPage = Page.miniContactInfoDisplay_App;
             Test.setCurrentPageReference(myVfPage);
-            ApexPages.currentPage().getParameters().put('id',app.Id);
+            ApexPages.currentPage().getParameters().put('id', app.Id);
             ApexPages.StandardController con = new ApexPages.StandardController(opp);
             miniContactInfoDisplayController mini = new miniContactInfoDisplayController(con);
             mini.showContactNumber();

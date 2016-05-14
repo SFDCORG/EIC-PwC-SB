@@ -1,5 +1,5 @@
-global without sharing class ServiceWrapper{
-    global class SageContract{
+global without sharing class ServiceWrapper {
+    global class SageContract {
         private String custid;
         private String aoppid;
         private String contid;
@@ -31,7 +31,7 @@ global without sharing class ServiceWrapper{
             String contpid,
             String issubagent,
             String contractCounsellor,
-            String sageOpportunityId){
+            String sageOpportunityId) {
                 this.custid = custid;
                 this.aoppid = aoppid;
                 this.contid = contid;
@@ -50,7 +50,7 @@ global without sharing class ServiceWrapper{
         }
     }
     
-    public static List<Contract__c> MapSageContract(List<SageContract> scs){
+    public static List<Contract__c> MapSageContract(List<SageContract> scs) {
         List<Contract__c> cons = new List<Contract__c>();
         List<Opportunity> opportunities = new List<Opportunity>();
         Map<String, String> oppIdMapSageOppId = new Map<String, String>();
@@ -63,7 +63,7 @@ global without sharing class ServiceWrapper{
 
         System.debug(LoggingLevel.INFO, '*** scs: ' + scs);
 
-        for(SageContract sc : scs){
+        for (SageContract sc : scs) {
             if (String.isNotBlank(sc.sageOpportunityId)) {
                 sageOppIds.add(sc.sageOpportunityId);
             }
@@ -80,7 +80,7 @@ global without sharing class ServiceWrapper{
             sageOppIdMapOpp.put(opp.ext_Opportunity_id__c, opp);
         }
 
-        for(SageContract sc : scs){            
+        for (SageContract sc : scs) {            
             if (String.isBlank(sc.aoppid) && String.isBlank(sc.sageOpportunityId)) continue;
             if (!externalIds.contains(sc.contid)) {
                 Contract__c con = new Contract__c();
@@ -98,7 +98,7 @@ global without sharing class ServiceWrapper{
                 con.Sage_Main_Contract_Id__c = sc.contpid;
                 con.Is_Subagent__c = sc.issubagent == 'N'?FALSE:TRUE;
                 con.Contract_Counsellor__c = sc.contractCounsellor;
-                if(recId != ''){
+                if (recId != '') {
                     con.RecordTypeId = recId;
                 }
                 cons.add(con);
@@ -125,7 +125,7 @@ global without sharing class ServiceWrapper{
         return cons;
     }
 
-    public static List<Sage_Payment__c>  MapSagePayment(List<SagePayment> payments){
+    public static List<Sage_Payment__c>  MapSagePayment(List<SagePayment> payments) {
         List<Sage_Payment__c> pays = new List<Sage_Payment__c>();
         List<String> contIds = new List<String>();
         Map<String, Contract__c> contractMap = new Map<String, Contract__c>();
@@ -133,14 +133,14 @@ global without sharing class ServiceWrapper{
         System.debug(LoggingLevel.INFO, '*** payments: ' + payments);
 
         //Get external contranct and contract Id relationship
-        for(SagePayment payment: payments){
+        for(SagePayment payment: payments) {
             contIds.add(payment.contid);
         }
-        for(Contract__c con :[SELECT Id, External_Contract_Id__c,Account__c,Opportunity__c,Opportunity__r.AccountId FROM Contract__c WHERE External_Contract_Id__c in :contIds]){
+        for(Contract__c con :[SELECT Id, External_Contract_Id__c,Account__c,Opportunity__c,Opportunity__r.AccountId FROM Contract__c WHERE External_Contract_Id__c in :contIds]) {
             contractMap.put(con.External_Contract_Id__c, con);
         }
 
-        for(SagePayment payment: payments){
+        for(SagePayment payment: payments) {
             Sage_Payment__c pay = new Sage_Payment__c();
             pay.Account__c = payment.custid == ''?contractMap.get(payment.contid).Opportunity__r.AccountId:payment.custid;
             pay.Opportunity__c = payment.aoppid == ''?contractMap.get(payment.contid).Opportunity__c:payment.aoppid;
@@ -155,7 +155,7 @@ global without sharing class ServiceWrapper{
     }
 
 
-    global class SagePayment{       
+    global class SagePayment {       
         private String custid;
         private String aoppid;
         private String contid;
@@ -172,7 +172,7 @@ global without sharing class ServiceWrapper{
             String property,
             String amt,
             String typ,
-            String sta){
+            String sta) {
             this.custid = custid;
             this.aoppid = aoppid;
             this.contid = contid;
@@ -185,7 +185,7 @@ global without sharing class ServiceWrapper{
         }        
     }
 
-    global class IntServContract{
+    global class IntServContract {
         public String CRM_Student_ID;        //Account
         public String CRM_Opportunity_ID;    //Opportunity
         public String CRM_Contract_ID;       //External Contract Id
@@ -195,7 +195,7 @@ global without sharing class ServiceWrapper{
         public List<RegisterInfo> BS_Register_Infos;
     }
 
-    global class RegisterInfo{
+    global class RegisterInfo {
         public String Code;
         public String Date_Stamp;
         public String CS_Hour;
@@ -217,21 +217,21 @@ global without sharing class ServiceWrapper{
         public List<CourseItem> Curriculas;
     }
 
-    global class IntServPayment{
+    global class IntServPayment {
         public String DateStamp;
         public String Money;
     }
 
-    global class CourseItem{
+    global class CourseItem {
         public String Code;
         public String Name;
     }
 
-    public static Contract__c MapIntServContract(IntServContract isc){        
+    public static Contract__c MapIntServContract(IntServContract isc) {        
 
         String recId = '';
         for( RecordType rec : [SELECT Id, RecordType.Name, SObjectType FROM RecordType 
-                    WHERE RecordType.Name = 'IntServ' AND SObjectType = 'Contract__c']){
+                    WHERE RecordType.Name = 'IntServ' AND SObjectType = 'Contract__c']) {
             recId = rec.Id;
         }
 
@@ -240,17 +240,17 @@ global without sharing class ServiceWrapper{
         con.Opportunity__c = isc.CRM_Opportunity_ID;
         con.External_Contract_Id__c = isc.CRM_Contract_ID;
         con.Type__c = isc.BS_Event_Type;
-        if(recId != ''){
+        if (recId != '') {
             con.RecordTypeId = recId;
         }
 
         return con;
     }
 
-    public static List<Register__c> MapIntServReg(Id conId, List<RegisterInfo> regInfos){
+    public static List<Register__c> MapIntServReg(Id conId, List<RegisterInfo> regInfos) {
         List<Register__c> regs = new List<Register__c>();
 
-        for(RegisterInfo regInfo : regInfos){
+        for (RegisterInfo regInfo : regInfos) {
             Register__c reg = new Register__c();
             reg.Contract__c = conId;
 
@@ -276,9 +276,9 @@ global without sharing class ServiceWrapper{
         return regs;
     }
 
-    public static List<IntServ_Course__c> MapIntServCourse(Id regId, List<CourseItem> courses){
+    public static List<IntServ_Course__c> MapIntServCourse(Id regId, List<CourseItem> courses) {
         List<IntServ_Course__c> cs = new List<IntServ_Course__c>();
-        for(CourseItem item : courses){
+        for (CourseItem item : courses) {
             IntServ_Course__c c = new IntServ_Course__c();
             c.Name = item.Name;
             c.Code__c = item.Code;
@@ -290,9 +290,9 @@ global without sharing class ServiceWrapper{
         return cs;
     }
 
-    public static List<IntServ_Payment__c> MapIntServPayment(Id regId, List<IntServPayment> pays){
+    public static List<IntServ_Payment__c> MapIntServPayment(Id regId, List<IntServPayment> pays) {
         List<IntServ_Payment__c> payments = new List<IntServ_Payment__c>();
-        for(IntServPayment pay: pays){
+        for (IntServPayment pay: pays) {
             IntServ_Payment__c payment = new IntServ_Payment__c();
             payment.Date_Stamp__c = Date.valueOf(pay.DateStamp);
             payment.Money__c = Decimal.valueOf(pay.Money)/100;
@@ -304,8 +304,7 @@ global without sharing class ServiceWrapper{
         return payments;
     }
 
-
-    global class PaymentStatus{
+    global class PaymentStatus {
         public String custid;         //SFDC客户Id
         public String aoppid;         //SFDC商机Id
         public String contid;         //Sage合同Id
@@ -313,7 +312,7 @@ global without sharing class ServiceWrapper{
         public String typ2;           //Y = 全款收齐, N = 全款未收齐
     }
 
-    global class CustInfo{
+    global class CustInfo {
         public String custid;      //SFDC客户ID*
         public String cnname;      //客户姓名
         public String mob;         //客户手机
@@ -324,32 +323,31 @@ global without sharing class ServiceWrapper{
         public String qq;          //QQ
         public String msn;         //MSN
         public String homeadd;     //家庭地址
-
     }
 
-    global class OppInfo{
+    global class OppInfo {
         public String aoppid;             //SFDC 商机ID
         public String coursetype;         //机会申请层次
         public String plantime;           //拟出国时间
     }
 
-    public static void UpdatePaymentStatus(List<PaymentStatus> pays){
+    public static void UpdatePaymentStatus(List<PaymentStatus> pays) {
         List<Contract__c> cons = new List<Contract__c>();
 
-        for(PaymentStatus pay : pays){
+        for (PaymentStatus pay : pays) {
             Contract__c con = new Contract__c(External_Contract_Id__c = pay.contid);
 
-            if(pay.typ1 == 'Y'){
+            if (pay.typ1 == 'Y') {
                 con.Subscription__c = true;
             }
-            else{
+            else {
                 con.Subscription__c = false;
             }
 
-            if(pay.typ2 == 'Y') {
+            if (pay.typ2 == 'Y') {
                 con.Paid_In_Full__c = true;
             }
-            else{
+            else {
                 con.Paid_In_Full__c = false;
             }
 
@@ -359,62 +357,36 @@ global without sharing class ServiceWrapper{
         upsert cons External_Contract_Id__c;
     }
 
-    public static void UpdateCustInfo(List<CustInfo> custs){
-        // List<Account> accs = new List<Account>();
-        // for(CustInfo cust : custs){
-        //     Account acc = new Account(Id = cust.custid, RecordTypeId = Utils.getRecordTypeId('Account', 'EIC Account'));
-        //     acc.Name = cust.cnname;
-        //     //acc.Phone = cust.mob;
-        //     acc.ID_Number__c = cust.idcard;
-        //     acc.ID_Type__c = '身份证';
-        //     if (cust.birthday != null && cust.birthday != ''){
-        //         acc.Birthday__c = Date.valueOf(cust.birthday);
-        //     }
-            
-        //     if (cust.sex == 'Male' || cust.sex == '男'){
-        //         acc.Gender__c = '男';
-        //     }
-        //     else if (cust.sex == 'Female' || cust.sex == '女'){
-        //         acc.Gender__c = '女';
-        //     }
-        //     else{
-        //         acc.Gender__c = '不便透露';
-        //     }
+    public static void UpdateCustInfo(List<CustInfo> custs) {
 
-        //     accs.add(acc);
-        // }
-        // update accs;
     }
 
-    public static void UpdateOppInfo(List<OppInfo> oppInfos){
+    public static void UpdateOppInfo(List<OppInfo> oppInfos) {
         List<Opportunity> opps = new List<Opportunity>();
 
-        for(OppInfo oppInfo : oppinfos){
+        for(OppInfo oppInfo : oppinfos) {
             Opportunity opp = new Opportunity(Id = oppInfo.aoppid);
-            if(oppInfo.plantime != null && oppInfo.plantime != ''){
+            if (oppInfo.plantime != null && oppInfo.plantime != '') {
                 opp.Schedule_Abroad_Date__c = Date.valueOf(oppInfo.plantime);
             }           
 
-            if (oppInfo.coursetype != null && oppInfo.coursetype != ''){
+            if (oppInfo.coursetype != null && oppInfo.coursetype != '') {
                 Integer rating  = Integer.valueOf(oppInfo.coursetype);
                 String strRating = '';
-                for(Integer i = 1; (i <= rating ) && (i <= 5) ;i ++){
+                for(Integer i = 1; (i <= rating ) && (i <= 5) ;i ++) {
                     strRating += '★';
                 }
 
                 opp.Star_Rating__c = strRating;
             }
-            
 
             opps.add(opp);
         }
         
-
         update opps;
     }
 
-
-    global class ContractDetail{
+    global class ContractDetail {
         public String contid;
         public String contno;
         public String Module {get;set;}
@@ -422,8 +394,6 @@ global without sharing class ServiceWrapper{
         public String Status {get;set;}
         public String uname {get;set;}
         public String memo {get;set;}
-
-
     }
 
     public List<ServiceWrapper.ContractDetail> jsondata;

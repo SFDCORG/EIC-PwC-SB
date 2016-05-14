@@ -1,12 +1,12 @@
 {
     "folders": [
         {
+            "path": "C:/Users/vicia hh wang/Documents/GitHub/SFDC/EIC-PwC-SB", 
             "file_exclude_patterns": [
                 "*.*-meta.xml", 
                 "*.sublime-project"
             ], 
-            "folder_exclude_patterns": [], 
-            "path": "C:/00 DOCS/Sublime Workspace/EIC PwC SB-20160509"
+            "folder_exclude_patterns": []
         }
     ]
 }

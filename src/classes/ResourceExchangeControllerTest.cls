@@ -1,29 +1,32 @@
 /**************************************************************************************************
  * Name: ResourceExchangeControllerTest
  * Object: Lead, Lead_Item__c, Appointment__c, Account, Opportunity
- * Purpose: a test class for converting lead visualforce page function
- * Author: vicia.wang (vicia.hh.wang@cn.pwc.com)
+ * Purpose: a test class for converting lead Visualforce page function
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
  * Create Date: 2016-04-27
  * Modified History: 
- * 2016-04-27   vicia.wang Writes comments in this format
+ * 2016-04-27   Vicia Wang  Writes comments in this format
+ * 2016-05-10    Allen    Format the code
 ***************************************************************************************************/
 @isTest
 private class ResourceExchangeControllerTest {
+
     static testMethod void testResourceExchange() {
+
         User runUser = TestObjectFactory.createUser();
         User TMKAgent = TestObjectFactory.insertTMKUser();
 
         Utils.runLeadTrigger = FALSE;
-    	System.runAs(runUser) {
-            shouldProcessRun__c avoidTrigger = new shouldProcessRun__c(
-                Name = runUser.Id,
-                IsDisable__c = TRUE);
+        System.runAs(runUser) {
+            shouldProcessRun__c avoidTrigger = new shouldProcessRun__c(Name = runUser.Id,
+                                                                       IsDisable__c = TRUE);
             
             insert avoidTrigger;
 
-    		Campaign BankofChina = TestObjectFactory.createCampaign(
-				'BOC', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BSH');
-            // Set the resource exchange campaign
+            Campaign BankofChina = TestObjectFactory.createCampaign(
+                'BOC', Constants.COUNSELLING_CN, 'Offline', 'Business Cooperation', 'BSH');
+
+            // Sets the resource exchange campaign
             Campaign resourceExchangeCampaign = TestObjectFactory.createCampaign(
                 Constants.CAMP_RESOURCE_EXCHANGE_GROUP_NAME, 'All', Constants.REFERRAL_CN, Constants.REFERRAL_CN, Constants.REFERRAL_CN);
             Campaign_Channel__c cc1 = TestObjectFactory.createCampaignChannel();
@@ -43,53 +46,53 @@ private class ResourceExchangeControllerTest {
             update oppList1;
             delete counsellingOppList;
 
-    		PageReference resourceExchangePage = Page.ResourceExchange;
-    		Test.setCurrentPage(resourceExchangePage);
-    		ResourceExchangeController controller = new ResourceExchangeController();
-    		
-    		controller.searchOpp();
+            PageReference resourceExchangePage = Page.ResourceExchange;
+            Test.setCurrentPage(resourceExchangePage);
+            ResourceExchangeController controller = new ResourceExchangeController();
 
-    		// Checks whether user choose at least one business line or not
-    		System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
-    							ApexPages.getMessages(), System.Label.Error_Choose_One_BL_Opp));
+            controller.searchOpp();
 
-    		controller.hasCounsellingOpps = TRUE;
-    		controller.selectedCounsellingOppProject = Constants.US_CN;
-    		controller.searchOpp();
+            // Checks whether user choose at least one business line or not
+            System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
+                                ApexPages.getMessages(), System.Label.Error_Choose_One_BL_Opp));
 
-    		// Checks whether user choose at least one business line to create lead or not
-    		System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
-    							ApexPages.getMessages(), System.Label.Error_Choose_One_BL_To_Create_Leads));
+            controller.hasCounsellingOpps = TRUE;
+            controller.selectedCounsellingOppProject = Constants.US_CN;
+            controller.searchOpp();
+
+            // Checks whether user choose at least one business line to create lead or not
+            System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
+                                ApexPages.getMessages(), System.Label.Error_Choose_One_BL_To_Create_Leads));
 
             controller.hasTestprepOpps = TRUE;
-			controller.selectedTestprepOppProject = 'SAT';
+            controller.selectedTestprepOppProject = 'SAT';
             controller.selectedNewBusinessLine = 
                 System.Label.Counselling + ',' + System.Label.Testprep + ',' + System.Label.Cooperative;
-			controller.searchOpp();
+            controller.searchOpp();
 
-    		// Checks whether user choose testprep opportunity and also wants to create testprep lead or not
-    		System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
-    							ApexPages.getMessages(), System.Label.Error_No_TP_Leads_for_TP_Acc));
+            // Checks whether user choose testprep opportunity and also wants to create testprep lead or not
+            System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
+                                ApexPages.getMessages(), System.Label.Error_No_TP_Leads_for_TP_Acc));
 
-    		controller.hasTestprepOpps = FALSE;
-			controller.selectedTestprepOppProject = '';
+            controller.hasTestprepOpps = FALSE;
+            controller.selectedTestprepOppProject = '';
             controller.selectedNewBusinessLine = System.Label.Cooperative;
-			controller.hasCooperativeOpps = TRUE;
-			controller.selectedCooperativeOppProject = Constants.COOPERATIVE_PROJECT_CN;
-			controller.searchOpp();
+            controller.hasCooperativeOpps = TRUE;
+            controller.selectedCooperativeOppProject = Constants.COOPERATIVE_PROJECT_CN;
+            controller.searchOpp();
 
-    		// Checks whether user choose cooperative opportunity and also wants to create cooperative lead or not
-    		System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
-    							ApexPages.getMessages(), System.Label.Error_No_Coop_Leads_for_Coop_Acc));
+            // Checks whether user choose cooperative opportunity and also wants to create cooperative lead or not
+            System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
+                                ApexPages.getMessages(), System.Label.Error_No_Coop_Leads_for_Coop_Acc));
 
             controller.hasCounsellingOpps = FALSE;
             controller.selectedNewBusinessLine = System.Label.Counselling;
-			controller.selectedIntendCity = Constants.CITY_BJ_CN;
-			controller.selectedOppStage  = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN;
-			controller.selectedCampaignSource = BankofChina.Id;
-			controller.selectedConsultMode = Constants.F2F_CONSULTING_CN;
-            controller.filterLead.Birthday__c = System.today() - 5;
-            controller.filterLead.Schedule_Abroad_Year__c = System.today() - 10;
+            controller.selectedIntendCity = Constants.CITY_BJ_CN;
+            controller.selectedOppStage  = Constants.OPPORTUNITY_STAGE_FOLLOWUP_CN;
+            controller.selectedCampaignSource = BankofChina.Id;
+            controller.selectedConsultMode = Constants.F2F_CONSULTING_CN;
+            controller.filterLead.Birthday__c = System.Today() - 5;
+            controller.filterLead.Schedule_Abroad_Year__c = System.Today() - 10;
             controller.searchOpp();
 
             // Checks whether user inputs the valid start date or not
@@ -97,19 +100,19 @@ private class ResourceExchangeControllerTest {
                                 ApexPages.getMessages(), System.Label.Error_Start_Date_Before_End_Date));
 
             controller.filterLead.Birthday__c = NULL;
-            controller.filterLead.Schedule_Abroad_Year__c = System.today() - 10;
-			controller.searchOpp();
+            controller.filterLead.Schedule_Abroad_Year__c = System.Today() - 10;
+            controller.searchOpp();
 
             // Checks whether user inputs the valid start date or not
             System.assertEquals(TRUE, CommonHelperClass.compareVfErr(
                                 ApexPages.getMessages(), System.Label.Error_Entre_valid_date_range));
 
-            controller.filterLead.Birthday__c = System.today() - 5;
+            controller.filterLead.Birthday__c = System.Today() - 5;
             controller.filterLead.Schedule_Abroad_Year__c = NULL;
             controller.searchOpp();
 
-			controller.filterLead.Birthday__c = System.today() - 5;
-            controller.filterLead.Schedule_Abroad_Year__c = System.today() + 5;
+            controller.filterLead.Birthday__c = System.Today() - 5;
+            controller.filterLead.Schedule_Abroad_Year__c = System.Today() + 5;
             controller.searchOpp();
 
             for (Integer i = 0; i < controller.acctWraps.size(); i ++) {
@@ -163,6 +166,6 @@ private class ResourceExchangeControllerTest {
             String param = '{"lv1":"Offline","lv2":"Business Cooperation","lv3":"BSH","term":"BOC"}';
             List<Campaign> campaignList = ResourceExchangeController.searchCampaign(param, resourceExchangeCampaign.Id);
             System.assertEquals(1, campaignList.size());
-    	}
+        }
     }
 }

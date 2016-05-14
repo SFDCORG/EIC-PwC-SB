@@ -1,12 +1,36 @@
 public class Constants {
 
+
+    private static RecordTypeLookup appointmentRTLookup{get{
+        if(appointmentRTLookup == null){
+           appointmentRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Appoitment__c\'');
+        } return appointmentRTLookup;
+    }
+    set;}
+    private static RecordTypeLookup opportunityRTLookup{get{
+        if(opportunityRTLookup == null){
+           opportunityRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Opportunity\'');
+        } return opportunityRTLookup;
+    }
+    set;}
+    private static RecordTypeLookup campaignRTLookup{get{
+        if(campaignRTLookup == null){
+           campaignRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Campaign\'');
+        } return campaignRTLookup;
+    }
+    set;}
+    private static RecordTypeLookup organizationRTLookup{get{
+        if(organizationRTLookup == null){
+           organizationRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Organization__c\'');
+        } return organizationRTLookup;
+    }set;}
+
     //////////////////////////////
     //
     // Appointment related constants
     //
     //////////////////////////////
 
-    private static RecordTypeLookup appointmentRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Appoitment__c\'');
     public static Id APP_RT_INVITATION_ID{
         get{
             return appointmentRTLookup.objMap.get('Invitation').Id;
@@ -34,12 +58,26 @@ public class Constants {
 
     //////////////////////////////
     //
+    // Contract related constants
+    //
+    //////////////////////////////
+
+    // Record Types
+    private static RecordTypeLookup contractRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Contract__c\'');
+    public static Id CONTRACT_RT_COUNSELLING_ID{
+        get{
+            return contractRTLookup.objMap.get('Counselling').Id;
+        }
+        set;
+    }
+
+    //////////////////////////////
+    //
     // Opportunity related constants
     //
     //////////////////////////////
 
     // Record Types
-    private static RecordTypeLookup opportunityRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Opportunity\'');
     public static Id OPP_RT_TESTPREP_ID{
         get{
             return opportunityRTLookup.objMap.get('TestPrep').Id;
@@ -183,6 +221,20 @@ public class Constants {
         set;
     }
 
+    public static Id PROFILE_LOCAL_CS_ID{
+        get{
+            return profileNameIdMap.get('分公司分校客服专员');
+        }
+        set;
+    }
+
+    public static Id PROFILE_COUNSELLING_CS_FRONT_DESK_ID{
+        get{
+            return profileNameIdMap.get('留学分公司客服前台主管');
+        }
+        set;
+    }
+
     public static List<Profile> profileIdList {
         get {
             if (profileIdList == null) {
@@ -210,15 +262,19 @@ public class Constants {
     }
 
     // Profile Groups
-    public static final Set<Id> TMK_PROFILE_IDS= new Set<Id>{
-      PROFILE_TMK_CUSTOMER_SERVICE_ID,
-      PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID};
+    public static final Set<Id> TMK_PROFILE_IDS = new Set<Id>{
+        PROFILE_TMK_CUSTOMER_SERVICE_ID,
+        PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID};
 
-    public static final Set<Id> TMK_AND_SYS_ADMIN_PROFILE_IDS= new Set<Id>{
-      PROFILE_SYS_ADMIN_ID,
-      PROFILE_TMK_CUSTOMER_SERVICE_ID,
-      PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID};
+    public static final Set<Id> TMK_AND_SYS_ADMIN_PROFILE_IDS = new Set<Id>{
+        PROFILE_SYS_ADMIN_ID,
+        PROFILE_TMK_CUSTOMER_SERVICE_ID,
+        PROFILE_TMK_CUSTOMER_SERVICE_MANAGER_ID};
 
+    public static final Set<Id> CENTER_CUSTOMER_SERVICE_PROFILE_IDS = new Set<Id>{
+        PROFILE_LOCAL_CS_MANAGER_ID,
+        PROFILE_LOCAL_CS_ID,
+        PROFILE_COUNSELLING_CS_FRONT_DESK_ID};
 
     //////////////////////////////
     //
@@ -230,7 +286,6 @@ public class Constants {
     public static final String CAMP_CUSTOMER_REFERRAL_GROUP_NAME = '集团客服互荐';
 
     // Record Types
-    private static RecordTypeLookup campaignRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Campaign\'');
     public static Id CAMP_RT_LEVEL_4_PROMO_CHANNEL{
         get{
             return campaignRTLookup.objMap.get('Level_4_Promotion_Channel').Id;
@@ -257,25 +312,33 @@ public class Constants {
     //////////////////////////////
 
     // Record Types
-    private static RecordTypeLookup organizationRTLookup = new RecordTypeLookup('SELECT id, DeveloperName FROM RecordType WHERE SObjectType = \'Organization__c\'');
     public static Id ORG_RT_TESTPREP_ID{
         get{
-            return organizationRTLookup.objMap.get('TestPrep').Id;
+            if(ORG_RT_TESTPREP_ID == null)
+            {
+                ORG_RT_TESTPREP_ID = organizationRTLookup.objMap.get('TestPrep').Id;
+            }
+            return ORG_RT_TESTPREP_ID;
         }
-        set;
-    }
+        set;}
     public static Id ORG_RT_COUNSELLING_ID{
         get{
-            return organizationRTLookup.objMap.get('Counselling').Id;
+            if(ORG_RT_COUNSELLING_ID == null)
+            {
+                ORG_RT_COUNSELLING_ID = organizationRTLookup.objMap.get('Counselling').Id;
+            }
+            return ORG_RT_COUNSELLING_ID;
         }
-        set;
-    }
+        set;}
     public static Id ORG_RT_COOPERATIVE_ID{
         get{
-            return organizationRTLookup.objMap.get('Cooperative').Id;
+            if(ORG_RT_COOPERATIVE_ID == null)
+            {
+                ORG_RT_COOPERATIVE_ID = organizationRTLookup.objMap.get('Cooperative').Id;
+            }
+            return ORG_RT_COOPERATIVE_ID;
         }
-        set;
-    }
+        set;}
 
     //////////////////////////////
     //
@@ -311,6 +374,15 @@ public class Constants {
     public static String APP_UNCOMPLETED = '未完成'; // Assingments haven't be completed yet
     public static String APP_FOLLOWING ='跟进中'; // Appointments are still following by course cousltant
     public static String APP_NOVISIT = '未到访'; // Customer won't show, and don't willing to come next time.
+    public static String APP_FOLLOWUP_RESULT_REFUSE_CN = '拒绝回访';
+    
+    public static List<String> APP_CLOSED_STATUSES = new List<String>{
+        APP_VISITED,
+        APP_NEXT_TIME_VISIT,
+        APP_COMPLETED,
+        APP_COMPLETED_DELAY,
+        APP_EXPIRED
+    };
 
     // Declares Appointments' Appointment_Type__c picklist Value
     public static String APP_FIRST_DAY_ASS = '第0天任务'; // 1st day assignment
@@ -320,6 +392,7 @@ public class Constants {
     public static String APP_SIXTH_DAY_ASS = '第6天任务'; // 6th day assignment
     public static String APP_FIRST_SHOWUP_CN = '首次到访邀约'; // first time visited
     public static String APP_FDA_TYPE_CN = '前台到访'; // FDA Visited Type
+    public static String APP_TYPE_INVITE_AGAIN = '再次到访邀约';
 
     // Declare associate deparement
     public static String CUSTOMER_SERVER = '客服'; // Customer server
@@ -376,6 +449,9 @@ public class Constants {
     public static String LEAD_STATUS_CONVERTED_DUP_CN = '关闭--重复线索转化成功';
     public static String LEAD_STATUS_CONVERTED_WON_CN = '关闭--转化商机成功';
     public static String LEAD_STATUS_WHOLE_CONVERTED_CN = '全部转化';
+    public static String LEAD_STATUS_WHOLE_CONVERTED_VISITED_CN = '全部转化(到访)';
+    public static String LEAD_STATUS_PARTIAL_CONVERTED_CN = '部分转化';
+    public static String LEAD_STATUS_PARTIAL_CONVERTED_VISITED_CN = '部分转化(到访)';
     public static String LEAD_PHONE_STATUS_HASACCOUNT_CN = '可以导入线索, 但已存在客户!';
     public static String LEAD_PHONE_STATUS_HASLEAD_CN = '可以导入线索, 但已存在重复号码线索!';
 
@@ -386,7 +462,9 @@ public class Constants {
     public static String LEAD_ITEM_STATUS_SLEEP_MANUALLY_CN = '休眠手动';
     public static String LEAD_ITEM_STATUS_LOST_SLEEP_MANUALLY_CN = '流失';
     public static String LEAD_ITEM_STATUS_CONVERTED_DUP_CN = '关闭--重复线索转化成功';
+    public static String LEAD_ITEM_STATUS_CONVERTED_DUP_VISITED_CN = '关闭--重复线索转化成功(到访)';
     public static String LEAD_ITEM_STATUS_CONVERTED_WON_CN = '关闭--转化商机成功';
+    public static String LEAD_ITEM_STATUS_CONVERTED_WON_VISITED_CN = '关闭--转化商机成功(到访)';
     public static String LEAD_ITEM_STATUS_OPEN_OPP_CN = '不能创建, 已存在未关闭商机！';
     public static String LEAD_ITEM_STATUS_WON_OPP_CN = '不能创建, 已存在已赢单商机！';
     public static String LEAD_ITEM_STATUS_HAS_LEAD_CN = '不能创建, 已存在未转化线索!';
@@ -471,6 +549,4 @@ public class Constants {
     public static String NO_SELECTED_OPPS = '请先选择所需要分配的商机';
     public static String CHANGE_WITH_NO_ACCESS_OPPS = '请检查视图筛条件包含非下级代理商机,无法分配';
     public static String CONTAIN_TRANSFERING_OPPS = '请检查此次批量更改商机所有人的所有商机，存在正在转移过程中的商机，请等待当前批次转移结束后，再次操作';
-
-    //
 }

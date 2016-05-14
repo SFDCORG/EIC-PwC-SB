@@ -180,7 +180,7 @@ public without sharing class DuplicatePhoneAccountCls {
             conts.add(contat);
         }
 
-        if (ld.Phone != null) {
+        if (ld.Phone != null && ld.Area_Code__c != null) {
 
             Contact_EIC__c contat2 = new Contact_EIC__c ();
             contat2.Account__c = acc.Id;
@@ -217,7 +217,7 @@ public without sharing class DuplicatePhoneAccountCls {
             AccountId = acc.Id,
             CloseDate = System.Today() + 30,
             Intended_City__c = ld.Intended_City__c,
-            Intended_Office__c = ld.Intended_Office__c,
+            Intended_Office__c = ld.Intended_Office__c == 'null' ? '' : ld.Intended_Office__c,
             Project__c = li.Project__c,
             Consultation_Mode__c = ld.Consultation_Mode__c,
             StageName = '待分配',

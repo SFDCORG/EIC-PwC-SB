@@ -1,24 +1,25 @@
 /**************************************************************************************************
- * Name: lookupUserforAppoimentController
- * Object: /
+ * Name: LookupUserforAppoimentController
+ * Object: ***
  * Purpose: The Lookup component on the appointment batch Assign page
- * Author: /
- * Create Date: 2015-12-14
- * Modify History:
- * 2016-04-18    Ray Cen    Writes comments and optimizes the code
- **************************************************************************************************/
-public class lookupUserforAppoimentController {
-    
-    public String searchText {get; set;} // Search Key Word
-    public List<User> userlist {get; set;} // Define the return User List
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
+ * Create Date: 2016-05-10
+ * Modified History:
+ * 2016-05-10    Allen    Format the code
+***************************************************************************************************/
+public class LookupUserforAppoimentController {
+
+    public String searchText { get; set; } // Search Key Word
+    public List<User> userlist { get; set; } // Define the return User List
     private String city =  ''; // Current User City Info
     private String business =  ''; // Current User Business Line
-    private String dep = ''; // Current User deparetment
-    private Boolean isWg = false; // Current User is a all contry CC or not
-    private Set<Id> managerProfileID=ProfileRelated.getCCManagerSet(); // Get CC Manaager Profile Set
-    
-    // Initilzes the class, and gets the current login user's basic info
-    public lookupUserforAppoimentController() {
+    private String dep = ''; // Current User department
+    private Boolean isWg = false; // Current User is a all country CC or not
+    private Set<Id> managerProfileID = ProfileRelated.getCCManagerSet(); // Get CC Manager Profile Set
+
+    // Initializes the class, and gets the current login user's basic info
+    public LookupUserforAppoimentController() {
+
         searchText = '';
         userlist =  new List<User> ();
         User u = [SELECT Approval_Department__c,
@@ -38,29 +39,27 @@ public class lookupUserforAppoimentController {
 
     // Search User
     public PageReference searchUser() {
-        if (String.isNotBlank(searchText)){
+
+        if (String.isNotBlank(searchText)) {
             userlist.clear();
             if (searchText.contains('*')) {
                 searchText = '%' + searchText.replace('*', '') + '%';
             }
-            
+
             // Admin can search all the manager profiles user
             if (ProfileRelated.adminProfileSet().contains(UserInfo.getProfileId())) {
-               
+
                 userlist.addAll( [SELECT userRole.Name, Name ,Department_of_Role__c 
                                   FROM User
                                   WHERE Name LIKE :searchText 
                                   And ProfileID IN :managerProfileID ]);
             } else {
-                for(User us1 : [SELECT userRole.Name, 
-                                       Name,
-                                       Department_of_Role__c,
-                                       Approval_Department__c
+                for(User us1 : [SELECT userRole.Name, Name, Department_of_Role__c, Approval_Department__c
                                 FROM User WHERE Name LIKE :searchText
                                 And City_of_Role__c LIKE :city
                                 And Business_Unit__c = :business 
                                 And isActive = true
-                                And ProfileID in :managerProfileID]) {
+                                And ProfileID IN :managerProfileID]) {
 
                     if (us1.Department_of_Role__c.contains(dep) ||
                         dep.contains(us1.Department_of_Role__c) ||
@@ -74,9 +73,10 @@ public class lookupUserforAppoimentController {
 
         return null;
     }
-    
+
     // Gets User List When there no search key words
     private void getUserList() {
+
         userlist.clear();
         for(User us1 : [SELECT userRole.Name, Name, Id ,Department_of_Role__c
                        FROM User
@@ -86,6 +86,7 @@ public class lookupUserforAppoimentController {
                        And ProfileID IN :managerProfileID]) {
             if (us1.Department_of_Role__c.contains(dep) ||
                 dep.contains(us1.Department_of_Role__c)) {
+
                 userlist.add(us1);
             }
         }

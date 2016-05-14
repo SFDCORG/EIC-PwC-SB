@@ -1,175 +1,216 @@
+/**************************************************************************************************
+ * Name: OpportunitiesAssignPageControllerTest
+ * Object: opportunity
+ * Purpose: Test Opportunity manually assign
+ * Author: Ray Cen
+ * Create Date: 2016-04-18
+ * Modify History:
+ * 2016-04-18    Ray Cen    Writes comments and optimizes the code
+ * 2016-05-10    Allen    Format the code
+ **************************************************************************************************/
 @isTest
 private class OpportunitiesAssignPageControllerTest {
 
+   static testMethod void FunctionTest () {
 
-   @testSetup static void setup()
-   { 
-   		Account acc= new Account();
-      	acc.Name='AccQuickSearch';
-      	insert acc;
+            User usr = [SELECT Id
+                        FROM User
+                        WHERE Id = :UserInfo.getUserId()];
 
-      	Contact_EIC__c contat  = new Contact_EIC__c();
-        contat.isPrimary__c = true;
-        contat.Name='test';
-        contat.Contact_Type__c='手机';
-        contat.Account__c=acc.Id;
-        contat.Relationship__c= 'OneSelf';
-        contat.UniqueContact__c='13671999387';
-        insert contat;
+        // Prepares the test Data
+        System.runAs(usr) {
 
-        Opportunity o= new Opportunity();
-      	o.CloseDate=System.today();
-      	o.name='test';
-      	o.RecordTypeID=RecordTypeRelated.Counselling_Opp;
-      	o.AccountId=acc.Id;
-      	o.sys_UnlockStage__c=true;  
-      	o.StageName='顾问跟进';
-      	o.sys_UnlockStage__c=false;
-      	o.Intended_City__c= '上海';
-      	o.Project__c='澳大利亚';
-      	o.Consultation_Mode__c='普通商机';
-      	insert o;
+            User uuser  =  TestObjectFactory.createSalesUser();
+            uuser.Username = 'opp@test.com.eic.pwc';
+            uuser.User_External_Id__c = '201604211738';
+            insert uuser;
 
-      	OpportunityTeamMember oppMember= new OpportunityTeamMember();
-        oppMember.OpportunityId=o.Id;
-        oppMember.UserId=userinfo.getUserId();
-        oppMember.TeamMemberRole= 'Team Member';
+            User uuser2  =  TestObjectFactory.createSalesUser();
+            uuser2.Username = 'oppowenr@test.com.eic.pwc';
+            uuser2.User_External_Id__c = '201604211739';
+            insert uuser2;
+        }
+
+        User runUser = [SELECT Id, Name
+                        FROM User
+                        WHERE username = 'opp@test.com.eic.pwc'];
+
+        User lineUser = [SELECT Id, Name
+                         FROM User
+                         WHERE username = 'oppowenr@test.com.eic.pwc'];
+
+        Account acc = TestObjectFactory.createAccount();
+        acc.Name = 'AccQuickSearch';
+        insert acc;
+
+        Opportunity opp = TestObjectFactory.createOpportunity(acc.id, runUser);
+        opp.Intended_City__c = '上海';
+        insert opp;
+
+        OpportunityTeamMember oppMember = TestObjectFactory.createOppTeam(opp, usr.Id);
         insert oppMember;
 
+        Appoitment__c app = TestObjectFactory.createApp(opp, runUser.Id);
+        app.Appointment_Type__c = '第5天任务';
+        app.Assign_To__c = runUser.Id;
+        app.OwnerId = lineUser.Id;
+        insert app;
 
-        Organization__c org= new Organization__c();
-	    org.name='test';
-	    org.City__c='上海';
-	    org.Front_Desk__c=UserInfo.getUserId();
-	    org.RecordTypeID='012280000009bCeAAI';
-	    org.OwnerId=userInfo.getUserId();
-	    org.Department__c='澳新部';
-	    org.Office__c='人民广场';
-	    insert org;
+        Organization__c org = TestObjectFactory.createOrgs();
+        org.Front_Desk__c = runUser.Id;
+        insert org;
 
-	    Organization__c org1= new Organization__c();
-	    org1.name='test';
-	    org1.City__c='上海';
-	    org1.Front_Desk__c=UserInfo.getUserId();
-	    org1.RecordTypeID='012280000009bCeAAI';
-	    org1.OwnerId=userInfo.getUserId();
-	    org1.Department__c='客服部';
-	    org1.Office__c='人民广场';
-	    org1.Org_Manager__c=userInfo.getUserId();
-	    insert org1;
+        Organization__c CSOrg = TestObjectFactory.createOrgs();
+        CSorg.Department__c = '客服部';
+        CSorg.Org_Manager__c = runUser.Id;
+        CSorg.City__c = '上海';
+        CSorg.RecordTypeID = [SELECT Id 
+                              FROM RecordType 
+                              WHERE SObjectType = 'Organization__c'
+                              AND DeveloperName = 'Counselling' LIMIT 1].Id;
+        insert CSOrg;
 
+        Scheduling_Table__c sctable = TestObjectFactory.createSchedulingTable(org);
+        sctable.Source__c = '集团TMK外呼';
+        sctable.Project__c = '美国';
+        sctable.Front_Desk__c = runUser.Id;
+        sctable.Manager__c = runUser.Id;
+        sctable.City__c = '上海';
+        insert sctable;
 
-	    Scheduling_Table__c sctable=new Scheduling_Table__c();
-	    sctable.Name='test';
-	    sctable.Organization__c=org.Id;
-	    sctable.Front_Desk__c=org.Front_Desk__c;
-	    sctable.Intercept__c= '分配至顾问';
-	    sctable.Project__c='澳大利亚';
-	    sctable.Source__c='普通商机';
-	    sctable.Department__c=org.Department__c;
-	    sctable.isActive__c=true;
-	    sctable.City__c='上海';
-	    sctable.Manager__c=userinfo.getUserId();
-	    sctable.RecordTypeID='012280000009b2U';
-	    insert sctable;
+        Scheduling_Table_Line__c sctline = TestObjectFactory.createScheTableLine(sctable);
+        sctline.Project__c = '美国';
+        sctline.Source__c = '集团TMK外呼';
+        sctline.User__c = lineUser.Id;
+        sctline.Start_Working_Time__c = '00:00';
+        sctline.End_Working_Time__c = '23:59';
+        sctline.Monday_Time__c = '√';
+        sctline.Tuesday_Time__c = '√';
+        sctline.Wednesday_Time__c = '√';
+        sctline.Thursday_Time__c = '√';
+        sctline.Friday_Time__c = '√';
+        sctline.Saturday_Time__c = '√';
+        sctline.Sunday_Time__c = '√';
+        sctline.Compensation_Opportunity_Num__c = 0;
+        sctline.Daily_Opportunities__c = 0;
+        insert sctline;
 
-	    Scheduling_Table_Line__c sctline= new Scheduling_Table_Line__c();
-	    sctline.Project__c='澳大利亚';
-	    sctline.Source__c='普通商机';
-	    sctline.Monday_Time__c='D';
-	    sctline.Start_Working_Time__c= '08:00';
-	    sctline.End_Working_Time__c= '23:00';
-	    sctline.User__c=userinfo.getUserId();
-	    sctline.Daily_Opportunities__c=1;
-	    sctline.Monthly_Opportunities__c=2;
-	    sctline.Scheduling_Table__c=sctable.Id;
-	    insert sctline;
+        Scheduling_Table_Line__c sctline2 = TestObjectFactory.createScheTableLine(sctable);
+        sctline2.User__c = UserInfo.getUserId();
+        sctline2.Project__c = '美国';
+        sctline2.Source__c = '集团TMK外呼';
+        sctline2.User__c = runUser.Id;
+        sctline2.Start_Working_Time__c = '00:00';
+        sctline2.End_Working_Time__c = '23:59';
+        sctline2.Monday_Time__c = '√';
+        sctline2.Tuesday_Time__c = '√';
+        sctline2.Wednesday_Time__c = '√';
+        sctline2.Thursday_Time__c = '√';
+        sctline2.Friday_Time__c = '√';
+        sctline2.Saturday_Time__c = '√';
+        sctline2.Sunday_Time__c = '√';
+        sctline2.Compensation_Opportunity_Num__c = 0;
+        sctline2.Daily_Opportunities__c = 0;
+        insert sctline2;
 
-	    Scheduling_Table_Order__c schOrder=new Scheduling_Table_Order__c();
-	    schOrder.Indicator__c=true;
-	    schOrder.Order__c=1;
-	    schOrder.Scheduling_Table__c=sctable.Id;
-	    schOrder.User__c=userinfo.getUserId();
-	    insert schOrder;
+        Scheduling_Table_Order__c sctOrder = TestObjectFactory.createScheTableOrder(sctable);
+        sctOrder.Count__c = 0;
+        sctOrder.Order__c = 1;
+        sctOrder.User__c = lineUser.Id;
+        insert sctOrder;
 
-	    WorkTimesV2__c wt= new WorkTimesV2__c();
-	    wt.A__c='08:30-17:30';
-	    wt.B__c='09:00-18:00';
-	    wt.C__c='10:00-19:00';
-	    wt.D__c='0:00-23:00';
-	    wt.Enable_Table_Record_Type__c='TestPrep;';
-	    insert wt;
+        Scheduling_Table_Order__c sctOrder2 = TestObjectFactory.createScheTableOrder(sctable);
+        sctOrder2.User__c = runUser.Id;
+        sctOrder2.Count__c = 0;
+        sctOrder2.Order__c = 2;
+        insert sctOrder2;
 
-	    Appoitment__c app2= new Appoitment__c();
-        Date dt= System.today();
-        app2.Appointment_Type__c='首次到访';  
-        app2.Due_Date__c=dt.addDays(-1);
-        app2.Due_Time__c= '08:00';
-        app2.Opportunity__c=o.Id;
-        app2.RecordTypeId=RecordTypeRelated.Invitation_App;
-        app2.Assign_To__c=userInfo.getUserId();
-        app2.Status__c='跟进中';
-        insert app2;    
+        Scheduling_Table_Order__c sctOrder3 = TestObjectFactory.createScheTableOrder(sctable);
+        sctOrder3.User__c = runUser.Id;
+        sctOrder3.Count__c = 0;
+        sctOrder3.Order__c = 3;
+        insert sctOrder3;
 
+        WorkTimesV2__c wt = TestObjectFactory.createWorkTimesSetting();
+        insert wt;
 
-   }
-    
-   static testMethod void FunctionTest()
-   {    
- 		test.StartTest();
+        shouldProcessRun__c avoidTrigger = TestObjectFactory.createShouldRun(usr.Id);
+        insert avoidTrigger;
 
- 		Opportunity opp=[select id, 
- 		                        Intended_City__c, 
- 		                        Project__c,RecordTypeID,
- 		                        StageName,Source__c,
- 		                        sys_Department__c,
-                                sys_UnlockStage__c, 
-                                OwnerID,
-                                RecordType.DeveloperName,
-                                sys_LastAssignTime__c,
-                                sys_LastContactTime__c
-                                from Opportunity][0];
+        Opportunity oppResult = new Opportunity();
+        Scheduling_Table_Line__c sctlineResult = new Scheduling_Table_Line__c();
+        Scheduling_Table_Line__c sctlineResult2 = new Scheduling_Table_Line__c();
+        Scheduling_Table_Order__c sctOrderResult = new Scheduling_Table_Order__c();
+        Scheduling_Table_Order__c sctOrderResult2 = new Scheduling_Table_Order__c();
 
-        Appoitment__c app=[select id from Appoitment__c limit 1];
-        
- 		PageReference myVfPage = Page.OpportunitiesAssignPage;
+        Test.StartTest();
+        PageReference myVfPage = Page.OpportunitiesAssignPage;
         Test.setCurrentPageReference(myVfPage); // use setCurrentPageReference, 
-        ApexPages.currentPage().getParameters().put('ID',opp.Id);
-        ApexPages.currentPage().getParameters().put('appointId',app.Id);
-        OpportunitiesAssignPageController oppassign= new OpportunitiesAssignPageController(new ApexPages.StandardController(opp));
+        ApexPages.currentPage().getParameters().put('ID', opp.Id);
+        ApexPages.currentPage().getParameters().put('appointId', app.Id);
+        OpportunitiesAssignPageController oppassign = new OpportunitiesAssignPageController(new ApexPages.StandardController(opp));
         oppassign.getappDateTime();
 
-        //Opportunity Directly Assign
-        oppassign.assignMethod='OppDirectly';
+        // Opportunity Directly Assign
+        oppassign.assignMethod = 'OppDirectly';
         oppassign.assignMethodSelect();
-        oppassign.selectedUserID=userinfo.getUserId();
+        oppassign.selectedUserID = Userinfo.getUserId();
         oppassign.showAllDirectlyUsers();
         oppassign.selectuser();
         oppassign.assignOpp();
 
+        oppResult = [SELECT OwnerId FROM Opportunity WHERE Id = :opp.Id LIMIT 1];
+        System.assertEquals(oppResult.OwnerId, UserInfo.getUserId());
 
-
-        //scheduling Table Assign
-        oppassign.assignMethod='CC';
+        // Scheduling Table Assign
+        oppassign.assignMethod = 'CC';
         oppassign.assignMethodSelect();
-        oppassign.selectedscheTableID=oppassign.scheTables[0].id;
+        oppassign.selectedscheTableID = sctable.Id;
         oppassign.selectScheTable();
         oppassign.showAllUsers();
-        oppassign.selectedscehTableLineID=oppassign.scheTablines[0].schedulingTableLine.ID;
+        oppassign.selectedscehTableLineID = sctline.Id;
         oppassign.selectScheTableLine();
         oppassign.assignOpp();
-        //oppassign.finish();
+        oppResult = [SELECT OwnerId FROM Opportunity WHERE Id = :opp.Id LIMIT 1];
+        sctlineResult = [SELECT Daily_Opportunities__c 
+                         FROM Scheduling_Table_Line__c 
+                         WHERE Id = :sctline.Id LIMIT 1];
 
+        sctOrderResult = [SELECT Count__c 
+                          FROM Scheduling_Table_Order__c 
+                          WHERE Id = :sctOrder.Id LIMIT 1];
 
-        //low star pool Assign
-        oppassign.assignMethod='Pool';
+        System.assertEquals(oppResult.OwnerId, lineUser.Id);
+        System.assertEquals(1, sctlineResult.Daily_Opportunities__c);
+        System.assertEquals(1, sctOrderResult.Count__c);
+
+        /* Compensate test, the line 2's order count is less than the line 1, 
+        If assign opportunity to line 1, the compensate logic will be triggered*/
+        oppassign = new OpportunitiesAssignPageController(new ApexPages.StandardController(opp));
+        oppassign.assignMethod = 'CC';
+        oppassign.assignMethodSelect();
+        oppassign.selectedscheTableID=sctable.Id;
+        oppassign.selectScheTable();
+        oppassign.showAllUsers();
+        oppassign.selectedscehTableLineID = sctline.Id;
+        oppassign.selectScheTableLine();
+        oppassign.assignOpp();
+        oppassign.isGiveBack = true;
+        oppassign.finish();
+        sctlineResult2 = [SELECT Daily_Opportunities__c, Compensation_Opportunity_Num__c
+                         FROM Scheduling_Table_Line__c 
+                         WHERE Id = :sctline2.Id LIMIT 1];
+        System.assertEquals(1, sctlineResult2.Compensation_Opportunity_Num__c);
+
+        // low star pool Assign
+        oppassign.assignMethod = 'Pool';
         oppassign.assignMethodSelect();
         oppassign.assignOpp();
-   
+        oppResult = [SELECT OwnerId, StageName FROM Opportunity WHERE Id = :opp.Id LIMIT 1];
+        System.assertEquals('低星资源池', oppResult.StageName);
+        System.assertEquals(runUser.Id, oppResult.OwnerId);
         oppassign.cancel();
 
- 		test.StopTest();
+        test.StopTest();
    }
-
-    
 }

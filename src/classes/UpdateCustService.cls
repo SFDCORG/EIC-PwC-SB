@@ -22,11 +22,11 @@
 @RestResource(urlMapping='/UpdCust')
 global class UpdateCustService{
     @HttpPost
-    global static String doPost(List<ServiceWrapper.CustInfo> JSONData){
-        try{
+    global static String doPost(List<ServiceWrapper.CustInfo> JSONData) {
+        try {
             ServiceWrapper.UpdateCustInfo(JSONData);
         
-        } catch(Exception e) {
+        } catch (Exception e) {
             String message = 'Cause: ' + e.getCause();
             message += 'Stack Trace: ' + e.getStackTraceString();
             message += 'Message: ' + e.getMessage();

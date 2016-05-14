@@ -1,7 +1,7 @@
 @isTest
 public with sharing class SendMessageTest {
     @isTest
-    public static void testGenerateSMSTemplate(){
+    public static void testGenerateSMSTemplate() {
         List<SMS_Template__c> templateList = new List<SMS_Template__c>();
         SMS_Template__c t1 = new SMS_Template__c();
         t1.Active__c = true;
@@ -28,7 +28,7 @@ public with sharing class SendMessageTest {
     }
 
     @isTest
-    public static void testLeadSendMessage(){
+    public static void testLeadSendMessage() {
         Profile p = [SELECT Id FROM Profile WHERE Name='分公司分校前台'];
         UserRole ur = [SELECT Id FROM UserRole WHERE Name = '留学上海分公司客服部专员'];
         User u = new User(Alias = 'standt', Email='sample1@testorg.com', 
@@ -44,7 +44,7 @@ public with sharing class SendMessageTest {
             TimeZoneSidKey='America/Los_Angeles', UserName='admin123@testorg.com');
         insert approver;
 
-        System.runAs(u){
+        System.runAs(u) {
             List<SMS_Template__c> templateList = new List<SMS_Template__c>();
             SMS_Template__c t1 = new SMS_Template__c();
             t1.Active__c = true;
@@ -125,7 +125,7 @@ public with sharing class SendMessageTest {
     }
 
     @isTest
-    public static void testAccountSendMessage(){
+    public static void testAccountSendMessage() {
         Profile p = [SELECT Id FROM Profile WHERE Name='分公司分校前台'];
         UserRole ur = [SELECT Id FROM UserRole WHERE Name = '留学上海分公司客服部专员'];
         User u = new User(Alias = 'standt', Email='sample@testorg.com', 
@@ -133,7 +133,7 @@ public with sharing class SendMessageTest {
             LocaleSidKey='en_US', ProfileId = p.Id, UserRoleId = ur.Id,
             TimeZoneSidKey='America/Los_Angeles', UserName='sample@testorg.com');
 
-        System.runAs(u){
+        System.runAs(u) {
             List<SMS_Template__c> templateList = new List<SMS_Template__c>();
             SMS_Template__c t1 = new SMS_Template__c();
             t1.Active__c = true;

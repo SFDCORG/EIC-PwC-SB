@@ -33,7 +33,7 @@ public without sharing class SendMessageCtrl {
     public List<ContactWrapper> contactList {get; set;}
 
     private String prefix;
-    private Set<String> relatedToObjectSet = new Set<String>{ 'All'};
+    private Set<String> relatedToObjectSet = new Set<String> {'All'};
 
     public SendMessageCtrl() {
         hasError = false;
@@ -41,15 +41,8 @@ public without sharing class SendMessageCtrl {
         recordId = ApexPages.currentPage().getParameters().get('id');
         sObjectName = ApexPages.currentPage().getParameters().get('so');
         User u = [SELECT UserRole.Name FROM User WHERE Id = :UserInfo.getUserId()];
-        /*if(u.UserRole.Name != null){
-            if(u.UserRole.Name.contains('留学') && u.UserRole.Name.contains('顾问')){
-                hasError = true;
-                ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '留学顾问不能发送短信！'));
-                return;
-            }
-        }*/
-        if(String.isNotBlank(recordId) && String.isNotBlank(sObjectName)){
-            if(sObjectName == 'Account'){
+        if (String.isNotBlank(recordId) && String.isNotBlank(sObjectName)) {
+            if (sObjectName == 'Account') {
                 relatedToObjectSet.add('客户');
                 Account account = [
                     SELECT  Name
@@ -57,7 +50,7 @@ public without sharing class SendMessageCtrl {
                     WHERE   Id = :recordId];
                 accountName = account.Name;                    
                 getAccountPhones(recordId);
-            }else if(sObjectName == 'Lead'){
+            }else if (sObjectName == 'Lead') {
                 relatedToObjectSet.add('销售线索');
                 Lead lead = [
                     SELECT  MobilePhone,
@@ -67,7 +60,7 @@ public without sharing class SendMessageCtrl {
                 accountName = lead.Name;                    
                 contactList = new List<ContactWrapper>();
                 contactList.add(new ContactWrapper(lead.Id, lead.Name, lead.MobilePhone, lead.MobilePhone, true));
-            }else if(sObjectName == 'Opportunity'){
+            }else if (sObjectName == 'Opportunity') {
                 relatedToObjectSet.add('商机');
                 Opportunity opp = [
                     SELECT  AccountId,
@@ -105,8 +98,8 @@ public without sharing class SendMessageCtrl {
                     FROM    SMS_Template__c
                     WHERE   Related_To__c IN :relatedToObjectSet
                     AND     Active__c = true
-                    ORDER BY First_Level__c, Second_Level__c, Third_Level__c, Fourth_Level__c, Name]){
-                if(String.isNotBlank(sms.First_Level__c)){
+                    ORDER BY First_Level__c, Second_Level__c, Third_Level__c, Fourth_Level__c, Name]) {
+                if (String.isNotBlank(sms.First_Level__c)) {
                     firstLevelSet.add(sms.First_Level__c);
                 }
                 smsTemplateWrapperList.add(new SMSTemplateWrapper(sms));
@@ -114,7 +107,7 @@ public without sharing class SendMessageCtrl {
 
             displayedSMSTemplateWrapperList.addAll(smsTemplateWrapperList);
 
-            for(String fl : firstLevelSet){
+            for(String fl : firstLevelSet) {
                 firstLevelItemList.add(new SelectOption(fl, fl));
             }
 
@@ -151,12 +144,12 @@ public without sharing class SendMessageCtrl {
         Set<String> secondLevelSet = new Set<String>();
         for (Integer i = 0; i < displayedSMSTemplateWrapperList.size(); i ++) {
             SMS_Template__c sms = displayedSMSTemplateWrapperList[i].smsTemplate;
-            if(String.isNotBlank(sms.Second_Level__c)){
+            if (String.isNotBlank(sms.Second_Level__c)) {
                 secondLevelSet.add(sms.Second_Level__c); 
             }
         }
 
-        for(String sl : secondLevelSet){
+        for(String sl : secondLevelSet) {
             secondLevelItemList.add(new SelectOption(sl, sl));
         }
 
@@ -191,12 +184,12 @@ public without sharing class SendMessageCtrl {
         Set<String> thirdLevelSet = new Set<String>();
         for (Integer i = 0; i < displayedSMSTemplateWrapperList.size(); i ++) {
             SMS_Template__c sms = displayedSMSTemplateWrapperList[i].smsTemplate;
-            if(String.isNotBlank(sms.Third_Level__c)){
+            if (String.isNotBlank(sms.Third_Level__c)) {
                 thirdLevelSet.add(sms.Third_Level__c); 
             }
         }
 
-        for(String tl : thirdLevelSet){
+        for(String tl : thirdLevelSet) {
             thirdLevelItemList.add(new SelectOption(tl, tl));
         }
 
@@ -235,7 +228,7 @@ public without sharing class SendMessageCtrl {
             }
         }
 
-        for(String fl : fourthLevelSet){
+        for(String fl : fourthLevelSet) {
             fourthLevelItemList.add(new SelectOption(fl, fl));
         }
 
@@ -309,24 +302,24 @@ public without sharing class SendMessageCtrl {
     }
 
     // send message
-    public void sendMessage(){
+    public void sendMessage() {
         SMS__c sms = SMS__c.getAll().get('SendMessage');
-        if(sms != null){
-            if(String.isBlank(smsBodyWithValue)){
+        if (sms != null) {
+            if (String.isBlank(smsBodyWithValue)) {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '短信发送失败!'));
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '短信模板内容不能为空！'));
                 return;
             }
             String phone = '';
 
-            for(ContactWrapper c : contactList){
-                if(c.isSelected == true && String.isNotBlank(c.mobile)){
+            for(ContactWrapper c : contactList) {
+                if (c.isSelected == true && String.isNotBlank(c.mobile)) {
                     phone = c.mobile + ',';
                 }
             }
-            if(String.isNotBlank(phone)){
+            if (String.isNotBlank(phone)) {
                 phone = phone.substring(0, phone.length() - 1);
-            }else{
+            }else {
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '短信发送失败!'));
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '电话号码不能为空！'));
                 return;
@@ -343,29 +336,29 @@ public without sharing class SendMessageCtrl {
 
             HttpResponse res = h.send(req);
 
-            if(res.getStatusCode() == 200){
+            if (res.getStatusCode() == 200) {
                 System.debug(LoggingLevel.INFO, '*** res.getBody(): ' + res.getBody());
                 Object obj = JSON.deserializeUntyped(res.getBody());
                 String objStr = JSON.serialize(obj);
                 Map<String, Object> objMap = (Map<String, Object>)JSON.deserializeUntyped(objStr);
 
                 String msg = String.valueOf(objMap.get('msg'));
-                if(msg == 'OK'){
+                if (msg == 'OK') {
                     smsStatusCode = '0';
                     logHistory(phone, smsBodyWithValue);
-                }else{
+                }else {
                     smsStatusCode = '-1';
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '短信发送失败!'));
                     ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, msg));
                     return;
                 }
-            }else{
+            }else {
                 smsStatusCode = '-1';
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '短信发送失败!'));
                 ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, res.getBody()));
                 return;
             }
-        }else{
+        }else {
             smsStatusCode = '-1';
             ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '短信发送失败!'));
             ApexPages.addMessage(new ApexPages.Message(ApexPages.severity.ERROR, '请联系管理员，维护SMS自定义设置!'));
@@ -374,22 +367,22 @@ public without sharing class SendMessageCtrl {
     }
   
     // create SMS history
-    private void logHistory(String phone, String body){
+    private void logHistory(String phone, String body) {
         SMS_History__c history = new SMS_History__c();
         history.Send_Time__c = Datetime.now();
         history.Sender__c = UserInfo.getUserId();
         history.Receiving_Mobile_Number__c = phone;
         history.Message_Body__c = body;
-        if(sObjectName == 'Lead'){
+        if (sObjectName == 'Lead') {
             history.Lead__c = recordId;
-        }else if(sObjectName == 'Opportunity'){
+        }else if (sObjectName == 'Opportunity') {
             history.Opportunity__c = recordId;
         }
         insert history;
     }
 
     // get contacts by account id
-    private void getAccountPhones(String accountId){
+    private void getAccountPhones(String accountId) {
         contactList = new List<ContactWrapper>();
         for(Contact_EIC__c c : [
                 SELECT  Name,
@@ -401,7 +394,7 @@ public without sharing class SendMessageCtrl {
                 FROM    Contact_EIC__c 
                 WHERE   Account__c = :accountId
                 AND     Contact_Type__c IN ('手机', 'mig_type')
-                AND     IsInvalid__c = false]){
+                AND     IsInvalid__c = false]) {
             contactList.add(new ContactWrapper(c.Account__c, c.Name, c.Encryped_Phone__c, c.Unique_Contact__c, c.IsPrimary__c));
         }
     }
@@ -439,12 +432,11 @@ public without sharing class SendMessageCtrl {
         }
     }
 
-    public PageReference refreshPhoneSection()
-    {  
-       for( ContactWrapper cont:contactList)
-       {    
-            cont.isSelected=(cont.mobile==selectedPhone);    
-       }
-       return null;
+    public PageReference refreshPhoneSection() {  
+        for (ContactWrapper cont : contactList) {    
+            cont.isSelected = cont.mobile == selectedPhone;    
+        }
+
+        return null;
     }
 }

@@ -11,7 +11,7 @@ public without sharing class SplitLeadUtils {
     static List<Lead_Item__c> deletedLeadItems = new List<Lead_Item__c>();
 
     // Processes the lead deduplication 
-    public static void processLead(List<Lead> leads,  List<Lead> oldLeads, String triggerType) {
+    public static void processLead(List<Lead> leads, List<Lead> oldLeads, String triggerType) {
         Savepoint sp = Database.setSavepoint();
         List<Lead_Item__c> items = new List<Lead_Item__c>();
         List<Lead_Item__c> oldItems = new List<Lead_Item__c>();
@@ -262,26 +262,28 @@ public without sharing class SplitLeadUtils {
                 // In order to skip the no intention validation rule
                 lead.Is_Counselling__c = FALSE;
                 // Splits the business line and project to prelead items
-                for (String bl :intendedBL) {
+                for (String bl : intendedBL) {
                     // These business line does not care about their projects.
-                    if (bl == Constants.TESTPREP_CN || bl == 'NP' || bl == Constants.SCHOLAR_TREE_CN || bl == Constants.COOPERATIVE_CN) {
+                    if (bl == Constants.TESTPREP_CN || bl == 'NP' 
+                            || bl == Constants.SCHOLAR_TREE_CN 
+                            || bl == Constants.COOPERATIVE_CN) {
                         // Get the projects only for prepsmith
                         String leadProjs = '';
-                        for (String intproj :intendedProjs) {
-                            if (testprepProjs.Project__c.contains(intproj) && 
-                                bl == Constants.TESTPREP_CN) {
+                        for (String intproj : intendedProjs) {
+                            if (testprepProjs.Project__c.contains(intproj) 
+                                    && bl == Constants.TESTPREP_CN) {
                                 leadProjs += intproj + ';';
 
-                            } else if (shanghaiNPProjs.Project__c.contains(intproj) && 
-                                bl == 'NP') {
+                            } else if (shanghaiNPProjs.Project__c.contains(intproj) 
+                                    && bl == 'NP') {
                                 leadProjs += intproj + ';';
 
-                            } else if (xueshutangProjs.Project__c.contains(intproj) && 
-                                bl == Constants.SCHOLAR_TREE_CN) {
+                            } else if (xueshutangProjs.Project__c.contains(intproj) 
+                                    && bl == Constants.SCHOLAR_TREE_CN) {
                                 leadProjs += intproj + ';';
 
-                            } else if (cooperativeEducationProjs.Project__c.contains(intproj) && 
-                                bl == Constants.COOPERATIVE_CN) {
+                            } else if (cooperativeEducationProjs.Project__c.contains(intproj)
+                                    && bl == Constants.COOPERATIVE_CN) {
                                 leadProjs += intproj + ';';
                             }
                         }
@@ -321,7 +323,8 @@ public without sharing class SplitLeadUtils {
 
                         // If it does not have counselling projects
                         if (!hasCounsellingProj) {
-                            leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, bl, campaignId, NULL, ''));
+                            leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                                bl, campaignId, NULL, ''));
 
                         }  else {
                             leadProjs = leadProjs.substring(0, leadProjs.length() - 1);
@@ -338,13 +341,15 @@ public without sharing class SplitLeadUtils {
                     }
 
                     if (cProjects.size() == 0) {
-                        leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.COUNSELLING_CN, campaignId, NULL, ''));
+                        leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                            Constants.COUNSELLING_CN, campaignId, NULL, ''));
 
                     // If it does not have counselling projects
                     } else {
                         // If it has counselling projects
                         for (String country :cProjects) {
-                            Lead_Item__c li = createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.COUNSELLING_CN, campaignId, country, country);
+                            Lead_Item__c li = createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                                Constants.COUNSELLING_CN, campaignId, country, country);
                             if(Live800Flag.isTestPrepToCounselling){
                                 li.isRecommend__c = true;
                             }
@@ -354,7 +359,8 @@ public without sharing class SplitLeadUtils {
                 }
 
                 if (lead.Is_TestPrep__c) {
-                    Lead_Item__c li = createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.TESTPREP_CN, campaignId, lead.TestPrep_Project__c, '');
+                    Lead_Item__c li = createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                        Constants.TESTPREP_CN, campaignId, lead.TestPrep_Project__c, '');
                     if(Live800Flag.isCounsellingToTestPrep){
                         li.isRecommend__c = true;
                     }
@@ -369,7 +375,8 @@ public without sharing class SplitLeadUtils {
 
                 if (lead.Is_NP__c) {
                     if (constants.NP_CITIES.contains(lead.Intended_City__c)){
-                        leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 'NP', campaignId, lead.TestPrep_Project__c, ''));
+                        leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                            'NP', campaignId, lead.TestPrep_Project__c, ''));
                     
                     } else {
                         lead.Intended_City__c.addError(System.Label.Error_Not_Np_City);
@@ -377,12 +384,14 @@ public without sharing class SplitLeadUtils {
                 }
 
                 if (lead.Is_Scholar_Tree__c) {
-                    leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.SCHOLAR_TREE_CN, campaignId, Constants.SCHOLAR_TREE_PROJECT_CN, ''));
+                    leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                        Constants.SCHOLAR_TREE_CN, campaignId, Constants.SCHOLAR_TREE_PROJECT_CN, ''));
                 }
 
                 if (lead.Is_Cooperative_Education__c) {
                     if (constants.COOPERATIVE_EDUCATION_CITIES.contains(lead.Intended_City__c)){
-                        leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, Constants.COOPERATIVE_CN, campaignId, lead.Cooperative_Education_Project__c, ''));
+                        leadItems.add(createOneLeadItem (lead, Constants.LEAD_ITEM_STATUS_NEW_CN, 
+                            Constants.COOPERATIVE_CN, campaignId, lead.Cooperative_Education_Project__c, ''));
                     
                     } else {
                         lead.Intended_City__c.addError(System.Label.Error_Not_Coop_City);
@@ -504,7 +513,9 @@ public without sharing class SplitLeadUtils {
                 Set<Id> oppOwners = new Set<Id>();
                 if (!oppOwners.contains(opp.OwnerId)) {
                     Task task = new Task(
-                        Subject = String.valueOf(System.today().format()) + '-' + Constants.ACCOUNT_CN + opp.Account.Name + '-' + Constants.LEAD_CREATION_PROMPT_INFO,
+                        Subject = String.valueOf(System.today().format()) + '-' + 
+                            Constants.ACCOUNT_CN + opp.Account.Name + '-' + 
+                            Constants.LEAD_CREATION_PROMPT_INFO,
                         OwnerId = opp.OwnerId,
                         WhatId = opp.Id,
                         ActivityDate = System.today(),
@@ -522,17 +533,17 @@ public without sharing class SplitLeadUtils {
                     String oppKey2 = opp.Intended_City__c + ';NP';
                     for (String itemKey :keyMapItem.keySet()) {
                         if (itemKey.contains(oppKey)
-                            && phoneMapAccIds != NULL
-                            && keyMapPhone.get(itemKey) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
+                                && phoneMapAccIds != NULL
+                                && keyMapPhone.get(itemKey) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
                             keyMapItem.get(itemKey).Status__c = Constants.LEAD_ITEM_STATUS_OPEN_OPP_CN;
 
                         } else if (itemKey.contains(oppKey2)
-                            && phoneMapAccIds != NULL
-                            && keyMapPhone.get(itemKey) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
+                                && phoneMapAccIds != NULL
+                                && keyMapPhone.get(itemKey) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
                             keyMapItem.get(itemKey).Status__c = Constants.LEAD_ITEM_STATUS_OPEN_OPP_CN;
                         }
                     }
@@ -543,10 +554,10 @@ public without sharing class SplitLeadUtils {
 
                     for (String itemKey :keyMapItem.keySet()) {
                         if (itemKey.contains(oppKey)
-                            && phoneMapAccIds != NULL
-                            && keyMapPhone.get(itemKey) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
+                                && phoneMapAccIds != NULL
+                                && keyMapPhone.get(itemKey) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
                             keyMapItem.get(itemKey).Status__c = Constants.LEAD_ITEM_STATUS_OPEN_OPP_CN;
                         }
                     }
@@ -569,10 +580,10 @@ public without sharing class SplitLeadUtils {
                     String oppKey = opp.Intended_City__c + ';' + Constants.COOPERATIVE_CN;
                     for (String itemKey :keyMapItem.keySet()) {
                         if (itemKey.contains(oppKey)
-                            && phoneMapAccIds != NULL
-                            && keyMapPhone.get(itemKey) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
-                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
+                                && phoneMapAccIds != NULL
+                                && keyMapPhone.get(itemKey) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
+                                && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
                             keyMapItem.get(itemKey).Status__c = Constants.LEAD_ITEM_STATUS_OPEN_OPP_CN;
                         }
                     }
@@ -583,10 +594,10 @@ public without sharing class SplitLeadUtils {
                 String oppKey = opp.Intended_City__c + ';' + Constants.COUNSELLING_CN + ';' + opp.Project__c;
                 for (String itemKey :keyMapItem.keySet()) {
                     if (itemKey.contains(oppKey)
-                        && phoneMapAccIds != NULL
-                        && keyMapPhone.get(itemKey) != NULL
-                        && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
-                        && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
+                            && phoneMapAccIds != NULL
+                            && keyMapPhone.get(itemKey) != NULL
+                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)) != NULL
+                            && phoneMapAccIds.get(keyMapPhone.get(itemKey)).contains(opp.AccountId)) {
                         keyMapItem.get(itemKey).Status__c = Constants.LEAD_ITEM_STATUS_WON_OPP_CN;
                     }
                 }
@@ -634,7 +645,7 @@ public without sharing class SplitLeadUtils {
 
                         if (keyMapItem.get(itemKey).Mobile_Unique_Key__c != NULL) {
                             // Populates the extension agent
-                            if (Utils.isExcelUploader || (Trigger.isBefore == TRUE && trigger.isBefore && trigger.isInsert )) {
+                            if (Utils.isExcelUploader || (Trigger.isBefore && trigger.isBefore && trigger.isInsert )) {
                                 keyMapLead.get(leadKey).OriginCampaign__c = campaignMap.get(keyMapLead.get(leadKey).Campaign__c).Name;
                             }
                             keyMapItem.get(itemKey).Mobile_Unique_Key__c = keyMapItem.get(itemKey).Mobile_Unique_Key__c.replace(keyMapLead.get(leadKey).Campaign__c, cooperation.Value__c);
@@ -643,10 +654,14 @@ public without sharing class SplitLeadUtils {
 
                         if (keyMapItem.get(itemKey).Fix_Phone_Unique_Key__c != NULL) {
                             // Populates the extension agent
-                            if (Utils.isExcelUploader || (Trigger.isBefore == TRUE && trigger.isBefore && trigger.isInsert )) {
-                                keyMapLead.get(leadKey).OriginCampaign__c = campaignMap.get(keyMapLead.get(leadKey).Campaign__c).Name;
+                            if (Utils.isExcelUploader || (Trigger.isBefore && trigger.isBefore && trigger.isInsert )) {
+                                keyMapLead.get(leadKey).OriginCampaign__c = 
+                                    campaignMap.get(keyMapLead.get(leadKey).Campaign__c).Name;
                             }
-                            keyMapItem.get(itemKey).Fix_Phone_Unique_Key__c = keyMapItem.get(itemKey).Fix_Phone_Unique_Key__c.replace(keyMapLead.get(leadKey).Campaign__c, cooperation.Value__c);
+                            keyMapItem.get(itemKey).Fix_Phone_Unique_Key__c = 
+                                keyMapItem.get(itemKey).Fix_Phone_Unique_Key__c
+                                    .replace(keyMapLead.get(leadKey).Campaign__c,
+                                cooperation.Value__c);
                             keyMapLead.get(leadKey).Campaign__c = cooperation.Value__c;
                         }
 
@@ -663,7 +678,10 @@ public without sharing class SplitLeadUtils {
                             if (Utils.isExcelUploader || (Trigger.isBefore == TRUE && trigger.isBefore && trigger.isInsert )) {
                                 keyMapLead.get(leadKey).OriginCampaign__c = campaignMap.get(keyMapLead.get(leadKey).Campaign__c).Name;
                             }
-                            keyMapItem.get(itemKey).Mobile_Unique_Key__c = keyMapItem.get(itemKey).Mobile_Unique_Key__c.replace(keyMapLead.get(leadKey).Campaign__c, referral.Value__c);
+                            keyMapItem.get(itemKey).Mobile_Unique_Key__c = 
+                                keyMapItem.get(itemKey).Mobile_Unique_Key__c
+                                    .replace(keyMapLead.get(leadKey).Campaign__c, 
+                                referral.Value__c);
                             keyMapLead.get(leadKey).Campaign__c = referral.Value__c;
                         }
 

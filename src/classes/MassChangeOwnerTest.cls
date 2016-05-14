@@ -1,43 +1,56 @@
+/**************************************************************************************************
+ * Name: MassChangeOwnerTest
+ * Object: ***
+ * Purpose: ***
+ * Author: Vicia Wang (vicia.hh.wang@cn.pwc.com)
+ * Create Date: 2016-05-10
+ * Modified History:
+ * 2016-05-10    Allen    Format the code
+***************************************************************************************************/
 @isTest
 private class MassChangeOwnerTest {
+
     @isTest
-    private static void testMassChangeOwner(){
+    private static void testMassChangeOwner () {
+
         List<User> staffList = new List<User>();
         User staff1 = new User(
             Alias = 'A',
-            Email='test@eic1.com',
-            EmailEncodingKey='UTF-8',
-            LastName='留学上海客服专员A',
-            LanguageLocaleKey='en_US',
-            LocaleSidKey='en_US',
+            Email = 'test@eic1.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = '留学上海客服专员A',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
             ProfileId = [SELECT Id FROM Profile WHERE Name = '分公司分校客服专员'].Id,
             UserRoleId = [SELECT Id FROM UserRole WHERE DeveloperName = 'Counselling_SH_Renguang_CS_Null_Staff'].Id,
-            TimeZoneSidKey='America/Los_Angeles',
-            UserName='test@eic1.com');
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'test@eic1.com');
         staffList.add(staff1);
+
         User staff2 = new User(
             Alias = 'B',
-            Email='test@eic2.com',
-            EmailEncodingKey='UTF-8',
-            LastName='留学上海客服专员B',
-            LanguageLocaleKey='en_US',
-            LocaleSidKey='en_US',
+            Email = 'test@eic2.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = '留学上海客服专员B',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
             ProfileId = [SELECT Id FROM Profile WHERE Name = '分公司分校客服专员'].Id,
             UserRoleId = [SELECT Id FROM UserRole WHERE DeveloperName = 'Counselling_SH_Renguang_CS_Null_Staff'].Id,
-            TimeZoneSidKey='America/Los_Angeles',
-            UserName='test@eic2.com');
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'test@eic2.com');
         staffList.add(staff2);
+
         User staff3 = new User(
             Alias = 'C',
-            Email='test@eic3.com',
-            EmailEncodingKey='UTF-8',
-            LastName='留学上海客服专员C',
-            LanguageLocaleKey='en_US',
-            LocaleSidKey='en_US',
+            Email = 'test@eic3.com',
+            EmailEncodingKey = 'UTF-8',
+            LastName = '留学上海客服专员C',
+            LanguageLocaleKey = 'en_US',
+            LocaleSidKey = 'en_US',
             ProfileId = [SELECT Id FROM Profile WHERE Name = '分公司分校客服专员'].Id,
             UserRoleId = [SELECT Id FROM UserRole WHERE DeveloperName = 'Counselling_SH_Renguang_CS_Null_Staff'].Id,
-            TimeZoneSidKey='America/Los_Angeles',
-            UserName='test@eic3.com');
+            TimeZoneSidKey = 'America/Los_Angeles',
+            UserName = 'test@eic3.com');
         staffList.add(staff3);
         insert staffList;
 
@@ -66,14 +79,15 @@ private class MassChangeOwnerTest {
             UserName = 'test@eic.com');
         insert approver;
 
-        Group g1 = new Group(Name='集团TMK主管组', type='Queue');
+        Group g1 = new Group(Name = '集团TMK主管组', type = 'Queue');
         insert g1;
         QueuesObject q1 = new QueueSObject(QueueID = g1.id, SobjectType = 'Lead');
         insert q1;
 
         Test.startTest();
 
-        System.runAs(owner){
+        System.runAs(owner) {
+
             List<Lead_Distribution_Table__c> ldtList = new List<Lead_Distribution_Table__c>();
             Lead_Distribution_Table__c ldt1 = new Lead_Distribution_Table__c();
             ldt1.Name = '线索分配表A';
@@ -88,10 +102,12 @@ private class MassChangeOwnerTest {
             ldtl1.Lead_Distribution_Table__c = ldt1.Id;
             ldtl1.Customer_Service_Staff__c = staff1.Id;
             ldtlList.add(ldtl1);
+
             Lead_Distribution_Table_Line__c ldtl2 = new Lead_Distribution_Table_Line__c();
             ldtl2.Lead_Distribution_Table__c = ldt1.Id;
             ldtl2.Customer_Service_Staff__c = staff2.Id;
             ldtlList.add(ldtl2);
+
             Lead_Distribution_Table_Line__c ldtl3 = new Lead_Distribution_Table_Line__c();
             ldtl3.Lead_Distribution_Table__c = ldt2.Id;
             ldtl3.Customer_Service_Staff__c = staff3.Id;
@@ -104,8 +120,8 @@ private class MassChangeOwnerTest {
 
             Campaign campaign1 = new Campaign();
             campaign1.Name = '2015年10月上海百度竞价A';
-            campaign1.StartDate = System.today();
-            campaign1.EndDate = System.today().addDays(30);
+            campaign1.StartDate = System.Today();
+            campaign1.EndDate = System.Today().addDays(30);
             campaign1.Approver__c = approver.Id;
             campaign1.Marketing_Channel_Lv1__c = '线上';
             campaign1.Marketing_Channel_Lv2__c = 'PC';
@@ -123,6 +139,7 @@ private class MassChangeOwnerTest {
             lead1.Intended_City__c = '上海';
             lead1.Is_NP__c = true;
             leadList.add(lead1);
+
             Lead lead2 = new Lead();
             lead2.Campaign__c = campaign1.Id;
             lead2.Company = 'EIC';
@@ -133,6 +150,7 @@ private class MassChangeOwnerTest {
             lead2.Intended_City__c = '上海';
             lead2.Is_NP__c = true;
             leadList.add(lead2);
+
             Lead lead3 = new Lead();
             lead3.Campaign__c = campaign1.Id;
             lead3.Company = 'EIC';

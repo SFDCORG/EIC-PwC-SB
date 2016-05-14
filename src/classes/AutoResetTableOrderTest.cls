@@ -1,70 +1,74 @@
+/**************************************************************************************************
+ * Name: AutoResetTableOrderTest
+ * Object: Scheduling_Table_Order__c
+ * Purpose: a test class for AutoResetTableOrder
+ * Author: Ray Cen (ray.cen@cn.pwc.com)
+ * Create Date: 2016-05-12
+ * Modify History:
+ * 2016-05-12    Vicia Wang    Writes comments AND optimizes the code
+ **************************************************************************************************/
 @isTest
 private class AutoResetTableOrderTest {
 
     static testMethod void AutoResetTableOrder() {
-        Organization__c org = new Organization__c ();
-        org.name = 'test';
-        org.City__c = '上海';
-        org.Front_Desk__c = UserInfo.getUserId();
-        org.RecordTypeID = '012280000009bCeAAI';
-        org.OwnerId = UserInfo.getUserId();
-        org.Department__c = '澳新部';
-        org.Office__c = '人民广场';
-        insert org;
+        
+        User admin = TestObjectFactory.createUser();
 
-        Scheduling_Table__c sctable = new Scheduling_Table__c ();
-        sctable.Name = 'test';
-        sctable.Organization__c = org.Id;
-        sctable.Front_Desk__c = org.Front_Desk__c;
-        sctable.Intercept__c = '分配至顾问';
-        sctable.Project__c = '澳大利亚';
-        sctable.Source__c = '普通商机';
-        sctable.Department__c = org.Department__c;
-        sctable.isActive__c = true;
-        sctable.City__c = '上海';
-        sctable.Manager__c = Userinfo.getUserId();
-        sctable.Auto_Reset_Cycle__c = '日';
-        insert sctable;
+        System.runAs(admin) {
 
-        Scheduling_Table_Line__c sctline = new Scheduling_Table_Line__c ();
-        sctline.Project__c = '澳大利亚';
-        sctline.Source__c = '普通商机';
-        sctline.Monday_Time__c = '√';
-        sctline.Start_Working_Time__c = '08:00';
-        sctline.End_Working_Time__c = '13:00';
-        sctline.User__c = Userinfo.getUserId();
-        sctline.Daily_Opportunities__c = 1;
-        sctline.Monthly_Opportunities__c = 2;
-        sctline.Scheduling_Table__c = sctable.Id;
-        insert sctline;
+            // Initializes the org hierarchy
+            Organization__c org = TestObjectFactory.createOrg(Constants.CITY_SH_CN, 
+                                                              'Counselling', 
+                                                              Constants.COUNSELLING_CN);
+            insert org;
 
-        Scheduling_Table_Order__c schOrder = new Scheduling_Table_Order__c ();
-        schOrder.Indicator__c = true;
-        schOrder.Order__c = 1;
-        schOrder.Scheduling_Table__c = sctable.Id;
-        schOrder.User__c = Userinfo.getUserId();
-        insert schOrder;
+            Scheduling_Table__c scheduleTable = TestObjectFactory.createSchedulingTable(org);
+            insert scheduleTable;
 
-        Test.startTest();
+            Scheduling_Table_Line__c scheduleLine = TestObjectFactory.createSchedulingTableLine(scheduleTable);
+            insert scheduleLine;
 
-        String schTime = '0 10 * * 1-12 ? *';
+            Scheduling_Table_Order__c scheudleOrder = TestObjectFactory.createScheTableOrder(scheduleTable);
+            insert scheudleOrder;
+            
+            String schTime = '0 10 * * 1-12 ? *';
 
-         // Daily Reset
-         AutoResetTableOrder_sch schD = new  AutoResetTableOrder_sch ();
-         System.schedule('AutoResetD', schTime, schD);
+            // Daily Reset
+            AutoResetTableOrder_sch schD = new  AutoResetTableOrder_sch ();
+            String dayJobId = System.schedule('AutoResetD', schTime, schD);
+            // Gets the information from the CronTrigger API object
+            CronTrigger dayCT = [SELECT Id, CronExpression, TimesTriggered, NextFireTime
+                                 FROM CronTrigger 
+                                 WHERE id = : dayJobId];
+            
+            // Verifies the expressions are the same
+            System.assertEquals(schTime, dayCT.CronExpression);
 
-         //Weekly Reset
-         sctable.Auto_Reset_Cycle__c = '周';
-         update sctable;
-         AutoResetTableOrder_Weekly schW = new  AutoResetTableOrder_Weekly ();
-         System.schedule('AutoResetW', schTime, schW);
-
-         // Monthly Reset
-         sctable.Auto_Reset_Cycle__c = '月';
-         update sctable;
-         AutoResetTableOrder_Monthly schM = new  AutoResetTableOrder_Monthly ();
-         System.schedule('AutoResetM', schTime, schM);
-
-         Test.stopTest();
+            //Weekly Reset
+            scheduleTable.Auto_Reset_Cycle__c = '周';
+            update scheduleTable;
+            AutoResetTableOrder_Weekly schW = new  AutoResetTableOrder_Weekly ();
+            String weekJobId = System.schedule('AutoResetW', schTime, schW);
+            // Gets the information from the CronTrigger API object
+            CronTrigger weekCT = [SELECT Id, CronExpression, TimesTriggered, NextFireTime
+                                  FROM CronTrigger 
+                                  WHERE id = : weekJobId];
+            
+            // Verifies the expressions are the same
+            System.assertEquals(schTime, weekCT.CronExpression);
+            
+            // Monthly Reset
+            scheduleTable.Auto_Reset_Cycle__c = '月';
+            update scheduleTable;            
+            AutoResetTableOrder_Monthly schM = new  AutoResetTableOrder_Monthly ();
+            String monthJobId = System.schedule('AutoResetM', schTime, schM);
+            // Gets the information from the CronTrigger API object
+            CronTrigger monthCT = [SELECT Id, CronExpression, TimesTriggered, NextFireTime
+                                   FROM CronTrigger 
+                                   WHERE id = : monthJobId];
+            
+            // Verifies the expressions are the same
+            System.assertEquals(schTime, monthCT.CronExpression);
+        }
     }
 }

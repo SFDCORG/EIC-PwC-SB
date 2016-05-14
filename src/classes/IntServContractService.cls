@@ -42,29 +42,33 @@
 
 ************************************************/
 //Create and Update Payment
-@RestResource(urlMapping='/UpdIntServContract')
-global without sharing class IntServContractService{
-    @HttpPost
-    global static String doPost(ServiceWrapper.IntServContract intserv){
+@RestResource(urlMapping = '/UpdIntServContract')
+global without sharing class IntServContractService {
 
-        List<IntServ_Course__c> coursers = new List<IntServ_Course__c>();
-        List<IntServ_Payment__c> payments = new List<IntServ_Payment__c>();
+    @HttpPost
+    global static String doPost (ServiceWrapper.IntServContract intserv) {
+
+        List<IntServ_Course__c> coursers = new List<IntServ_Course__c> ();
+        List<IntServ_Payment__c> payments = new List<IntServ_Payment__c> ();
 
         try{
-            //upsert contract
+
+            // Upserts contract
             System.debug(LoggingLevel.INFO, '*** intserv: ' + intserv);
             Contract__c sc = ServiceWrapper.MapIntServContract(intserv);
             upsert sc External_Contract_Id__c;
 
-            //upsert related registers
+            // Upserts related registers
             List<Register__c> regs = ServiceWrapper.MapIntServReg(sc.Id, intserv.BS_Register_Infos);
             upsert regs Code__c;
 
-            //upsert related coursers
-            //upsert related payments
-            for(Register__c reg : regs){
-                for(ServiceWrapper.RegisterInfo regInfo: intserv.BS_Register_Infos){
-                    if(regInfo.Code == reg.Code__c){
+            // Upserts related coursers
+            // Upserts related payments
+            for (Register__c reg : regs) {
+
+                for (ServiceWrapper.RegisterInfo regInfo: intserv.BS_Register_Infos) {
+
+                    if (regInfo.Code == reg.Code__c) {
                         coursers.addAll(ServiceWrapper.MapIntServCourse(reg.Id, regInfo.Curriculas));
                         payments.addAll(ServiceWrapper.MapIntServPayment(reg.Id, regInfo.Pay_Records));
                     }
@@ -72,19 +76,20 @@ global without sharing class IntServContractService{
             }
             upsert coursers;
             upsert payments;
-        }
-        catch(Exception e){
+        } catch (Exception e) {
+
             String message = 'Cause: ' + e.getCause();
             message += 'Stack Trace: ' + e.getStackTraceString();
             message += 'Message: ' + e.getMessage();
-            return JSON.serialize(message);
+            return JSON.serialize (message);
         }
 
-        return JSON.serialize('Contract Inserted!');
+        return JSON.serialize ('Contract Inserted!');
     }
 
     @HttpGet
-    global static String doGet(){
+    global static String doGet() {
+
         return 'SFDC Service与启德综合业务系统对接接口';
     }
 }

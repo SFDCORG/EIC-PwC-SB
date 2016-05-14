@@ -1,4 +1,4 @@
-<apex:page tabStyle="Opportunity" showHeader="false" sidebar="false" controller="lookupUserforOpportunityController">
+<apex:page tabStyle="Opportunity" showHeader="false" sidebar="false" controller="LookupUserforOpportunityController">
      
     <apex:includeScript value="{!$Resource.jquery110}"/>
     <apex:stylesheet value="{!URLFOR($Resource.tablesorter, '/dist/css/theme.default.min.css')}"/>
