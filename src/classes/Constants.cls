@@ -549,4 +549,6 @@ public class Constants {
     public static String NO_SELECTED_OPPS = '请先选择所需要分配的商机';
     public static String CHANGE_WITH_NO_ACCESS_OPPS = '请检查视图筛条件包含非下级代理商机,无法分配';
     public static String CONTAIN_TRANSFERING_OPPS = '请检查此次批量更改商机所有人的所有商机，存在正在转移过程中的商机，请等待当前批次转移结束后，再次操作';
+    
+    // Adds
 }
